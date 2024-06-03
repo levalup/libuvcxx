@@ -21,12 +21,12 @@ namespace uv {
         RUN_NOWAIT = UV_RUN_NOWAIT,
     };
 
-    class loop {
+    class loop_t {
     public:
-        using self = loop;
+        using self = loop_t;
         using raw_t = uv_loop_t;
 
-        loop()
+        loop_t()
             : self(uvcxx::make_shared<raw_t>(uv_loop_init, uv_loop_close)) {}
 
         static self init() { return self{ }; }
@@ -49,13 +49,14 @@ namespace uv {
     private:
         std::shared_ptr<raw_t> m_raw;
 
-        explicit loop(decltype(m_raw) raw) : m_raw(std::move(raw)) {}
+        explicit loop_t(decltype(m_raw) raw) : m_raw(std::move(raw)) {}
 
-        friend loop default_loop();
+        friend loop_t default_loop();
+        friend class handle_t;  // for handle_t::loop()
     };
 
-    inline loop default_loop() {
-        return loop{uvcxx::make_borrowed(uv_default_loop())};
+    inline loop_t default_loop() {
+        return loop_t{uvcxx::make_borrowed(uv_default_loop())};
     }
 }
 

@@ -7,96 +7,122 @@
 #define LIBUVCXX_FS_H
 
 #include <functional>
+#include <utility>
 
 #include <uv.h>
+
+#include "loop.h"
+#include "req.h"
 
 #include "cxx/memory.h"
 #include "cxx/defer.h"
 #include "cxx/promise.h"
 
-#include "./loop.h"
-
-namespace uv::fs {
-    using raw_req = uv_fs_t;
-    namespace {
-        auto req_cleanup = uv_fs_req_cleanup;
-    }
-
-    class request {
+namespace uv {
+    class fs_t : public req_extend_t<uv_fs_t, req_t> {
     public:
-        raw_req req{};
-        uvcxx::promise_proxy<raw_req *> *proxy{};
-
-        virtual ~request() = default;
+        using self = fs_t;
+        using supper = req_extend_t<uv_fs_t, req_t>;
     };
 
-    template <typename T>
-    class promise_request : public request {
-    public:
-        uvcxx::promise<T> promise;
+    namespace fs {
+        namespace inner {
+            using cxx_req_t = fs_t;
+            using raw_req_t = cxx_req_t::raw_t;
 
-        explicit promise_request(typename uvcxx::promise_cast<T, raw_req *>::wrapper_t wrapper) {
-            proxy = new uvcxx::promise_cast<T, raw_req *>(promise, std::move(wrapper));
+            template<typename... T>
+            class callback_t : public req_callback_t<raw_req_t> {
+            public:
+                using self = callback_t;
+
+                using promise_t = uvcxx::promise<T...>;
+                using promise_cast_t = uvcxx::promise_cast<uvcxx::promise<T...>, raw_req_t *>;
+
+                // store the instance of `req` to avoid resource release caused by no external reference
+                cxx_req_t cxx_req;
+                promise_cast_t promise;
+
+                explicit callback_t(cxx_req_t req, typename promise_cast_t::wrapper_t wrapper)
+                        : cxx_req(std::move(req)), promise(promise_t(), wrapper) {
+                    cxx_req.set_data(this);
+                }
+
+                uvcxx::promise_proxy<raw_req_t *> &proxy() noexcept final {
+                    return promise;
+                }
+
+                void finalize(raw_req_t *req) noexcept final {
+                    uv_fs_req_cleanup(req);
+                }
+
+                int check(raw_req_t *req) noexcept final {
+                    return (int) req->result;
+                }
+            };
+
+            template<typename... T>
+            class invoker {
+            public:
+                template<typename FUNC, typename ...ARGS,
+                        typename=typename std::enable_if_t<std::is_integral_v<
+                                std::invoke_result_t<FUNC,
+                                        loop_t::raw_t *, raw_req_t *, ARGS..., decltype(callback_t<T...>::raw_callback)>
+                        >>>
+                uvcxx::promise<T...> operator()(
+                        typename callback_t<T...>::promise_cast_t::wrapper_t wrapper,
+                        FUNC func, loop_t loop, cxx_req_t req, ARGS &&...args) const {
+                    auto *data = new callback_t<T...>(std::move(req), std::move(wrapper));
+                    uvcxx::defer delete_data(std::default_delete<callback_t<T...>>(), data);
+
+                    auto err = std::invoke(
+                            func,
+                            (loop_t::raw_t *) loop,
+                            (cxx_req_t::raw_t *) data->cxx_req,
+                            std::forward<ARGS>(args)...,
+                            callback_t<T...>::raw_callback);
+
+                    if (err < 0) throw uvcxx::exception(err);
+                    delete_data.release();
+                    return data->promise.promise();
+                }
+            };
         }
 
-        ~promise_request() override {
-            delete proxy;
+        inline uvcxx::promise<uv_file> open(loop_t loop, fs_t fs, const char *path, int flags, int mode) {
+            return inner::invoker<uv_file>()(
+                    [](inner::raw_req_t *req) { return (uv_file) req->result; },
+                    uv_fs_open, std::move(loop), std::move(fs), path, flags, mode);
         }
-    };
 
-    static void raw_callback(raw_req *req) {
-        using namespace uvcxx;
-
-        auto data = (request*)req->data;
-        defer delete_data(std::default_delete<request>(), data);
-        defer cleanup(req_cleanup, req);
-
-        defer promise_finally([&]() { data->proxy->finally(); });
-
-        try {
-            if (req->result < 0) throw exception(req->result);
-            data->proxy->resolve(req);
-        } catch (const std::exception &) {
-            data->proxy->reject(std::current_exception());
+        inline uvcxx::promise<uv_file> open(const char *path, int flags, int mode) {
+            return open(default_loop(), inner::cxx_req_t(), path, flags, mode);
         }
-    }
 
-    /**
-     * @note The req->result has already checked.
-     * @note The function f will be implicitly called at the end.
-     */
-    uvcxx::promise<uv_file> open(loop &loop, const char *path, int flags, int mode) {
-        using namespace uvcxx;
+        inline uvcxx::promise<uv_file> open(loop_t loop, const char *path, int flags, int mode) {
+            return open(std::move(loop), inner::cxx_req_t(), path, flags, mode);
+        }
 
-        auto *data = new promise_request<uv_file>([](raw_req *req) {
-            return (uv_file)req->result;
-        });
-        defer delete_req(std::default_delete<request>(), data);
-        std::memset(&data->req, 0, sizeof(data->req));
-        data->req.data = data;
+        inline uvcxx::promise<uv_file> open(fs_t fs, const char *path, int flags, int mode) {
+            return open(default_loop(), std::move(fs), path, flags, mode);
+        }
 
-        auto err = uv_fs_open(loop, &data->req, path, flags, mode, raw_callback);
+        inline uvcxx::promise<int> close(loop_t loop, fs_t fs, uv_file file) {
+            return inner::invoker<int>()(
+                    [](inner::raw_req_t *req) { return (int) req->result; },
+                    uv_fs_close, std::move(loop), std::move(fs), file);
+        }
 
-        if (err < 0) throw exception(err);
-        delete_req.release();
-        return data->promise;
-    }
+        inline uvcxx::promise<int> close(uv_file file) {
+            return close(default_loop(), inner::cxx_req_t(), file);
+        }
 
-    uvcxx::promise<int> close(loop &loop, uv_file file) {
-        using namespace uvcxx;
+        inline uvcxx::promise<int> close(loop_t loop, uv_file file) {
+            return close(std::move(loop), inner::cxx_req_t(), file);
+        }
 
-        auto *data = new promise_request<int>([](raw_req *req) {
-            return (int)req->result;
-        });
-        defer delete_req(std::default_delete<request>(), data);
-        std::memset(&data->req, 0, sizeof(data->req));
-        data->req.data = data;
-
-        auto err = uv_fs_close(loop, &data->req, file, raw_callback);
-
-        if (err < 0) throw exception(err);
-        delete_req.release();
-        return data->promise;
+        inline uvcxx::promise<int> close(fs_t fs, uv_file file) {
+            return close(default_loop(), std::move(fs), file);
+        }
     }
 }
 

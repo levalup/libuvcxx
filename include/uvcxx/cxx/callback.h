@@ -3,8 +3,8 @@
 // L.eval: Let programmer get rid of only work jobs.
 //
 
-#ifndef LIBUVCXX_PROMISE_H
-#define LIBUVCXX_PROMISE_H
+#ifndef LIBUVCXX_CALLBACK_H
+#define LIBUVCXX_CALLBACK_H
 
 #include <functional>
 #include <memory>
@@ -13,40 +13,30 @@
 #include <utility>
 #include <future>
 
+#include "queue.h"
+
 namespace uvcxx {
-    static void default_on_except(const std::exception &e) {
-        std::ostringstream oss;
-        oss << "[ERROR] " << e.what() << std::endl;
-        std::cerr << oss.str();
-    }
-
-    static void default_on_except(std::exception_ptr p) {
-        try {
-            std::rethrow_exception(p);
-        } catch (const std::exception &e) {
-            default_on_except(e);
-        }
-    }
-
-    class promise_core {
+    class callback_core {
     public:
-        using on_then_t = std::function<void(void *)>;
+        using self = callback_core;
+
+        using on_call_t = std::function<void(void *)>;
         using on_except_t = std::function<void(std::exception_ptr)>;
         using on_finally_t = std::function<void()>;
 
-        ~promise_core() {
+        ~callback_core() {
             emit_finally();
         }
 
-        void emit_then(void *p) noexcept {
+        void emit(void *p) noexcept {
             try {
-                if (m_on_then) m_on_then(p);
+                if (m_on_call) m_on_call(p);
             } catch (...) {
-                emit_except(std::current_exception());
+                raise(std::current_exception());
             }
         }
 
-        void emit_except(std::exception_ptr p) noexcept {
+        void raise(std::exception_ptr p) noexcept {
             try {
                 if (m_on_except) m_on_except(p);
                 else default_on_except(p);
@@ -64,55 +54,69 @@ namespace uvcxx {
             }
         }
 
-        promise_core &then(on_then_t f) {
-            m_on_then = std::move(f);
+        self &call(on_call_t f) {
+            m_on_call = std::move(f);
             return *this;
         }
 
-        promise_core &except(on_except_t f) {
+        self &except(on_except_t f) {
             m_on_except = std::move(f);
             return *this;
         }
 
-        promise_core &finally(on_finally_t f) {
+        self &finally(on_finally_t f) {
             m_on_finally = std::move(f);
             return *this;
         }
 
+        static void default_on_except(const std::exception &e) {
+            std::ostringstream oss;
+            oss << "[ERROR] " << e.what() << std::endl;
+            std::cerr << oss.str();
+        }
+
+        static void default_on_except(std::exception_ptr p) {
+            try {
+                std::rethrow_exception(p);
+            } catch (const std::exception &e) {
+                default_on_except(e);
+            }
+        }
+
     private:
         std::atomic<bool> m_finalized{false};
-        on_then_t m_on_then;
+        on_call_t m_on_call;
         on_except_t m_on_except;
         on_finally_t m_on_finally;
     };
 
     /**
-     * Javascript style promise, mix C++ style promise like std::promise.
-     * @tparam T promise arguments
-     * @note using `get_future` will overwrite
-     *     the callback functions of `then`, `except` and `finally`.
+     * Set callback in return value.
+     * @tparam T callback arguments
+     * @note using `get_queue` will overwrite
+     *     the callback functions of `call`, `raise` and `finally`.
      *     DO NOT use then in same time.
-     * @note Call `then`, `except`, `finally`, `get_future` before run or while callback.
+     * @note Call `call`, `raise`, `finally`, `get_queue` before run or while callback.
      */
     template<typename... T>
-    class promise {
+    class callback {
     public:
-        using self = promise;
+        using self = callback;
         using type = std::tuple<T...>;
 
-        using on_then_t = std::function<void(const T &...)>;
+        using on_call_t = std::function<void(const T &...)>;
         using on_except_p_t = std::function<void(std::exception_ptr)>;
         using on_except_v_t = std::function<void(const std::exception &)>;
         using on_finally_t = std::function<void()>;
 
-        promise() : m_core(std::make_shared<promise_core>()) {}
+        callback() : m_core(std::make_shared<callback_core>()) {}
 
-        promise(nullptr_t) : m_core(nullptr) {}
+        callback(nullptr_t) : m_core(nullptr) {}
 
         explicit operator bool() const { return bool(m_core); }
 
-        self &then(on_then_t f) {
-            m_core->then([f = std::move(f)](void *p) {
+        self &call(on_call_t f) {
+            m_core->call([f = std::move(f)](void *p) {
                 auto &pack = *(const type *) (p);
                 std::apply(f, pack);
             });
@@ -146,18 +150,18 @@ namespace uvcxx {
         }
 
         template<typename FUNC>
-        typename std::enable_if_t<std::is_constructible_v<on_then_t, FUNC>, self> &
-        then(FUNC f) {
-            return this->then(on_then_t(f));
+        typename std::enable_if_t<std::is_constructible_v<on_call_t, FUNC>, self> &
+        call(FUNC f) {
+            return this->call(on_call_t(f));
         }
 
         template<typename FUNC>
         typename std::enable_if_t<
-                !std::is_constructible_v<on_then_t, FUNC> && std::is_same_v<
+                !std::is_constructible_v<on_call_t, FUNC> && std::is_same_v<
                         decltype(std::declval<FUNC>()(std::declval<const T &>()...)),
                         void>, self> &
-        then(FUNC f) {
-            return this->then(on_then_t([f = std::move(f)](const T &...args) {
+        call(FUNC f) {
+            return this->call(on_call_t([f = std::move(f)](const T &...args) {
                 f(args...);
             }));
         }
@@ -167,8 +171,8 @@ namespace uvcxx {
                 sizeof...(T) != 0 && std::is_same_v<
                         decltype(std::declval<FUNC>()()),
                         void>, self> &
-        then(FUNC f) {
-            return this->then(on_then_t([f = std::move(f)](void *) {
+        call(FUNC f) {
+            return this->call(on_call_t([f = std::move(f)](void *) {
                 f();
             }));
         }
@@ -197,94 +201,100 @@ namespace uvcxx {
             return this->finally(on_finally_t(f));
         }
 
-        std::future<std::tuple<T...>> get_future() {
-            auto sp = std::make_shared<std::promise<std::tuple<T...>>>();
-            this->then([sp](const T &...v) {
-                sp->set_value(std::make_tuple(v...));
-            }).except([sp](std::exception_ptr p) {
-                sp->set_exception(p);
-            }).finally(nullptr);
-            return sp->get_future();
+        queue<T...> get_queue() {
+            queue<T...> q;
+            this->call([q](const T &...v) {
+                auto t = q;
+                t.push(v...);
+            }).finally([q]() {
+                auto t = q;
+                t.close();
+            }).except(nullptr);
+            return q;
         }
 
     private:
-        std::shared_ptr<promise_core> m_core;
+        std::shared_ptr<callback_core> m_core;
 
-        promise(decltype(m_core) core) : m_core(std::move(core)) {}
+        callback(decltype(m_core) core) : m_core(std::move(core)) {}
 
     private:
         template<typename... K>
         friend
-        class promise_emitter;
+        class callback_emitter;
 
         template<typename... K>
         friend
-        class promise_proxy;
+        class callback_proxy;
     };
 
     template<>
-    class promise<void> : public promise<> {
+    class callback<void> : public callback<> {
     public:
-        using self = promise;
-        using supper = promise<>;
+        using self = callback;
+        using supper = callback<>;
 
         using supper::supper;
     };
 
     template<typename...T>
-    using promise_t = promise<T...>;
+    using callback_t = callback<T...>;
 
     template<typename... T>
-    class promise_proxy {
+    class callback_proxy {
     public:
-        using self = promise_proxy;
+        using self = callback_proxy;
         using type = std::tuple<T...>;
 
-        virtual ~promise_proxy() = default;
+        virtual ~callback_proxy() = default;
 
-        virtual void resolve(const T &...v) noexcept = 0;
+        virtual void emit(const T &...v) noexcept = 0;
 
-        virtual void reject(std::exception_ptr p) noexcept = 0;
+        virtual void raise(std::exception_ptr p) noexcept = 0;
 
         virtual void finally() noexcept = 0;
 
         void apply(const std::tuple<T...> &v) noexcept {
             std::apply([this](const T &...v) {
-                this->resolve(v...);
+                this->emit(v...);
             }, v);
+        }
+
+        void operator()(const T &...v) {
+            this->emit(v...);
         }
     };
 
     template<>
-    class promise_proxy<void> : public promise_proxy<> {
+    class callback_proxy<void> : public callback_proxy<> {
     };
 
     template<typename... T>
-    class promise_emitter : public promise_proxy<T...> {
+    class callback_emitter : public callback_proxy<T...> {
     public:
-        using self = promise_emitter;
-        using supper = promise_proxy<T...>;
+        using self = callback_emitter;
+        using supper = callback_proxy<T...>;
 
-        promise_emitter() : m_core(std::make_shared<promise_core>()) {}
+        callback_emitter() : m_core(std::make_shared<callback_core>()) {}
 
-        promise_emitter(nullptr_t) : m_core(nullptr) {}
+        callback_emitter(nullptr_t) : m_core(nullptr) {}
 
-        explicit promise_emitter(const promise<T...> &p)
+        explicit callback_emitter(const callback<T...> &p)
                 : m_core(p.m_core) {}
 
         explicit operator bool() const { return bool(m_core); }
 
-        void resolve(const T &...v) noexcept final {
+        void emit(const T &...v) noexcept final {
             std::tuple<T...> pack = std::make_tuple(v...);
-            m_core->emit_then(&pack);
+            m_core->emit(&pack);
         }
 
-        void reject() noexcept {
-            this->reject(std::current_exception());
+        void raise() noexcept {
+            this->raise(std::current_exception());
         }
 
-        void reject(std::exception_ptr p) noexcept final {
-            m_core->emit_except(p);
+        void raise(std::exception_ptr p) noexcept final {
+            m_core->raise(p);
         }
 
         void finally() noexcept final {
@@ -292,40 +302,41 @@ namespace uvcxx {
         }
 
         [[nodiscard]]
-        promise<T...> promise() const { return {m_core}; }
+        callback<T...> callback() const { return {m_core}; }
 
     private:
-        std::shared_ptr<promise_core> m_core;
+        std::shared_ptr<callback_core> m_core;
     };
 
     template<>
-    class promise_emitter<void> : public promise_emitter<> {
-        using self = promise_emitter;
-        using supper = promise_emitter<>;
+    class callback_emitter<void> : public callback_emitter<> {
+        using self = callback_emitter;
+        using supper = callback_emitter<>;
 
         using supper::supper;
     };
 
+
     template<typename V, typename... T>
-    class promise_cast;
+    class callback_cast;
 
     template<typename... V, typename... T>
-    class promise_cast<promise<V...>, T...> : public promise_proxy<T...> {
+    class callback_cast<callback<V...>, T...> : public callback_proxy<T...> {
     public:
-        using self = promise_cast;
-        using supper = promise_proxy<T...>;
+        using self = callback_cast;
+        using supper = callback_proxy<T...>;
 
         using value_t = std::tuple<V...>;
         using wrapper_t = std::function<value_t(const T &...)>;
 
-        promise_cast(nullptr_t) : m_emitter(nullptr) {}
+        callback_cast(nullptr_t) : m_emitter(nullptr) {}
 
-        promise_cast(const promise<V...> &p, wrapper_t wrapper)
+        callback_cast(const callback<V...> &p, wrapper_t wrapper)
                 : m_emitter(p), m_wrapper(std::move(wrapper)) {}
 
         template<typename FUNC, std::enable_if_t<
                 std::is_constructible_v<wrapper_t, FUNC>, int> = 0>
-        promise_cast(const promise<V...> &p, FUNC wrapper)
+        callback_cast(const callback<V...> &p, FUNC wrapper)
                 : self(p, wrapper_t(wrapper)) {}
 
         template<typename FUNC, std::enable_if_t<
@@ -333,7 +344,7 @@ namespace uvcxx {
                 sizeof...(V) == 1 && std::is_convertible_v<
                         decltype(std::declval<FUNC>()(std::declval<const T &>()...)),
                         typename std::tuple_element_t<0, value_t>>, int> = 0>
-        promise_cast(const promise<V...> &p, FUNC wrapper)
+        callback_cast(const callback<V...> &p, FUNC wrapper)
                 : self(p, wrapper_t([wrapper = std::move(wrapper)](const T &...value) -> value_t {
             return std::make_tuple(wrapper(value...));
         })) {}
@@ -343,35 +354,35 @@ namespace uvcxx {
                 sizeof...(V) == 0 && std::is_same_v<
                         decltype(std::declval<FUNC>()(std::declval<const T &>()...)),
                         void>, int> = 0>
-        promise_cast(const promise<V...> &p, FUNC wrapper)
+        callback_cast(const callback<V...> &p, FUNC wrapper)
                 : self(p, wrapper_t([wrapper = std::move(wrapper)](const T &...value) -> value_t {
             wrapper(value...);
             return std::make_tuple();
         })) {}
 
         template<typename FUNC, std::enable_if_t<
-                std::is_constructible_v<self, const promise<V...> &, FUNC>, int> = 0>
-        explicit promise_cast(FUNC wrapper)
-                : self(promise_t<V...>(), wrapper_t(wrapper)) {}
+                std::is_constructible_v<self, const callback<V...> &, FUNC>, int> = 0>
+        explicit callback_cast(FUNC wrapper)
+                : self(callback_t<V...>(), wrapper_t(wrapper)) {}
 
         explicit operator bool() const { return bool(m_emitter); }
 
-        void resolve(const T &...v) noexcept final {
+        void emit(const T &...v) noexcept final {
             try {
                 auto tmp = m_wrapper(v...);
                 m_emitter.apply(tmp);
             } catch (...) {
-                self::reject(std::current_exception());
+                self::raise(std::current_exception());
                 return;
             }
         }
 
-        void reject() noexcept {
-            this->reject(std::current_exception());
+        void raise() noexcept {
+            this->raise(std::current_exception());
         }
 
-        void reject(std::exception_ptr p) noexcept final {
-            m_emitter.reject(p);
+        void raise(std::exception_ptr p) noexcept final {
+            m_emitter.raise(p);
         }
 
         void finally() noexcept final {
@@ -379,21 +390,21 @@ namespace uvcxx {
         }
 
         [[nodiscard]]
-        promise<V...> promise() const { return m_emitter.promise(); }
+        callback<V...> callback() const { return m_emitter.callback(); }
 
     private:
-        promise_emitter<V...> m_emitter;
+        callback_emitter<V...> m_emitter;
         wrapper_t m_wrapper;
     };
 
     template<typename... T>
-    class promise_cast<promise<void>, T...> : promise_cast<promise<>, T...> {
+    class callback_cast<callback<void>, T...> : callback_cast<callback<>, T...> {
     public:
-        using self = promise_cast;
-        using supper = promise_cast<promise<>, T...>;
+        using self = callback_cast;
+        using supper = callback_cast<callback<>, T...>;
 
         using supper::supper;
     };
 }
 
-#endif //LIBUVCXX_PROMISE_H
+#endif //LIBUVCXX_CALLBACK_H

@@ -5,12 +5,22 @@
 
 #include "uvcxx.h"
 
-int main() {
-    auto loop = uv::default_loop();
+class fs_data_t : public uv::req_callback_t<uv_fs_t> {
+};
 
-    uv::fs::open(loop, "a.txt", O_CREAT, 0).then([&](int fd) {
-        uv::fs::close(loop, fd);
+int main() {
+    uv::fs::open("a.txt", O_CREAT | O_RDONLY, 0777).then([&](int fd) {
+        std::cout << "open fd = " << fd << std::endl;
+        uv::fs::close(fd);
+        // throw uvcxx::exception(UV_EAGAIN);
+        throw std::logic_error("throw logic after close");
+    }).except([](const std::exception &e) {
+        auto xx = dynamic_cast<const uvcxx::exception*>(&e);
+        if (xx != nullptr) {
+            std::cerr << "errcode = " << xx->errcode() << std::endl;
+        }
+        std::cerr << e.what() << std::endl;
     });
 
-    return loop.run();
+    return uv::default_loop().run();
 }

@@ -8,5 +8,6 @@
 
 #include "uvcxx/loop.h"
 #include "uvcxx/fs.h"
+#include "uvcxx/idle.h"
 
 #endif //LIBUVCXX_UVCXX_H

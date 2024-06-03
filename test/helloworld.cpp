@@ -2,7 +2,7 @@
 #include "uvcxx.h"
 
 int main() {
-    uv::loop loop; // = uv::default_loop();
+    uv::loop_t loop; // = uv::default_loop();
 
     std::cout << "Default loop." << std::endl;
     loop.run();

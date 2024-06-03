@@ -8,9 +8,9 @@
 int main() {
     using namespace uvcxx;
 
-    promise<int> a;
-    a.then([](int i) {
-        std::cout << "got " << i << std::endl;
+    promise<int, int> a;
+    a.then([](int i, int j) {
+        std::cout << "got " << i << " " << j << std::endl;
         throw std::logic_error("i");
     });
     promise<void> v;
@@ -18,7 +18,9 @@ int main() {
 
     {
         promise_emitter pm(a);
-        promise_cast<int, float> t(a, [](float a){ return std::ceil(a); });
+        promise_cast<decltype(a), float> t(a, [](float a){
+            return std::make_tuple(std::floor(a), std::ceil(a));
+        });
         t.resolve(12.6);
     }
 
