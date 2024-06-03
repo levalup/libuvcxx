@@ -64,6 +64,7 @@ namespace uvcxx {
             std::unique_lock _lock(m_mutex);
             m_closed = true;
             m_cond_writable.notify_all();
+            m_cond_readable.notify_all();
         }
 
         void limit(int64_t v) {
@@ -140,7 +141,7 @@ namespace uvcxx {
 
         std::pair<bool, value_t> pop() { return m_core->pop(); }
 
-        void close() { return m_core->close(); }
+        void close() { m_core->close(); }
 
         void limit(int64_t v) { return m_core->limit(v); }
 

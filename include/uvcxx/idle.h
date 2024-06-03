@@ -28,6 +28,11 @@ namespace uv {
             explicit data_t(const idle_t& idle)
                 : start_cb([idle]() { return (idle_t *)(&idle); }){
             }
+
+            void close() noexcept final {
+                // finally at close, make queue safe
+                start_cb.finally();
+            }
         };
 
         idle_t() : self(default_loop()) {}

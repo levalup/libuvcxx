@@ -210,6 +210,7 @@ namespace uvcxx {
                 auto t = q;
                 t.close();
             }).except(nullptr);
+            // TODO: make exception work, throw to queue.
             return q;
         }
 

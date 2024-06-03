@@ -36,7 +36,10 @@ namespace uv {
         struct data_t {
             virtual ~data_t() = default;
 
+            std::atomic<bool> closed{false};
             uvcxx::promise_emitter<> close_cb = nullptr;
+
+            virtual void close() noexcept = 0;
         };
 
         [[nodiscard]]
@@ -50,6 +53,14 @@ namespace uv {
         }
 
         void close(nullptr_t) {
+            assert(m_raw->data != nullptr);
+            auto data = (data_t *) m_raw->data;
+
+            // Ensure that the handle will only be closed once, avoiding multiple invocations of close
+            //     due to the use of asynchronous queues in the callback's `queue` working mode.
+            bool closed = false;
+            if (!data->closed.compare_exchange_strong(closed, true)) return;
+
             uv_close(m_raw.get(), raw_close_callback);
         }
 
@@ -58,8 +69,12 @@ namespace uv {
             assert(m_raw->data != nullptr);
             auto data = (data_t *) m_raw->data;
 
-            data->close_cb = decltype(data->close_cb)();
+            // Ensure that the handle will only be closed once, avoiding multiple invocations of close
+            //     due to the use of asynchronous queues in the callback's `queue` working mode.
+            bool closed = false;
+            if (!data->closed.compare_exchange_strong(closed, true)) return {};
 
+            data->close_cb = decltype(data->close_cb)();
             uv_close(m_raw.get(), raw_close_callback);
 
             return data->close_cb.promise();
@@ -138,6 +153,7 @@ namespace uv {
             if (!data) return;
             uvcxx::defer delete_data(std::default_delete<data_t>(), data);
             uvcxx::defer reset_data([&]() { raw->data = nullptr; });
+            uvcxx::defer close_data([&]() { data->close(); });
 
             if (data->close_cb) data->close_cb.resolve();
         }
