@@ -54,7 +54,7 @@ namespace uv {
             return uv_is_closing(m_raw.get());
         }
 
-        void close(nullptr_t) {
+        void close(std::nullptr_t) {
             assert(m_raw->data != nullptr);
             auto data = (data_t *) m_raw->data;
 

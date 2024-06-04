@@ -319,20 +319,14 @@ namespace uvcxx {
         using wrapper_t = std::function<value_t(const T &...)>;
 
         template <typename Tuple>
-        struct first_element;
+        struct first_element {
+            using type = void;
+        };
 
         template <typename First, typename ...Else>
         struct first_element<std::tuple<First, Else...>> {
             using type = First;
         };
-
-        template <>
-        struct first_element<std::tuple<>> {
-            using type = void;
-        };
-
-        template <typename Tuple>
-        using first_element_t = typename first_element<Tuple>::type;
 
         promise_cast(std::nullptr_t) : m_emitter(nullptr) {}
 
@@ -348,7 +342,7 @@ namespace uvcxx {
                 !std::is_constructible_v<wrapper_t, FUNC> &&
                 sizeof...(V) == 1 && std::is_convertible_v<
                         decltype(std::declval<FUNC>()(std::declval<const T &>()...)),
-                        first_element_t<value_t>>, int> = 0>
+                        typename first_element<value_t>::type>, int> = 0>
         promise_cast(const promise<V...> &p, FUNC wrapper)
                 : self(p, wrapper_t([wrapper = std::move(wrapper)](const T &...value) -> value_t {
             return std::make_tuple(wrapper(value...));
