@@ -21,12 +21,13 @@ namespace uv {
 
         class data_t : supper::data_t {
         public:
+            using self = data_t;
+            using supper = supper::data_t;
+
             uvcxx::callback_cast<uvcxx::callback<check_t *>> start_cb;
 
-            // Store the instance of `handle` in `start_cb's wrapper`
-            //     to avoid resource release caused by no external reference
-            explicit data_t(check_t check)
-                : start_cb([check = std::move(check)]() mutable { return &check; }){
+            explicit data_t(const check_t &check)
+                    : supper(check), start_cb([check = check]() mutable { return &check; }) {
             }
 
             void close() noexcept final {
@@ -37,7 +38,7 @@ namespace uv {
 
         check_t() : self(default_loop()) {}
 
-        explicit check_t(loop_t loop) {
+        explicit check_t(const loop_t &loop) {
             uv_check_init(loop, *this);
             // data will be deleted in close action
             set_data(new data_t(*this));
@@ -45,8 +46,8 @@ namespace uv {
 
         uvcxx::callback<check_t*> start() {
             auto err = uv_check_start(*this, raw_callback);
-            if (err < 0) throw uvcxx::exception(err);
-            auto data = (data_t *)(get_data());
+            if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
+            auto data = get_data<data_t>();
             return data->start_cb.callback();
         }
 

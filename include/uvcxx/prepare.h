@@ -21,12 +21,13 @@ namespace uv {
 
         class data_t : supper::data_t {
         public:
+            using self = data_t;
+            using supper = supper::data_t;
+
             uvcxx::callback_cast<uvcxx::callback<prepare_t *>> start_cb;
 
-            // Store the instance of `handle` in `start_cb's wrapper`
-            //     to avoid resource release caused by no external reference
-            explicit data_t(prepare_t prepare)
-                : start_cb([prepare = std::move(prepare)]() mutable { return &prepare; }){
+            explicit data_t(const prepare_t &prepare)
+                : supper(prepare), start_cb([prepare = prepare]() mutable { return &prepare; }){
             }
 
             void close() noexcept final {
@@ -37,7 +38,7 @@ namespace uv {
 
         prepare_t() : self(default_loop()) {}
 
-        explicit prepare_t(loop_t loop) {
+        explicit prepare_t(const loop_t &loop) {
             uv_prepare_init(loop, *this);
             // data will be deleted in close action
             set_data(new data_t(*this));
@@ -45,8 +46,8 @@ namespace uv {
 
         uvcxx::callback<prepare_t*> start() {
             auto err = uv_prepare_start(*this, raw_callback);
-            if (err < 0) throw uvcxx::exception(err);
-            auto data = (data_t *)(get_data());
+            if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
+            auto data = get_data<data_t>();
             return data->start_cb.callback();
         }
 

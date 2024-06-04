@@ -3,7 +3,8 @@
 // L.eval: Let programmer get rid of only work jobs.
 //
 
-#include "uvcxx.h"
+#include "uvcxx/getaddrinfo.h"
+#include "uvcxx/getnameinfo.h"
 
 int main() {
     uv_getaddrinfo_t req;

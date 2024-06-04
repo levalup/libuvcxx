@@ -3,7 +3,7 @@
 // L.eval: Let programmer get rid of only work jobs.
 //
 
-#include "uvcxx.h"
+#include "uvcxx/idle.h"
 
 int main() {
     uv::loop_t loop;

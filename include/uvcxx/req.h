@@ -28,8 +28,32 @@ namespace uv {
         /**
          * the uv_req_t->data must be the sub-class of data_t
          */
-        struct data_t {
-            virtual ~data_t() = default;
+        class data_t {
+        public:
+            explicit data_t(const req_t &req)
+                : m_req(req.m_raw) {
+                m_req->data = this;
+            }
+
+            virtual ~data_t() {
+                m_req->data = nullptr;
+            };
+
+            raw_t *req() { return m_req.get(); }
+
+            [[nodiscard]]
+            const raw_t *req() const { return m_req.get(); }
+
+            template<typename T>
+            T *req() { return (T*)m_req.get(); }
+
+            template<typename T>
+            [[nodiscard]]
+            const T *req() const { return (const T*)m_req.get(); }
+
+        private:
+            // store the instance of `req` to avoid resource release caused by no external reference
+            std::shared_ptr<raw_t> m_req;
         };
 
         int cancel() {
@@ -85,6 +109,7 @@ namespace uv {
         const T *raw() const { return reinterpret_cast<T *>(m_raw.get()); }
 
     private:
+        // store the instance of `req` to avoid resource release caused by no external reference
         std::shared_ptr<raw_t> m_raw;
     };
 
@@ -118,6 +143,9 @@ namespace uv {
     class req_callback_t : public req_t::data_t {
     public:
         using self = req_callback_t;
+        using supper = req_t::data_t;
+
+        using supper::supper;
 
         virtual uvcxx::promise_proxy<REQ *, ARGS...> &proxy() noexcept = 0;
 
@@ -129,7 +157,6 @@ namespace uv {
             auto data = (self *) (req->data);
             if (!data) return;
             uvcxx::defer delete_data(std::default_delete<self>(), data);
-            uvcxx::defer reset_data([&]() { req->data = nullptr; });
             uvcxx::defer finalize_data([&]() { data->finalize(req, args...); });
 
             auto &proxy = data->proxy();

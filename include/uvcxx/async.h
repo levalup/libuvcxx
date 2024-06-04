@@ -21,15 +21,14 @@ namespace uv {
 
         class data_t : supper::data_t {
         public:
-            loop_t loop;
-            std::shared_ptr<async_t> ref;
+            using self = data_t;
+            using supper = supper::data_t;
 
+            loop_t loop;
             uvcxx::callback_emitter<> send_cb;
 
-            // Store the instance of `handle` in `send_cb's wrapper`
-            //     to avoid resource release caused by no external reference
-            explicit data_t(loop_t loop, async_t async)
-                : loop(std::move(loop)), ref(std::make_shared<async_t>(std::move(async))) {
+            explicit data_t(const async_t &async, loop_t loop)
+                : supper(async), loop(std::move(loop)) {
             }
 
             void close() noexcept final {
@@ -42,11 +41,11 @@ namespace uv {
 
         explicit async_t(loop_t loop) {
             // data will be deleted in close action
-            set_data(new data_t(std::move(loop), *this));
+            set_data(new data_t(*this, std::move(loop)));
         }
 
         uvcxx::callback<> init() {
-            auto data = (data_t *)(get_data());
+            auto data = get_data<data_t>();
 
             auto err = uv_async_init(data->loop, *this, raw_callback);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);;

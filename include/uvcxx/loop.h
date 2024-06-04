@@ -33,6 +33,8 @@ namespace uv {
 
         operator raw_t *() { return m_raw.get(); }
 
+        operator raw_t *() const { return m_raw.get(); }
+
         explicit operator bool() { return bool(m_raw); }
 
         int run() {

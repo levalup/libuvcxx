@@ -39,17 +39,15 @@ namespace uv {
         class callback_t : public req_callback_t<raw_req_t, int, addrinfo *> {
         public:
             using self = callback_t;
+            using supper = req_callback_t<raw_req_t, int, addrinfo *>;
 
             using promise_t = uvcxx::promise<T...>;
             using promise_cast_t = uvcxx::promise_cast<uvcxx::promise<T...>, raw_req_t *, int, addrinfo *>;
 
-            // store the instance of `req` to avoid resource release caused by no external reference
-            cxx_req_t cxx_req;
             promise_cast_t promise;
 
-            explicit callback_t(cxx_req_t req, typename promise_cast_t::wrapper_t wrapper)
-                    : cxx_req(std::move(req)), promise(promise_t(), wrapper) {
-                cxx_req.set_data(this);
+            explicit callback_t(const cxx_req_t &req, typename promise_cast_t::wrapper_t wrapper)
+                    : supper(req), promise(promise_t(), std::move(wrapper)) {
             }
 
             typename promise_cast_t::supper &proxy() noexcept final {
@@ -67,16 +65,17 @@ namespace uv {
     }
 
     inline uvcxx::promise<addrinfo *> getaddrinfo(
-            loop_t loop, getaddrinfo_t req,
+            const loop_t &loop, const getaddrinfo_t& req,
             const char *node, const char *service, const addrinfo *hints = nullptr) {
+        using raw_req_t = inner::getaddrinfo::raw_req_t;
         using callback_t = inner::getaddrinfo::callback_t<addrinfo *>;
         auto *data = new callback_t(
-                std::move(req), [](inner::getaddrinfo::raw_req_t *, int, addrinfo *res) {
+                req, [](raw_req_t *, int, addrinfo *res) {
                     return res;
                 });
         uvcxx::defer delete_data(std::default_delete<callback_t>(), data);
 
-        auto err = uv_getaddrinfo(loop, data->cxx_req, callback_t::raw_callback, node, service, hints);
+        auto err = uv_getaddrinfo(loop, data->req<raw_req_t>(), callback_t::raw_callback, node, service, hints);
         if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
         delete_data.release();
         return data->promise.promise();
@@ -88,15 +87,15 @@ namespace uv {
     }
 
     inline uvcxx::promise<addrinfo *> getaddrinfo(
-            getaddrinfo_t req,
+            const getaddrinfo_t& req,
             const char *node, const char *service, const addrinfo *hints = nullptr) {
-        return getaddrinfo(default_loop(), std::move(req), node, service, hints);
+        return getaddrinfo(default_loop(), req, node, service, hints);
     }
 
     inline uvcxx::promise<addrinfo *> getaddrinfo(
-            loop_t loop,
+            const loop_t &loop,
             const char *node, const char *service, const addrinfo *hints = nullptr) {
-        return getaddrinfo(std::move(loop), {}, node, service, hints);
+        return getaddrinfo(loop, {}, node, service, hints);
     }
 }
 

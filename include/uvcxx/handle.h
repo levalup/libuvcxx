@@ -35,13 +35,38 @@ namespace uv {
         /**
          * the uv_handle_t->data must be the sub-class of data_t
          */
-        struct data_t {
-            virtual ~data_t() = default;
-
+        class data_t {
+        public:
             std::atomic<bool> closed{false};
             uvcxx::promise_emitter<> close_cb = nullptr;
 
+        public:
+            explicit data_t(const handle_t &handle)
+                    : m_handle(handle.m_raw) {
+                m_handle->data = this;
+            }
+
+            virtual ~data_t() {
+                m_handle->data = nullptr;
+            };
+
             virtual void close() noexcept = 0;
+
+            raw_t *handle() { return m_handle.get(); }
+
+            [[nodiscard]]
+            const raw_t *handle() const { return m_handle.get(); }
+
+            template<typename T>
+            T *handle() { return (T*)m_handle.get(); }
+
+            template<typename T>
+            [[nodiscard]]
+            const T *handle() const { return (const T*)m_handle.get(); }
+
+        private:
+            // store the instance of `handle` to avoid resource release caused by no external reference
+            std::shared_ptr<raw_t> m_handle;
         };
 
         [[nodiscard]]
@@ -127,6 +152,12 @@ namespace uv {
             return uv_handle_type_name(m_raw->type);
         }
 
+        template<typename T>
+        [[nodiscard]]
+        T *get_data() const {
+            return (T*)m_raw->data;
+        }
+
         operator raw_t *() const { return m_raw.get(); }
 
         operator const raw_t *() const { return m_raw.get(); }
@@ -153,7 +184,6 @@ namespace uv {
             auto data = (data_t *) raw->data;
             if (!data) return;
             uvcxx::defer delete_data(std::default_delete<data_t>(), data);
-            uvcxx::defer reset_data([&]() { raw->data = nullptr; });
             uvcxx::defer close_data([&]() { data->close(); });
 
             if (data->close_cb) data->close_cb.resolve();

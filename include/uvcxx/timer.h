@@ -21,12 +21,13 @@ namespace uv {
 
         class data_t : supper::data_t {
         public:
+            using self = data_t;
+            using supper = supper::data_t;
+
             uvcxx::callback_cast<uvcxx::callback<timer_t *>> start_cb;
 
-            // Store the instance of `handle` in `start_cb's wrapper`
-            //     to avoid resource release caused by no external reference
-            explicit data_t(timer_t timer)
-                : start_cb([timer = std::move(timer)]() mutable { return &timer; }){
+            explicit data_t(const timer_t &timer)
+                : supper(timer), start_cb([timer = timer]() mutable { return &timer; }){
             }
 
             void close() noexcept final {
@@ -37,7 +38,7 @@ namespace uv {
 
         timer_t() : self(default_loop()) {}
 
-        explicit timer_t(loop_t loop) {
+        explicit timer_t(const loop_t &loop) {
             uv_timer_init(loop, *this);
             // data will be deleted in close action
             set_data(new data_t(*this));
@@ -46,7 +47,7 @@ namespace uv {
         uvcxx::callback<timer_t*> start(uint64_t timeout, uint64_t repeat) {
             auto err = uv_timer_start(*this, raw_callback, timeout, repeat);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
-            auto data = (data_t *)(get_data());
+            auto data = get_data<data_t>();
             return data->start_cb.callback();
         }
 
