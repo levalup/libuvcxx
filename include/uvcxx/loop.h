@@ -46,6 +46,10 @@ namespace uv {
             if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
             return err;
         }
+
+        static self borrow(uv_loop_t *loop) {
+            return self{uvcxx::make_borrowed(loop)};
+        }
     private:
         std::shared_ptr<raw_t> m_raw;
 
@@ -56,7 +60,7 @@ namespace uv {
     };
 
     inline loop_t default_loop() {
-        return loop_t{uvcxx::make_borrowed(uv_default_loop())};
+        return loop_t::borrow(uv_default_loop());
     }
 }
 

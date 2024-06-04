@@ -24,6 +24,8 @@ namespace uv {
      * Please do not modify data.
      * The data' resources will be freed after close. So remember to `close` handle.
      * Do `close` even if not start but only construct it.
+     * Q: Why not `close` in destructor?
+     * A: Because the destructor only be called after it is closed.
      */
     class handle_t {
     public:
@@ -64,7 +66,7 @@ namespace uv {
             uv_close(m_raw.get(), raw_close_callback);
         }
 
-        [[nodiscard]]
+        [[nodiscard("use close(nullptr) instead")]]
         uvcxx::promise<> close() {
             assert(m_raw->data != nullptr);
             auto data = (data_t *) m_raw->data;
@@ -99,8 +101,7 @@ namespace uv {
 
         [[nodiscard]]
         loop_t loop() const {
-            auto loop = uv_handle_get_loop(m_raw.get());
-            return loop_t{uvcxx::make_borrowed(loop)};
+            return loop_t::borrow(uv_handle_get_loop(m_raw.get()));
         }
 
         [[nodiscard]]
@@ -201,7 +202,9 @@ namespace uv {
         using raw_t = T;
 
         handle_extend_t()
-                : supper(make_shared()) {}
+                : supper(make_shared()) {
+            this->set_data(nullptr);
+        }
 
         operator T *() { return (T *) this->raw(); }
 

@@ -111,11 +111,11 @@ namespace uvcxx {
 
         callback() : m_core(std::make_shared<callback_core>()) {}
 
-        callback(nullptr_t) : m_core(nullptr) {}
+        callback(std::nullptr_t) : m_core(nullptr) {}
 
         explicit operator bool() const { return bool(m_core); }
 
-        self &call(on_call_t f) {
+        self &call(std::function<void(const T &...)> f) {
             m_core->call([f = std::move(f)](void *p) {
                 auto &pack = *(const type *) (p);
                 std::apply(f, pack);
@@ -123,17 +123,17 @@ namespace uvcxx {
             return *this;
         }
 
-        self &except(nullptr_t) {
+        self &except(std::nullptr_t) {
             m_core->except(nullptr);
             return *this;
         }
 
-        self &except(on_except_p_t f) {
+        self &except(std::function<void(std::exception_ptr)> f) {
             m_core->except(std::move(f));
             return *this;
         }
 
-        self &except(on_except_v_t f) {
+        self &except(std::function<void(const std::exception &)> f) {
             m_core->except([f = std::move(f)](std::exception_ptr p) {
                 try {
                     std::rethrow_exception(p);
@@ -144,7 +144,7 @@ namespace uvcxx {
             return *this;
         }
 
-        self &finally(on_finally_t f) {
+        self &finally(std::function<void()> f) {
             m_core->finally(std::move(f));
             return *this;
         }
@@ -203,21 +203,18 @@ namespace uvcxx {
 
         queue<T...> get_queue() {
             queue<T...> q;
-            this->call([q](const T &...v) {
-                auto t = q;
-                t.push(v...);
-            }).finally([q]() {
-                auto t = q;
-                t.close();
+            this->call([q = q](const T &...v) mutable {
+                q.push(v...);
+            }).finally([q = q]() mutable {
+                q.close();
             }).except(nullptr);
-            // TODO: make exception work, throw to queue.
             return q;
         }
 
     private:
         std::shared_ptr<callback_core> m_core;
 
-        callback(decltype(m_core) core) : m_core(std::move(core)) {}
+        explicit callback(decltype(m_core) core) : m_core(std::move(core)) {}
 
     private:
         template<typename... K>
@@ -278,7 +275,7 @@ namespace uvcxx {
 
         callback_emitter() : m_core(std::make_shared<callback_core>()) {}
 
-        callback_emitter(nullptr_t) : m_core(nullptr) {}
+        callback_emitter(std::nullptr_t) : m_core(nullptr) {}
 
         explicit callback_emitter(const callback<T...> &p)
                 : m_core(p.m_core) {}
@@ -303,7 +300,7 @@ namespace uvcxx {
         }
 
         [[nodiscard]]
-        callback<T...> callback() const { return {m_core}; }
+        callback<T...> callback() const { return callback_t<T...>{m_core}; }
 
     private:
         std::shared_ptr<callback_core> m_core;
@@ -317,7 +314,6 @@ namespace uvcxx {
         using supper::supper;
     };
 
-
     template<typename V, typename... T>
     class callback_cast;
 
@@ -330,7 +326,23 @@ namespace uvcxx {
         using value_t = std::tuple<V...>;
         using wrapper_t = std::function<value_t(const T &...)>;
 
-        callback_cast(nullptr_t) : m_emitter(nullptr) {}
+        template <typename Tuple>
+        struct first_element;
+
+        template <typename First, typename ...Else>
+        struct first_element<std::tuple<First, Else...>> {
+            using type = First;
+        };
+
+        template <>
+        struct first_element<std::tuple<>> {
+            using type = void;
+        };
+
+        template <typename Tuple>
+        using first_element_t = typename first_element<Tuple>::type;
+
+        callback_cast(std::nullptr_t) : m_emitter(nullptr) {}
 
         callback_cast(const callback<V...> &p, wrapper_t wrapper)
                 : m_emitter(p), m_wrapper(std::move(wrapper)) {}
@@ -344,7 +356,7 @@ namespace uvcxx {
                 !std::is_constructible_v<wrapper_t, FUNC> &&
                 sizeof...(V) == 1 && std::is_convertible_v<
                         decltype(std::declval<FUNC>()(std::declval<const T &>()...)),
-                        typename std::tuple_element_t<0, value_t>>, int> = 0>
+                        first_element_t<value_t>>, int> = 0>
         callback_cast(const callback<V...> &p, FUNC wrapper)
                 : self(p, wrapper_t([wrapper = std::move(wrapper)](const T &...value) -> value_t {
             return std::make_tuple(wrapper(value...));

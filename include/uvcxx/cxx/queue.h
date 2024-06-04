@@ -12,7 +12,7 @@
 #include <condition_variable>
 
 namespace uvcxx {
-    template <typename... T>
+    template<typename... T>
     class queue_core {
     public:
         using value_t = std::tuple<T...>;
@@ -90,7 +90,7 @@ namespace uvcxx {
         std::atomic<bool> m_closed{false};
     };
 
-    template <typename... T>
+    template<typename... T>
     class queue {
     public:
         using self = queue;
@@ -103,8 +103,8 @@ namespace uvcxx {
 
             using value_type = value_t;
             using difference_type = std::ptrdiff_t;
-            using pointer = const value_t*;
-            using reference = const value_t&;
+            using pointer = const value_t *;
+            using reference = const value_t &;
             using iterator_category = std::forward_iterator_tag;
 
             bool operator==(const self &) const { return !m_item.first; }
@@ -143,7 +143,10 @@ namespace uvcxx {
 
         void close() { m_core->close(); }
 
-        void limit(int64_t v) { return m_core->limit(v); }
+        self &limit(int64_t v) {
+            m_core->limit(v);
+            return *this;
+        }
 
         iterator_t begin() { return iterator_t(m_core).next(); }
 

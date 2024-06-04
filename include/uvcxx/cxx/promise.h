@@ -14,20 +14,6 @@
 #include <future>
 
 namespace uvcxx {
-    static void default_on_except(const std::exception &e) {
-        std::ostringstream oss;
-        oss << "[ERROR] " << e.what() << std::endl;
-        std::cerr << oss.str();
-    }
-
-    static void default_on_except(std::exception_ptr p) {
-        try {
-            std::rethrow_exception(p);
-        } catch (const std::exception &e) {
-            default_on_except(e);
-        }
-    }
-
     class promise_core {
     public:
         using on_then_t = std::function<void(void *)>;
@@ -79,6 +65,20 @@ namespace uvcxx {
             return *this;
         }
 
+        static void default_on_except(const std::exception &e) {
+            std::ostringstream oss;
+            oss << "[ERROR] " << e.what() << std::endl;
+            std::cerr << oss.str();
+        }
+
+        static void default_on_except(std::exception_ptr p) {
+            try {
+                std::rethrow_exception(p);
+            } catch (const std::exception &e) {
+                default_on_except(e);
+            }
+        }
+
     private:
         std::atomic<bool> m_finalized{false};
         on_then_t m_on_then;
@@ -107,11 +107,11 @@ namespace uvcxx {
 
         promise() : m_core(std::make_shared<promise_core>()) {}
 
-        promise(nullptr_t) : m_core(nullptr) {}
+        promise(std::nullptr_t) : m_core(nullptr) {}
 
         explicit operator bool() const { return bool(m_core); }
 
-        self &then(on_then_t f) {
+        self &then(std::function<void(const T &...)> f) {
             m_core->then([f = std::move(f)](void *p) {
                 auto &pack = *(const type *) (p);
                 std::apply(f, pack);
@@ -119,17 +119,17 @@ namespace uvcxx {
             return *this;
         }
 
-        self &except(nullptr_t) {
+        self &except(std::nullptr_t) {
             m_core->except(nullptr);
             return *this;
         }
 
-        self &except(on_except_p_t f) {
+        self &except(std::function<void(std::exception_ptr)> f) {
             m_core->except(std::move(f));
             return *this;
         }
 
-        self &except(on_except_v_t f) {
+        self &except(std::function<void(const std::exception &)> f) {
             m_core->except([f = std::move(f)](std::exception_ptr p) {
                 try {
                     std::rethrow_exception(p);
@@ -140,7 +140,7 @@ namespace uvcxx {
             return *this;
         }
 
-        self &finally(on_finally_t f) {
+        self &finally(std::function<void()> f) {
             m_core->finally(std::move(f));
             return *this;
         }
@@ -210,7 +210,7 @@ namespace uvcxx {
     private:
         std::shared_ptr<promise_core> m_core;
 
-        promise(decltype(m_core) core) : m_core(std::move(core)) {}
+        explicit promise(decltype(m_core) core) : m_core(std::move(core)) {}
 
     private:
         template<typename... K>
@@ -267,7 +267,7 @@ namespace uvcxx {
 
         promise_emitter() : m_core(std::make_shared<promise_core>()) {}
 
-        promise_emitter(nullptr_t) : m_core(nullptr) {}
+        promise_emitter(std::nullptr_t) : m_core(nullptr) {}
 
         explicit promise_emitter(const promise<T...> &p)
                 : m_core(p.m_core) {}
@@ -292,7 +292,7 @@ namespace uvcxx {
         }
 
         [[nodiscard]]
-        promise<T...> promise() const { return {m_core}; }
+        promise<T...> promise() const { return promise_t<T...>{m_core}; }
 
     private:
         std::shared_ptr<promise_core> m_core;
@@ -318,7 +318,23 @@ namespace uvcxx {
         using value_t = std::tuple<V...>;
         using wrapper_t = std::function<value_t(const T &...)>;
 
-        promise_cast(nullptr_t) : m_emitter(nullptr) {}
+        template <typename Tuple>
+        struct first_element;
+
+        template <typename First, typename ...Else>
+        struct first_element<std::tuple<First, Else...>> {
+            using type = First;
+        };
+
+        template <>
+        struct first_element<std::tuple<>> {
+            using type = void;
+        };
+
+        template <typename Tuple>
+        using first_element_t = typename first_element<Tuple>::type;
+
+        promise_cast(std::nullptr_t) : m_emitter(nullptr) {}
 
         promise_cast(const promise<V...> &p, wrapper_t wrapper)
                 : m_emitter(p), m_wrapper(std::move(wrapper)) {}
@@ -332,7 +348,7 @@ namespace uvcxx {
                 !std::is_constructible_v<wrapper_t, FUNC> &&
                 sizeof...(V) == 1 && std::is_convertible_v<
                         decltype(std::declval<FUNC>()(std::declval<const T &>()...)),
-                        typename std::tuple_element_t<0, value_t>>, int> = 0>
+                        first_element_t<value_t>>, int> = 0>
         promise_cast(const promise<V...> &p, FUNC wrapper)
                 : self(p, wrapper_t([wrapper = std::move(wrapper)](const T &...value) -> value_t {
             return std::make_tuple(wrapper(value...));
