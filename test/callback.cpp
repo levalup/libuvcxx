@@ -3,6 +3,8 @@
 // L.eval: Let programmer get rid of only work jobs.
 //
 
+#include <cmath>
+
 #include "uvcxx/cxx/callback.h"
 
 int main() {

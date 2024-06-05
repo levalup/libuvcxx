@@ -8,16 +8,18 @@ Copy `include` to you project.
 
 ## 2. Schedule
 
-### Loop [ing]
+### Loop [OK]
 
-### Req [ing]
-### Handle [ing]
+### Req [OK]
+### Handle [OK]
 
 ### Timer [OK]
 ### Prepare [OK]
 ### Check [OK]
 ### Idle [OK]
 ### Poll [OK]
+### TCP [OK]
+### Signal [ing]
 
 ### Async [OK]
 

@@ -6,17 +6,8 @@
 #ifndef LIBUVCXX_GETNAMEINFO_H
 #define LIBUVCXX_GETNAMEINFO_H
 
-#include <functional>
-#include <utility>
-
-#include <uv.h>
-
 #include "loop.h"
 #include "req.h"
-
-#include "cxx/memory.h"
-#include "cxx/defer.h"
-#include "cxx/promise.h"
 
 namespace uv {
     class getnameinfo_t : public req_extend_t<uv_getnameinfo_t, req_t> {

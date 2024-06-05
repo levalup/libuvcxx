@@ -6,12 +6,10 @@
 #ifndef LIBUVCXX_BUF_H
 #define LIBUVCXX_BUF_H
 
-#include <memory>
 #include <cstdlib>
+#include <memory>
 
 #include <uv.h>
-
-#include "cxx/defer.h"
 
 namespace uv {
     class buf_t {
@@ -45,8 +43,6 @@ namespace uv {
         }
 
         static raw_t *new_buf(size_t size) {
-            using namespace uvcxx;
-
             auto buf = (raw_t *) std::malloc(sizeof(raw_t));
             auto base = (char *) buf + sizeof(raw_t);
 

@@ -6,12 +6,7 @@
 #ifndef LIBUVCXX_ASYNC_H
 #define LIBUVCXX_ASYNC_H
 
-#include <uv.h>
-
-#include "loop.h"
 #include "handle.h"
-
-#include "cxx/callback.h"
 
 namespace uv {
     class async_t : public handle_extend_t<uv_async_t, handle_t> {
@@ -24,11 +19,10 @@ namespace uv {
             using self = data_t;
             using supper = supper::data_t;
 
-            loop_t loop;
             uvcxx::callback_emitter<> send_cb;
 
-            explicit data_t(async_t &handle, loop_t loop)
-                    : supper(handle), loop(std::move(loop)) {
+            explicit data_t(async_t &handle)
+                    : supper(handle) {
                 handle.watch(send_cb);
             }
 
@@ -38,18 +32,21 @@ namespace uv {
             }
         };
 
-        async_t() : self(default_loop()) {}
-
-        explicit async_t(loop_t loop) {
+        async_t() {
             // data will be deleted in close action
-            set_data(new data_t(*this, std::move(loop)));
+            set_data(new data_t(*this));
         }
 
         [[nodiscard]]
         uvcxx::callback<> init() {
+            return init(default_loop());
+        }
+
+        [[nodiscard]]
+        uvcxx::callback<> init(const loop_t &loop) {
             auto data = get_data<data_t>();
 
-            auto err = uv_async_init(data->loop, *this, raw_callback);
+            auto err = uv_async_init(loop, *this, raw_callback);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);;
             return data->send_cb.callback();
         }

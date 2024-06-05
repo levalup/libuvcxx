@@ -6,8 +6,8 @@
 #ifndef LIBUVCXX_EXCEPT_H
 #define LIBUVCXX_EXCEPT_H
 
-#include <stdexcept>
 #include <sstream>
+#include <stdexcept>
 
 #include <uv.h>
 

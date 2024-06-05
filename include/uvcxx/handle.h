@@ -6,16 +6,10 @@
 #ifndef LIBUVCXX_HANDLE_H
 #define LIBUVCXX_HANDLE_H
 
-#include <memory>
-#include <functional>
 #include <cassert>
 
-#include <uv.h>
-
-#include "cxx/defer.h"
-#include "cxx/except.h"
-#include "cxx/promise.h"
 #include "cxx/callback.h"
+#include "cxx/promise.h"
 
 #include "loop.h"
 
@@ -169,9 +163,15 @@ namespace uv {
             return (T *) m_raw->data;
         }
 
+        operator raw_t *() { return m_raw.get(); }
+
         operator raw_t *() const { return m_raw.get(); }
 
-        operator const raw_t *() const { return m_raw.get(); }
+        explicit operator bool() { return bool(m_raw); }
+
+        static self borrow(raw_t *raw) {
+            return self{std::shared_ptr<raw_t>(raw, [](raw_t *) {})};
+        }
 
     protected:
         explicit handle_t(std::shared_ptr<raw_t> raw)
@@ -179,13 +179,13 @@ namespace uv {
 
         raw_t *raw() { return m_raw.get(); }
 
-        const raw_t *raw() const { return m_raw.get(); }
+        raw_t *raw() const { return m_raw.get(); }
 
         template<typename T>
-        T *raw() { return reinterpret_cast<T *>(m_raw.get()); }
+        T *raw() { return (T *) (m_raw.get()); }
 
         template<typename T>
-        const T *raw() const { return reinterpret_cast<T *>(m_raw.get()); }
+        T *raw() const { return (T *) (m_raw.get()); }
 
     private:
         std::shared_ptr<raw_t> m_raw;
@@ -204,52 +204,27 @@ namespace uv {
         template<typename...ARGS>
         void watch(uvcxx::callback<ARGS...> &callback) {
             callback.template except<uvcxx::close_handle>([*this]() mutable {
-                this->close(nullptr);
+                close(nullptr);
             });
         }
 
         template<typename...ARGS>
         void watch(const uvcxx::callback_emitter<ARGS...> &callback) {
             callback.callback().template except<uvcxx::close_handle>([*this]() mutable {
-                this->close(nullptr);
+                close(nullptr);
             });
         }
 
         template<typename C, typename...ARGS>
         void watch(const uvcxx::callback_cast<C, ARGS...> &callback) {
             callback.callback().template except<uvcxx::close_handle>([*this]() mutable {
-                this->close(nullptr);
+                close(nullptr);
             });
         }
     };
 
-    class handle_buffer_t : public handle_t {
+    class handle_fd_t : virtual public handle_t {
     public:
-        using self = handle_buffer_t;
-        using supper = handle_t;
-
-        using supper::supper;
-
-        int send_buffer_size(int *value) {
-            auto err = uv_send_buffer_size(raw(), value);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
-        }
-
-        int recv_buffer_size(int *value) {
-            auto err = uv_recv_buffer_size(raw(), value);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
-        }
-    };
-
-    class handle_fd_t : public handle_t {
-    public:
-        using self = handle_buffer_t;
-        using supper = handle_t;
-
-        using supper::supper;
-
         int fileno(uv_os_fd_t *fd) const {
             auto err = uv_fileno(raw(), fd);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
@@ -269,17 +244,17 @@ namespace uv {
             this->set_data(nullptr);
         }
 
-        operator T *() { return (T *) this->raw(); }
+        operator T *() { return this->template raw<T>(); }
 
-        operator const T *() const { return (const T *) this->raw(); }
+        operator T *() const { return this->template raw<T>(); }
 
     protected:
         explicit handle_extend_t(const std::shared_ptr<T> &raw)
-                : supper(std::reinterpret_pointer_cast<supper::raw_t>(raw)) {}
+                : supper(std::reinterpret_pointer_cast<uv_handle_t>(raw)) {}
 
     private:
-        static std::shared_ptr<typename supper::raw_t> make_shared() {
-            return std::reinterpret_pointer_cast<typename supper::raw_t>(std::make_shared<T>());
+        static std::shared_ptr<uv_handle_t> make_shared() {
+            return std::reinterpret_pointer_cast<uv_handle_t>(std::make_shared<T>());
         }
     };
 }

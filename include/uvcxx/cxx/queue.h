@@ -6,10 +6,11 @@
 #ifndef LIBUVCXX_QUEUE_H
 #define LIBUVCXX_QUEUE_H
 
-#include <memory>
-#include <queue>
-#include <mutex>
+#include <atomic>
 #include <condition_variable>
+#include <memory>
+#include <mutex>
+#include <queue>
 
 namespace uvcxx {
     template<typename... T>

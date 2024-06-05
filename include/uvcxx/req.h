@@ -6,8 +6,6 @@
 #ifndef LIBUVCXX_REQ_H
 #define LIBUVCXX_REQ_H
 
-#include <memory>
-
 #include <uv.h>
 
 #include "cxx/defer.h"
@@ -90,9 +88,21 @@ namespace uv {
             return uv_req_type_name(m_raw->type);
         }
 
+        template<typename T>
+        [[nodiscard]]
+        T *get_data() const {
+            return (T *) m_raw->data;
+        }
+
+        operator raw_t *() { return m_raw.get(); }
+
         operator raw_t *() const { return m_raw.get(); }
 
-        operator const raw_t *() const { return m_raw.get(); }
+        explicit operator bool() { return bool(m_raw); }
+
+        static self borrow(raw_t *raw) {
+            return self{std::shared_ptr<raw_t>(raw, [](raw_t *) {})};
+        }
 
     protected:
         explicit req_t(std::shared_ptr<raw_t> raw)
@@ -100,13 +110,13 @@ namespace uv {
 
         raw_t *raw() { return m_raw.get(); }
 
-        const raw_t *raw() const { return m_raw.get(); }
+        raw_t *raw() const { return m_raw.get(); }
 
         template<typename T>
-        T *raw() { return reinterpret_cast<T *>(m_raw.get()); }
+        T *raw() { return (T *) (m_raw.get()); }
 
         template<typename T>
-        const T *raw() const { return reinterpret_cast<T *>(m_raw.get()); }
+        T *raw() const { return (T *) (m_raw.get()); }
 
     private:
         // store the instance of `req` to avoid resource release caused by no external reference
@@ -125,17 +135,17 @@ namespace uv {
             this->set_data(nullptr);
         }
 
-        operator T *() { return (T *) this->raw(); }
+        operator T *() { return this->template raw<T>(); }
 
-        operator const T *() const { return (const T *) this->raw(); }
+        operator T *() const { return this->template raw<T>(); }
 
     protected:
         explicit req_extend_t(const std::shared_ptr<T> &raw)
-                : supper(std::reinterpret_pointer_cast<supper::raw_t>(raw)) {}
+                : supper(std::reinterpret_pointer_cast<uv_req_t>(raw)) {}
 
     private:
-        static std::shared_ptr<typename supper::raw_t> make_shared() {
-            return std::reinterpret_pointer_cast<typename supper::raw_t>(std::make_shared<T>());
+        static std::shared_ptr<uv_req_t> make_shared() {
+            return std::reinterpret_pointer_cast<uv_req_t>(std::make_shared<T>());
         }
     };
 
@@ -168,7 +178,7 @@ namespace uv {
                 if (err == UV_ECANCELED) return;
                 if (err < 0) throw uvcxx::exception(err);
                 proxy.resolve(req, args...);
-            } catch (const std::exception &) {
+            } catch (...) {
                 proxy.reject(std::current_exception());
             }
         }

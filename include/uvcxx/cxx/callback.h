@@ -7,11 +7,10 @@
 #define LIBUVCXX_CALLBACK_H
 
 #include <functional>
-#include <memory>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <utility>
-#include <future>
 
 #include "queue.h"
 

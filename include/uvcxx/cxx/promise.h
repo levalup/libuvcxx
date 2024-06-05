@@ -7,11 +7,11 @@
 #define LIBUVCXX_PROMISE_H
 
 #include <functional>
-#include <memory>
+#include <future>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <utility>
-#include <future>
 
 namespace uvcxx {
     class promise_core {

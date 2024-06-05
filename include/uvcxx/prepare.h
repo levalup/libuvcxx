@@ -6,12 +6,7 @@
 #ifndef LIBUVCXX_PREPARE_H
 #define LIBUVCXX_PREPARE_H
 
-#include <uv.h>
-
-#include "loop.h"
 #include "handle.h"
-
-#include "cxx/callback.h"
 
 namespace uv {
     class prepare_t : public handle_extend_t<uv_prepare_t, handle_t> {
@@ -40,7 +35,7 @@ namespace uv {
         prepare_t() : self(default_loop()) {}
 
         explicit prepare_t(const loop_t &loop) {
-            uv_prepare_init(loop, *this);
+            (void)uv_prepare_init(loop, *this);
             // data will be deleted in close action
             set_data(new data_t(*this));
         }

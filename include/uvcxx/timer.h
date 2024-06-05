@@ -6,12 +6,7 @@
 #ifndef LIBUVCXX_TIMER_H
 #define LIBUVCXX_TIMER_H
 
-#include <uv.h>
-
-#include "loop.h"
 #include "handle.h"
-
-#include "cxx/callback.h"
 
 namespace uv {
     class timer_t : public handle_extend_t<uv_timer_t, handle_t> {
@@ -40,7 +35,7 @@ namespace uv {
         timer_t() : self(default_loop()) {}
 
         explicit timer_t(const loop_t &loop) {
-            uv_timer_init(loop, *this);
+            (void)uv_timer_init(loop, *this);
             // data will be deleted in close action
             set_data(new data_t(*this));
         }
@@ -78,6 +73,10 @@ namespace uv {
         uint64_t get_due_in() const {
             return uv_timer_get_repeat(*this);
         }
+
+        operator raw_t*() { return raw<raw_t>(); }
+
+        operator raw_t*() const { return raw<raw_t>(); }
 
     private:
         static void raw_callback(raw_t *handle) {

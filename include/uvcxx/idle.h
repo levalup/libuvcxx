@@ -6,12 +6,7 @@
 #ifndef LIBUVCXX_IDLE_H
 #define LIBUVCXX_IDLE_H
 
-#include <uv.h>
-
-#include "loop.h"
 #include "handle.h"
-
-#include "cxx/callback.h"
 
 namespace uv {
     class idle_t : public handle_extend_t<uv_idle_t, handle_t> {
@@ -40,7 +35,7 @@ namespace uv {
         idle_t() : self(default_loop()) {}
 
         explicit idle_t(const loop_t &loop) {
-            uv_idle_init(loop, *this);
+            (void)uv_idle_init(loop, *this);
             // data will be deleted in close action
             set_data(new data_t(*this));
         }

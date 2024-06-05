@@ -6,17 +6,8 @@
 #ifndef LIBUVCXX_GETADDRINFO_H
 #define LIBUVCXX_GETADDRINFO_H
 
-#include <functional>
-#include <utility>
-
-#include <uv.h>
-
 #include "loop.h"
 #include "req.h"
-
-#include "cxx/memory.h"
-#include "cxx/defer.h"
-#include "cxx/promise.h"
 
 namespace uv {
     class getaddrinfo_t : public req_extend_t<uv_getaddrinfo_t, req_t> {

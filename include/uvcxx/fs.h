@@ -6,19 +6,11 @@
 #ifndef LIBUVCXX_FS_H
 #define LIBUVCXX_FS_H
 
-#include <functional>
-#include <utility>
 #include <vector>
 
-#include <uv.h>
-
+#include "buf.h"
 #include "loop.h"
 #include "req.h"
-#include "buf.h"
-
-#include "cxx/memory.h"
-#include "cxx/defer.h"
-#include "cxx/promise.h"
 
 namespace uv {
     class fs_t : public req_extend_t<uv_fs_t, req_t> {

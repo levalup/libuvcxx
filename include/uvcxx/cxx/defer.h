@@ -6,8 +6,8 @@
 #ifndef LIBUVCXX_DEFER_H
 #define LIBUVCXX_DEFER_H
 
-#include <type_traits>
 #include <functional>
+#include <type_traits>
 
 namespace uvcxx {
     class defer {
