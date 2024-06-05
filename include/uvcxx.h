@@ -16,6 +16,7 @@
 #include "uvcxx/idle.h"
 #include "uvcxx/loop.h"
 #include "uvcxx/os.h"
+#include "uvcxx/poll.h"
 #include "uvcxx/prepare.h"
 #include "uvcxx/timer.h"
 

@@ -64,8 +64,9 @@ namespace uv {
         };
     }
 
+    [[nodiscard]]
     inline uvcxx::promise<addrinfo *> getaddrinfo(
-            const loop_t &loop, const getaddrinfo_t& req,
+            const loop_t &loop, const getaddrinfo_t &req,
             const char *node, const char *service, const addrinfo *hints = nullptr) {
         using raw_req_t = inner::getaddrinfo::raw_req_t;
         using callback_t = inner::getaddrinfo::callback_t<addrinfo *>;
@@ -81,17 +82,20 @@ namespace uv {
         return data->promise.promise();
     }
 
+    [[nodiscard]]
     inline uvcxx::promise<addrinfo *> getaddrinfo(
             const char *node, const char *service, const addrinfo *hints = nullptr) {
         return getaddrinfo(default_loop(), {}, node, service, hints);
     }
 
+    [[nodiscard]]
     inline uvcxx::promise<addrinfo *> getaddrinfo(
-            const getaddrinfo_t& req,
+            const getaddrinfo_t &req,
             const char *node, const char *service, const addrinfo *hints = nullptr) {
         return getaddrinfo(default_loop(), req, node, service, hints);
     }
 
+    [[nodiscard]]
     inline uvcxx::promise<addrinfo *> getaddrinfo(
             const loop_t &loop,
             const char *node, const char *service, const addrinfo *hints = nullptr) {

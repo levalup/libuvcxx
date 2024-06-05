@@ -21,7 +21,7 @@ namespace uvcxx {
         template<typename FUNC, typename... Args,
                 typename = typename std::enable_if_t<std::is_invocable_v<FUNC, Args...>>>
         explicit defer(FUNC finalizer, Args &&... args)
-            : m_finalizer(self::bind(finalizer, std::forward<Args>(args)...)) {
+                : m_finalizer(self::bind(finalizer, std::forward<Args>(args)...)) {
         }
 
         ~defer() {
@@ -62,7 +62,7 @@ namespace uvcxx {
         typename std::enable_if_t<!std::is_invocable_r_v<void, FUNC, Args...>, std::function<void()>>
         bind(FUNC func, Args &&... args) {
             return [void_call = std::bind(func, std::forward<Args>(args)...)]() -> void {
-                (void)void_call();
+                (void) void_call();
             };
         }
 

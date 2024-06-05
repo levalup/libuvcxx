@@ -27,9 +27,9 @@ namespace uv {
         using raw_t = uv_loop_t;
 
         loop_t()
-            : self(uvcxx::make_shared<raw_t>(uv_loop_init, uv_loop_close)) {}
+                : self(uvcxx::make_shared<raw_t>(uv_loop_init, uv_loop_close)) {}
 
-        static self init() { return self{ }; }
+        static self init() { return self{}; }
 
         operator raw_t *() { return m_raw.get(); }
 
@@ -52,12 +52,14 @@ namespace uv {
         static self borrow(uv_loop_t *loop) {
             return self{uvcxx::make_borrowed(loop)};
         }
+
     private:
         std::shared_ptr<raw_t> m_raw;
 
         explicit loop_t(decltype(m_raw) raw) : m_raw(std::move(raw)) {}
 
         friend loop_t default_loop();
+
         friend class handle_t;  // for handle_t::loop()
     };
 

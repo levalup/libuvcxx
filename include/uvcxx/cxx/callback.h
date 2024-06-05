@@ -21,11 +21,12 @@ namespace uvcxx {
         using self = callback_core;
 
         using on_call_t = std::function<void(void *)>;
-        using on_except_t = std::function<void(std::exception_ptr)>;
+        // Return whether this exception has been handled
+        using on_except_t = std::function<bool(std::exception_ptr)>;
         using on_finally_t = std::function<void()>;
 
         ~callback_core() {
-            emit_finally();
+            finalize();
         }
 
         void emit(void *p) noexcept {
@@ -38,14 +39,14 @@ namespace uvcxx {
 
         void raise(std::exception_ptr p) noexcept {
             try {
-                if (m_on_except) m_on_except(p);
+                if (m_on_except) (void) m_on_except(p);
                 else default_on_except(p);
-            } catch (const std::exception &e) {
-                default_on_except(e);
+            } catch (...) {
+                default_on_except(p);;
             }
         }
 
-        void emit_finally() noexcept {
+        void finalize() noexcept {
             bool finalized = false;
             if (!m_finalized.compare_exchange_strong(finalized, true)) return;
             try {
@@ -54,18 +55,54 @@ namespace uvcxx {
             }
         }
 
+        self &call(std::nullptr_t) {
+            m_on_call = nullptr;
+            return *this;
+        }
+
         self &call(on_call_t f) {
-            m_on_call = std::move(f);
+            if (!f) return *this;
+            m_on_call =
+                    m_on_call
+                    ? [f = std::move(f), pre = std::move(m_on_call)](void *p) {
+                        pre(p);
+                        f(p);
+                    }
+                    : std::move(f);
+            return *this;
+        }
+
+        self &except(std::nullptr_t) {
+            m_on_except = nullptr;
             return *this;
         }
 
         self &except(on_except_t f) {
-            m_on_except = std::move(f);
+            if (!f) return *this;
+            m_on_except =
+                    m_on_except
+                    ? [f = std::move(f), pre = std::move(m_on_except)](std::exception_ptr p) {
+                        if (pre(p)) return true;
+                        return f(p);
+                    }
+                    : std::move(f);
+            return *this;
+        }
+
+        self &finally(std::nullptr_t) {
+            m_on_finally = nullptr;
             return *this;
         }
 
         self &finally(on_finally_t f) {
-            m_on_finally = std::move(f);
+            if (!f) return *this;
+            m_on_finally =
+                    m_on_finally
+                    ? [f = std::move(f), pre = std::move(m_on_finally)]() {
+                        pre();
+                        f();
+                    }
+                    : std::move(f);
             return *this;
         }
 
@@ -80,6 +117,10 @@ namespace uvcxx {
                 std::rethrow_exception(p);
             } catch (const std::exception &e) {
                 default_on_except(e);
+            } catch (...) {
+                std::ostringstream oss;
+                oss << "[ERROR] throw non - std::exception" << std::endl;
+                std::cerr << oss.str();
             }
         }
 
@@ -105,8 +146,7 @@ namespace uvcxx {
         using type = std::tuple<T...>;
 
         using on_call_t = std::function<void(const T &...)>;
-        using on_except_p_t = std::function<void(std::exception_ptr)>;
-        using on_except_v_t = std::function<void(const std::exception &)>;
+        using on_except_t = std::function<bool(std::exception_ptr)>;
         using on_finally_t = std::function<void()>;
 
         callback() : m_core(std::make_shared<callback_core>()) {}
@@ -114,6 +154,11 @@ namespace uvcxx {
         callback(std::nullptr_t) : m_core(nullptr) {}
 
         explicit operator bool() const { return bool(m_core); }
+
+        self &call(std::nullptr_t) {
+            m_core->call(nullptr);
+            return *this;
+        }
 
         self &call(std::function<void(const T &...)> f) {
             m_core->call([f = std::move(f)](void *p) {
@@ -128,19 +173,39 @@ namespace uvcxx {
             return *this;
         }
 
-        self &except(std::function<void(std::exception_ptr)> f) {
+        self &except(std::function<bool(std::exception_ptr)> f) {
             m_core->except(std::move(f));
             return *this;
         }
 
-        self &except(std::function<void(const std::exception &)> f) {
-            m_core->except([f = std::move(f)](std::exception_ptr p) {
+        template<typename E, typename std::enable_if_t<
+                std::is_base_of_v<std::exception, E>, int> = 0>
+        self &except(std::function<void(const E &)> f) {
+            m_core->except([f = std::move(f)](std::exception_ptr p) -> bool {
                 try {
                     std::rethrow_exception(p);
-                } catch (const std::exception &e) {
+                } catch (const E &e) {
                     f(e);
+                    return true;
+                } catch (...) {
+                    return false;
                 }
             });
+            return *this;
+        }
+
+        self &except(std::function<void(const std::exception &)> f) {
+            return this->except<std::exception>(std::move(f));
+        }
+
+        template<typename E, typename std::enable_if_t<
+                std::is_base_of_v<std::exception, E>, int> = 0>
+        self &except(std::function<void()> f) {
+            return this->except<E>([f = std::move(f)](const E &) { f(); });
+        }
+
+        self &finally(std::nullptr_t) {
+            m_core->finally(nullptr);
             return *this;
         }
 
@@ -182,15 +247,26 @@ namespace uvcxx {
                 decltype(std::declval<FUNC>()(std::declval<std::exception_ptr>())),
                 void>, self> &
         except(FUNC f) {
-            return this->except(on_except_p_t(f));
+            return this->except(on_except_t([f = std::move(f)](std::exception_ptr p) -> bool {
+                f(p);
+                return false;
+            }));
         }
 
-        template<typename FUNC>
+        template<typename E, typename FUNC>
         typename std::enable_if_t<std::is_same_v<
-                decltype(std::declval<FUNC>()(std::declval<const std::exception &>())),
+                decltype(std::declval<FUNC>()(std::declval<const E &>())),
                 void>, self> &
         except(FUNC f) {
-            return this->except(on_except_v_t(f));
+            return this->except<E>(std::function<void(const E &)>(std::move(f)));
+        }
+
+        template<typename E, typename FUNC>
+        typename std::enable_if_t<std::is_same_v<
+                decltype(std::declval<FUNC>()()),
+                void>, self> &
+        except(FUNC f) {
+            return this->except<E>(std::function<void()>(std::move(f)));
         }
 
         template<typename FUNC>
@@ -207,7 +283,7 @@ namespace uvcxx {
                 q.push(v...);
             }).finally([q = q]() mutable {
                 q.close();
-            }).except(nullptr);
+            });
             return q;
         }
 
@@ -250,7 +326,7 @@ namespace uvcxx {
 
         virtual void raise(std::exception_ptr p) noexcept = 0;
 
-        virtual void finally() noexcept = 0;
+        virtual void finalize() noexcept = 0;
 
         void apply(const std::tuple<T...> &v) noexcept {
             std::apply([this](const T &...v) {
@@ -295,8 +371,8 @@ namespace uvcxx {
             m_core->raise(p);
         }
 
-        void finally() noexcept final {
-            m_core->emit_finally();
+        void finalize() noexcept final {
+            m_core->finalize();
         }
 
         [[nodiscard]]
@@ -326,12 +402,12 @@ namespace uvcxx {
         using value_t = std::tuple<V...>;
         using wrapper_t = std::function<value_t(const T &...)>;
 
-        template <typename Tuple>
+        template<typename Tuple>
         struct first_element {
             using type = void;
         };
 
-        template <typename First, typename ...Else>
+        template<typename First, typename ...Else>
         struct first_element<std::tuple<First, Else...>> {
             using type = First;
         };
@@ -392,8 +468,8 @@ namespace uvcxx {
             m_emitter.raise(p);
         }
 
-        void finally() noexcept final {
-            m_emitter.finally();
+        void finalize() noexcept final {
+            m_emitter.finalize();
         }
 
         [[nodiscard]]
@@ -405,7 +481,7 @@ namespace uvcxx {
     };
 
     template<typename... T>
-    class callback_cast<callback<void>, T...> : callback_cast<callback<>, T...> {
+    class callback_cast<callback<void>, T...> : callback_cast<callback < >, T ...> {
     public:
         using self = callback_cast;
         using supper = callback_cast<callback<>, T...>;

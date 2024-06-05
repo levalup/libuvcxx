@@ -63,8 +63,9 @@ namespace uv {
         };
     }
 
+    [[nodiscard]]
     inline uvcxx::promise<const char *, const char *> getnameinfo(
-            const loop_t &loop, const getnameinfo_t& req,
+            const loop_t &loop, const getnameinfo_t &req,
             const sockaddr *addr, int flags) {
         using raw_req_t = inner::getnameinfo::raw_req_t;
         using callback_t = inner::getnameinfo::callback_t<const char *, const char *>;
@@ -80,17 +81,20 @@ namespace uv {
         return data->promise.promise();
     }
 
+    [[nodiscard]]
     inline uvcxx::promise<const char *, const char *> getnameinfo(
             const sockaddr *addr, int flags) {
         return getnameinfo(default_loop(), {}, addr, flags);
     }
 
+    [[nodiscard]]
     inline uvcxx::promise<const char *, const char *> getnameinfo(
             const getnameinfo_t &req,
             const sockaddr *addr, int flags) {
         return getnameinfo(default_loop(), req, addr, flags);
     }
 
+    [[nodiscard]]
     inline uvcxx::promise<const char *, const char *> getnameinfo(
             const loop_t &loop,
             const sockaddr *addr, int flags) {

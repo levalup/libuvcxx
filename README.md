@@ -8,7 +8,7 @@ Copy `include` to you project.
 
 ## 2. Schedule
 
-### Loop [OK]
+### Loop [ing]
 
 ### Req [ing]
 ### Handle [ing]
@@ -17,8 +17,9 @@ Copy `include` to you project.
 ### Prepare [OK]
 ### Check [OK]
 ### Idle [OK]
+### Poll [OK]
 
-### Async [ing]
+### Async [OK]
 
 TODO:
 ```

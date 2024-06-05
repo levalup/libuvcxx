@@ -31,7 +31,7 @@ namespace uv {
         class data_t {
         public:
             explicit data_t(const req_t &req)
-                : m_req(req.m_raw) {
+                    : m_req(req.m_raw) {
                 m_req->data = this;
             }
 
@@ -45,11 +45,11 @@ namespace uv {
             const raw_t *req() const { return m_req.get(); }
 
             template<typename T>
-            T *req() { return (T*)m_req.get(); }
+            T *req() { return (T *) m_req.get(); }
 
             template<typename T>
             [[nodiscard]]
-            const T *req() const { return (const T*)m_req.get(); }
+            const T *req() const { return (const T *) m_req.get(); }
 
         private:
             // store the instance of `req` to avoid resource release caused by no external reference
@@ -160,7 +160,7 @@ namespace uv {
             uvcxx::defer finalize_data([&]() { data->finalize(req, args...); });
 
             auto &proxy = data->proxy();
-            uvcxx::defer promise_finally([&]() { proxy.finally(); });
+            uvcxx::defer promise_finally([&]() { proxy.finalize(); });
 
             try {
                 auto err = data->check(req, args...);

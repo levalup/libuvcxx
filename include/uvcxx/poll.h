@@ -27,16 +27,18 @@ namespace uv {
             loop_t loop;
             uvcxx::callback_emitter<int, int> start_cb;
 
-            explicit data_t(const poll_t &poll, loop_t loop)
-                : supper(poll), loop(std::move(loop)) {}
+            explicit data_t(poll_t &handle, loop_t loop)
+                    : supper(handle), loop(std::move(loop)) {
+                handle.watch(start_cb);
+            }
 
             void close() noexcept final {
                 // finally at close, make queue safe
-                start_cb.finally();
+                start_cb.finalize();
             }
         };
 
-         poll_t() : self(default_loop()) {}
+        poll_t() : self(default_loop()) {}
 
         explicit poll_t(loop_t loop) {
             // data will be deleted in close action
@@ -44,10 +46,10 @@ namespace uv {
         }
 
         self &init(int fd) {
-             auto data = get_data<data_t>();
-             uv_poll_init(data->loop, *this, fd);
-             return *this;
-         }
+            auto data = get_data<data_t>();
+            uv_poll_init(data->loop, *this, fd);
+            return *this;
+        }
 
         self &init_socket(uv_os_sock_t socket) {
             auto data = get_data<data_t>();
@@ -55,10 +57,11 @@ namespace uv {
             return *this;
         }
 
+        [[nodiscard]]
         uvcxx::callback<int, int> start(int events) {
             auto err = uv_poll_start(*this, events, raw_callback);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
-            auto data = (data_t *)(get_data());
+            auto data = (data_t *) (get_data());
             return data->start_cb.callback();
         }
 
@@ -68,7 +71,7 @@ namespace uv {
 
     private:
         static void raw_callback(raw_t *handle, int status, int events) {
-            auto data = (data_t *)(handle->data);
+            auto data = (data_t *) (handle->data);
             data->start_cb.emit(status, events);
         }
     };

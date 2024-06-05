@@ -15,8 +15,19 @@
 #include "cxx/defer.h"
 #include "cxx/except.h"
 #include "cxx/promise.h"
+#include "cxx/callback.h"
 
 #include "loop.h"
+
+namespace uvcxx {
+    class close_handle : public std::logic_error {
+    public:
+        using self = close_handle;
+        using supper = std::logic_error;
+
+        close_handle() : supper("close handle") {}
+    };
+}
 
 namespace uv {
     /**
@@ -58,11 +69,11 @@ namespace uv {
             const raw_t *handle() const { return m_handle.get(); }
 
             template<typename T>
-            T *handle() { return (T*)m_handle.get(); }
+            T *handle() { return (T *) m_handle.get(); }
 
             template<typename T>
             [[nodiscard]]
-            const T *handle() const { return (const T*)m_handle.get(); }
+            const T *handle() const { return (const T *) m_handle.get(); }
 
         private:
             // store the instance of `handle` to avoid resource release caused by no external reference
@@ -155,7 +166,7 @@ namespace uv {
         template<typename T>
         [[nodiscard]]
         T *get_data() const {
-            return (T*)m_raw->data;
+            return (T *) m_raw->data;
         }
 
         operator raw_t *() const { return m_raw.get(); }
@@ -187,6 +198,28 @@ namespace uv {
             uvcxx::defer close_data([&]() { data->close(); });
 
             if (data->close_cb) data->close_cb.resolve();
+        }
+
+    protected:
+        template<typename...ARGS>
+        void watch(uvcxx::callback<ARGS...> &callback) {
+            callback.template except<uvcxx::close_handle>([*this]() mutable {
+                this->close(nullptr);
+            });
+        }
+
+        template<typename...ARGS>
+        void watch(const uvcxx::callback_emitter<ARGS...> &callback) {
+            callback.callback().template except<uvcxx::close_handle>([*this]() mutable {
+                this->close(nullptr);
+            });
+        }
+
+        template<typename C, typename...ARGS>
+        void watch(const uvcxx::callback_cast<C, ARGS...> &callback) {
+            callback.callback().template except<uvcxx::close_handle>([*this]() mutable {
+                this->close(nullptr);
+            });
         }
     };
 

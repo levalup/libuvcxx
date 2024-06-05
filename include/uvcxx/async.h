@@ -27,13 +27,14 @@ namespace uv {
             loop_t loop;
             uvcxx::callback_emitter<> send_cb;
 
-            explicit data_t(const async_t &async, loop_t loop)
-                : supper(async), loop(std::move(loop)) {
+            explicit data_t(async_t &handle, loop_t loop)
+                    : supper(handle), loop(std::move(loop)) {
+                handle.watch(send_cb);
             }
 
             void close() noexcept final {
                 // finally at close, make queue safe
-                send_cb.finally();
+                send_cb.finalize();
             }
         };
 
@@ -44,6 +45,7 @@ namespace uv {
             set_data(new data_t(*this, std::move(loop)));
         }
 
+        [[nodiscard]]
         uvcxx::callback<> init() {
             auto data = get_data<data_t>();
 
@@ -60,7 +62,7 @@ namespace uv {
 
     private:
         static void raw_callback(raw_t *handle) {
-            auto data = (data_t *)(handle->data);
+            auto data = (data_t *) (handle->data);
             data->send_cb.emit();
         }
     };
