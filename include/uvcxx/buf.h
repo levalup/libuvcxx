@@ -12,14 +12,121 @@
 #include <uv.h>
 
 namespace uv {
+    namespace inner {
+        /**
+         * This class is not thread safe
+         */
+        class buf_t : public uv_buf_t {
+        public:
+            using self = buf_t;
+            using supper = uv_buf_t;
+
+            using raw_t = uv_buf_t;
+
+            using base_t = decltype(base);
+            using len_t = decltype(len);
+
+            len_t capacity = 0;
+
+            buf_t(const buf_t &) = delete;
+
+            buf_t &operator=(const buf_t &) = delete;
+
+            buf_t() : supper({}) {
+                this->base = nullptr;
+                this->len = 0;
+            }
+
+            template<class Len, typename = typename std::enable_if_t<std::is_integral_v<Len>>>
+            explicit buf_t(Len size) : self() {
+                auto len = len_t(size);
+                this->base = (base_t) std::malloc(size_t(len));
+                this->len = len;
+                this->capacity = len;
+            }
+
+            ~buf_t() {
+                std::free(this->base);
+            }
+
+            explicit operator bool() const { return this->base; }
+
+            void free() {
+                if (this->base) std::free(this->base);
+                this->base = nullptr;
+                this->len = 0;
+                this->capacity = 0;
+            }
+
+            template<class Len, typename = typename std::enable_if_t<std::is_integral_v<Len>>>
+            void malloc(Len size) {
+                this->realloc(size);
+            }
+
+            template<class Len, typename = typename std::enable_if_t<std::is_integral_v<Len>>>
+            void realloc(Len size) {
+                this->reserve(size);
+                this->len = len_t(size);
+            }
+
+            template<class Len, typename = typename std::enable_if_t<std::is_integral_v<Len>>>
+            void reserve(Len size) {
+                auto len = len_t(size);
+                if (len > this->capacity) {
+                    if (this->base) {
+                        this->base = (base_t) std::realloc(this->base, size_t(len));
+                    } else {
+                        this->base = (base_t) std::malloc(size_t(len));
+                    }
+                    this->capacity = len;
+                }
+            }
+
+            operator raw_t *() { return this; }
+
+            operator raw_t *() const { return (raw_t *) this; }
+        };
+    }
+
+    /**
+     * This type is a reference type, and all copied objects use the same buffer,
+     *     which is not thread-safe.
+     */
     class buf_t {
     public:
         using self = buf_t;
 
         using raw_t = uv_buf_t;
 
-        explicit buf_t(size_t size)
-                : m_raw(make_buf(size)) {}
+        buf_t(std::nullptr_t) {}
+
+        buf_t() : m_raw(std::make_shared<inner::buf_t>()) {}
+
+        template<class Size, typename = typename std::enable_if_t<std::is_integral_v<Size>>>
+        explicit buf_t(Size size)
+                : m_raw(std::make_shared<inner::buf_t>(size)) {}
+
+        explicit operator bool() const { return m_raw && m_raw->operator bool(); }
+
+        void free() { m_raw->free(); }
+
+        template<class Size, typename = typename std::enable_if_t<std::is_integral_v<Size>>>
+        void malloc(size_t size) { m_raw->malloc(size); }
+
+        void realloc(size_t size) { m_raw->realloc(size); }
+
+        void reserve(size_t size) { m_raw->reserve(size); }
+
+        char *base() { return m_raw->base; }
+
+        [[nodiscard]]
+        const char *base() const { return m_raw->base; }
+
+        [[nodiscard]]
+        size_t len() const { return size_t(m_raw->len); }
+
+        [[nodiscard]]
+        size_t capacity() const { return size_t(m_raw->len); }
 
         char *data() { return m_raw->base; }
 
@@ -27,31 +134,16 @@ namespace uv {
         const char *data() const { return m_raw->base; }
 
         [[nodiscard]]
-        size_t len() const { return size_t(m_raw->len); }
+        size_t size() const { return size_t(m_raw->len); }
+
+        void resize(size_t size) { m_raw->realloc(size); }
+
+        operator raw_t *() { return m_raw.get(); }
 
         operator raw_t *() const { return m_raw.get(); }
 
     private:
-        std::shared_ptr<raw_t> m_raw;
-
-        static std::shared_ptr<raw_t> make_buf(size_t size) {
-            return {new_buf(size), delete_buf};
-        }
-
-        static void delete_buf(raw_t *buf) {
-            std::free(buf);
-        }
-
-        static raw_t *new_buf(size_t size) {
-            auto buf = (raw_t *) std::malloc(sizeof(raw_t));
-            auto base = (char *) buf + sizeof(raw_t);
-
-            // *buf = uv_buf_init(base, size);
-            buf->base = base;
-            buf->len = decltype(buf->len)(size);
-
-            return buf;
-        }
+        std::shared_ptr<inner::buf_t> m_raw;
     };
 }
 
