@@ -10,10 +10,10 @@
 #include "stream.h"
 
 namespace uv {
-    class tcp_t : public handle_extend_t<uv_tcp_t, stream_t> {
+    class tcp_t : public handle_extend_t<uv_tcp_t, acceptable_stream_t> {
     public:
         using self = tcp_t;
-        using supper = handle_extend_t<uv_tcp_t, stream_t>;
+        using supper = handle_extend_t<uv_tcp_t, acceptable_stream_t>;
 
         using raw_t = uv_tcp_t;
 
@@ -32,7 +32,18 @@ namespace uv {
             set_data(new data_t(*this));
         }
 
-        std::shared_ptr<stream_t> accept() override {
+        stream_t accept() override {
+            self client (this->loop());
+            uvcxx::defer close_client([&]() { client.close(nullptr); });
+
+            auto err = uv_accept(*this, client);
+            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
+
+            close_client.release();
+            return client;
+        }
+
+        std::shared_ptr<acceptable_stream_t> accept_v2() override {
             auto client = std::make_shared<self>(this->loop());
             uvcxx::defer close_client([&]() { client->close(nullptr); });
 

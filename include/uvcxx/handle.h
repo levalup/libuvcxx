@@ -55,7 +55,7 @@ namespace uv {
                 m_handle->data = nullptr;
             };
 
-            virtual void close() noexcept = 0;
+            virtual void close() noexcept {};
 
             raw_t *handle() { return m_handle.get(); }
 
@@ -76,12 +76,12 @@ namespace uv {
 
         [[nodiscard]]
         bool is_active() const {
-            return uv_is_active(m_raw.get());
+            return uv_is_active(*this);
         }
 
         [[nodiscard]]
         bool is_closing() const {
-            return uv_is_closing(m_raw.get());
+            return uv_is_closing(*this);
         }
 
         void close(std::nullptr_t) {
@@ -93,7 +93,7 @@ namespace uv {
             bool closed = false;
             if (!data->closed.compare_exchange_strong(closed, true)) return;
 
-            uv_close(m_raw.get(), raw_close_callback);
+            uv_close(*this, raw_close_callback);
         }
 
         [[nodiscard("use close(nullptr) instead")]]
@@ -107,21 +107,21 @@ namespace uv {
             if (!data->closed.compare_exchange_strong(closed, true)) return {};
 
             data->close_cb = decltype(data->close_cb)();
-            uv_close(m_raw.get(), raw_close_callback);
+            uv_close(*this, raw_close_callback);
 
             return data->close_cb.promise();
         }
 
         void ref() {
-            uv_ref(m_raw.get());
+            uv_ref(*this);
         }
 
         void unref() {
-            uv_unref(m_raw.get());
+            uv_unref(*this);
         }
 
         bool has_ref() {
-            return uv_has_ref(m_raw.get());
+            return uv_has_ref(*this);
         }
 
         [[nodiscard]]
@@ -131,12 +131,12 @@ namespace uv {
 
         [[nodiscard]]
         loop_t loop() const {
-            return loop_t::borrow(uv_handle_get_loop(m_raw.get()));
+            return loop_t::borrow(uv_handle_get_loop(*this));
         }
 
         [[nodiscard]]
         void *get_data() const {
-            return uv_handle_get_data(m_raw.get());
+            return uv_handle_get_data(*this);
         }
 
         /**
@@ -144,12 +144,12 @@ namespace uv {
          * @param data
          */
         void set_data(void *data) {
-            uv_handle_set_data(m_raw.get(), data);
+            uv_handle_set_data(*this, data);
         }
 
         [[nodiscard]]
         uv_handle_type get_type() const {
-            return uv_handle_get_type(m_raw.get());
+            return uv_handle_get_type(*this);
         }
 
         [[nodiscard]]
@@ -257,6 +257,140 @@ namespace uv {
             return std::reinterpret_pointer_cast<uv_handle_t>(std::make_shared<T>());
         }
     };
+}
+
+namespace uvcxx {
+    /**
+     * Keep the reference of the `handle` and close it when there are no references to it.
+     * No relationship to `uv_ref` and `uv_unref`
+     * Usage:
+     * ```
+     * {
+     *     uvcxx::ref idle = uv::idle_t();
+     *     // After going out of scope, `idle` will automatically call close.
+     * }
+     * ```
+     * The `ref` can be copied, and when it is no longer referenced, `close` will be called.
+     * @tparam Handle
+     */
+    template<typename Handle, typename Enable = void>
+    class ref;
+
+    template<typename Handle>
+    class ref<Handle, typename std::enable_if_t<
+            std::is_copy_constructible_v<Handle> &&
+            std::is_base_of_v<uv::handle_t, Handle>>> {
+    public:
+        using self = ref;
+
+        /**
+         * Create an object without an actual referenced instance.
+         * You can use bool(ref) to determine if the reference is actually held.
+         */
+        ref(std::nullptr_t) {}
+
+        /**
+         * Create an object with a referenced instance handle.
+         * @param handle
+         */
+        ref(Handle handle) : m_handle(make_shared(std::move(handle))) {}
+
+        /**
+         * Create an object with a referenced instance handle.
+         * @param handle
+         */
+        ref(const std::shared_ptr<Handle> &handle) : m_handle(make_shared(*handle)) {}
+
+        /**
+         * Remove the data associated with the current reference.
+         * If the reference is cleared, close will be automatically called.
+         * After this function is called, the object can no longer be operated on.
+         * Generally, there is no need to explicitly perform this operation.
+         * You can use bool(ref) to determine if the reference is actually held.
+         */
+        void unref() {
+            m_handle.reset();
+        }
+
+        explicit operator bool() const { return m_handle; }
+
+        Handle &operator*() { return *m_handle; }
+
+        const Handle &operator*() const { return *m_handle; }
+
+        Handle *operator->() { return m_handle.get(); }
+
+        const Handle *operator->() const { return m_handle.get(); }
+
+    private:
+        std::shared_ptr<Handle> m_handle;
+
+        static std::shared_ptr<Handle> make_shared(Handle handle) {
+            return std::shared_ptr<Handle>(new Handle(std::move(handle)), [](Handle *handle) {
+                handle->close(nullptr);
+                delete handle;
+            });
+        }
+    };
+
+    template<typename Handle>
+    class ref<Handle, typename std::enable_if_t<
+            !std::is_copy_constructible_v<Handle> &&
+            std::is_base_of_v<uv::handle_t, Handle>>> {
+    public:
+        using self = ref;
+
+        using PHandle = std::shared_ptr<Handle>;
+
+        /**
+         * Create an object without an actual referenced instance.
+         * You can use bool(ref) to determine if the reference is actually held.
+         */
+        ref(std::nullptr_t) {}
+
+        /**
+         * Create an object with a referenced instance handle.
+         * @param handle
+         */
+        ref(const std::shared_ptr<Handle> &handle) : m_handle(make_shared(handle)) {}
+
+        /**
+         * Remove the data associated with the current reference.
+         * If the reference is cleared, close will be automatically called.
+         * After this function is called, the object can no longer be operated on.
+         * Generally, there is no need to explicitly perform this operation.
+         * You can use bool(ref) to determine if the reference is actually held.
+         */
+        void unref() {
+            m_handle.reset();
+        }
+
+        explicit operator bool() const { return m_handle; }
+
+        Handle &operator*() { return **m_handle; }
+
+        const Handle &operator*() const { return **m_handle; }
+
+        Handle *operator->() { return (*m_handle).get(); }
+
+        const Handle *operator->() const { return (*m_handle).get(); }
+
+    private:
+        std::shared_ptr<PHandle> m_handle;
+
+        static std::shared_ptr<PHandle> make_shared(PHandle handle) {
+            return std::shared_ptr<PHandle>(new PHandle(std::move(handle)), [](PHandle *handle) {
+                (*handle)->close(nullptr);
+                delete handle;
+            });
+        }
+    };
+
+    template<typename Handle>
+    ref(Handle handle) -> ref<Handle>;
+
+    template<typename Handle>
+    ref(const std::shared_ptr<Handle> &handle) -> ref<Handle>;
 }
 
 #endif //LIBUVCXX_HANDLE_H

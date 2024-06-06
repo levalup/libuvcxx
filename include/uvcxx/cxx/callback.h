@@ -327,6 +327,15 @@ namespace uvcxx {
 
         virtual void finalize() noexcept = 0;
 
+        template<typename E, typename... ARGS,
+                typename = typename std::enable_if_t<
+                        std::is_base_of_v<std::exception, E> && std::is_constructible_v<E, ARGS...>
+                >>
+        void raise(ARGS &&...args) noexcept {
+            try { throw E(std::forward<ARGS>(args)...); }
+            catch (...) { this->raise(std::current_exception()); }
+        }
+
         void apply(const std::tuple<T...> &v) noexcept {
             std::apply([this](const T &...v) {
                 this->emit(v...);
@@ -361,6 +370,8 @@ namespace uvcxx {
             std::tuple<T...> pack = std::make_tuple(v...);
             m_core->emit(&pack);
         }
+
+        using supper::raise;
 
         void raise() noexcept {
             this->raise(std::current_exception());
@@ -458,6 +469,8 @@ namespace uvcxx {
                 return;
             }
         }
+
+        using supper::raise;
 
         void raise() noexcept {
             this->raise(std::current_exception());

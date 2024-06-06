@@ -11,8 +11,8 @@ int main() {
         (void)uv::fs::close(fd);
         // throw uvcxx::exception(UV_EAGAIN);
         throw std::logic_error("throw logic after close");
-    }).except<uvcxx::exception>([](const uvcxx::exception &e) {
-        std::cerr << "errcode = " << e.errcode() << std::endl;
+    }).except<uvcxx::errcode>([](const uvcxx::errcode &e) {
+        std::cerr << "errcode = " << e.code() << std::endl;
     }).except<std::exception>([](const std::exception &e) {
         std::cerr << e.what() << std::endl;
     });

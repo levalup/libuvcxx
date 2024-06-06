@@ -25,25 +25,21 @@ namespace uv {
             using supper = supper::data_t;
 
             uvcxx::callback_emitter<> listen_cb;    //< already check status
-            uvcxx::callback_emitter<std::shared_ptr<stream_t>> accept_cb;
             uvcxx::callback_emitter<ssize_t, const uv_buf_t*> read_cb;
             uvcxx::callback_emitter<size_t, uv_buf_t*> alloc_cb;
 
             explicit data_t(stream_t &handle)
                     : supper(handle) {
                 handle.watch(listen_cb);
-                handle.watch(accept_cb);
                 handle.watch(read_cb);
                 handle.watch(alloc_cb);
             }
 
             void close() noexcept override {
-                // finally at close, make queue safe
                 alloc_cb.finalize();
                 read_cb.finalize();
-                accept_cb.finalize();
                 listen_cb.finalize();
-                // supper::close(); //< supper is pure virtual function
+                supper::close();
             }
         };
 
@@ -67,21 +63,10 @@ namespace uv {
         }
 
         [[nodiscard]]
-        uvcxx::callback<std::shared_ptr<stream_t>> listen_accept(int backlog) {
-            this->listen(backlog).call([this]() {
-                auto data = this->get_data<data_t>();
-                data->accept_cb.emit(this->accept());
-            });
-            auto data = this->get_data<data_t>();
-            return data->accept_cb.callback();
-        }
-
-        virtual std::shared_ptr<stream_t> accept() = 0;
-
-        [[nodiscard]]
         uvcxx::callback<size_t, uv_buf_t*> alloc() {
             auto data = get_data<data_t>();
-            return data->alloc_cb.callback();
+            // memory alloc can not register multi-times callback
+            return data->alloc_cb.callback().call(nullptr);
         }
 
         [[nodiscard]]
@@ -171,12 +156,66 @@ namespace uv {
         }
 
         static void raw_listen_callback(raw_t *handle, int status) {
-            if (status < 0) {
-                throw uvcxx::exception(status);
-            }
             auto data = (data_t *) (handle->data);
-            data->listen_cb.emit();
+            if (status < 0) {
+                data->listen_cb.raise<uvcxx::errcode>(status);
+            } else {
+                data->listen_cb.emit();
+            }
         }
+    };
+
+    class acceptable_stream_t : public stream_t {
+    public:
+        using self = stream_t;
+        using supper = stream_t;
+
+        using supper::supper;
+
+        class data_t : supper::data_t {
+        public:
+            using self = data_t;
+            using supper = stream_t::data_t;
+
+            uvcxx::callback_emitter<stream_t> accept_cb;
+            uvcxx::callback_emitter<std::shared_ptr<acceptable_stream_t>> accept_v2_cb;
+
+            explicit data_t(acceptable_stream_t &handle)
+                    : supper(handle) {
+                handle.watch(accept_cb);
+                handle.watch(accept_v2_cb);
+            }
+
+            void close() noexcept override {
+                accept_v2_cb.finalize();
+                accept_cb.finalize();
+                supper::close();
+            }
+        };
+
+        [[nodiscard]]
+        uvcxx::callback<stream_t> listen_accept(int backlog) {
+            this->listen(backlog).call(nullptr).call([this]() {
+                auto data = this->get_data<data_t>();
+                data->accept_cb.emit(this->accept());
+            });
+            auto data = this->get_data<data_t>();
+            return data->accept_cb.callback();
+        }
+
+        virtual stream_t accept() = 0;
+
+        [[nodiscard]]
+        uvcxx::callback<std::shared_ptr<acceptable_stream_t>> listen_accept_v2(int backlog) {
+            this->listen(backlog).call(nullptr).call([this]() {
+                auto data = this->get_data<data_t>();
+                data->accept_v2_cb.emit(this->accept_v2());
+            });
+            auto data = this->get_data<data_t>();
+            return data->accept_v2_cb.callback();
+        }
+
+        virtual std::shared_ptr<acceptable_stream_t> accept_v2() = 0;
     };
 }
 

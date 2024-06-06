@@ -41,7 +41,9 @@ namespace uv {
         self &init(const loop_t &loop, int fd) {
             auto data = get_data<data_t>();
             auto err = uv_poll_init(loop, *this, fd);
-            if (err < 0) throw uvcxx::exception(err);
+            // To directly start after init, there is no path to return the error code instead.
+            // So an exception is directly thrown. This feature may be modified in the future.
+            if (err < 0) throw uvcxx::errcode(err);
             data->initialized = true;
             return *this;
         }
@@ -49,7 +51,9 @@ namespace uv {
         self &init_socket(const loop_t &loop, uv_os_sock_t socket) {
             auto data = get_data<data_t>();
             auto err = uv_poll_init_socket(loop, *this, socket);
-            if (err < 0) throw uvcxx::exception(err);
+            // To directly start after init, there is no path to return the error code instead.
+            // So an exception is directly thrown. This feature may be modified in the future.
+            if (err < 0) throw uvcxx::errcode(err);
             data->initialized = true;
             return *this;
         }

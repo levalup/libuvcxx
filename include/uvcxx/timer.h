@@ -19,10 +19,10 @@ namespace uv {
             using self = data_t;
             using supper = supper::data_t;
 
-            uvcxx::callback_cast<uvcxx::callback<timer_t *>> start_cb;
+            uvcxx::callback_emitter<> start_cb;
 
             explicit data_t(timer_t &handle)
-                    : supper(handle), start_cb([handle = handle]() mutable { return &handle; }) {
+                    : supper(handle) {
                 handle.watch(start_cb);
             }
 
@@ -41,7 +41,7 @@ namespace uv {
         }
 
         [[nodiscard]]
-        uvcxx::callback<timer_t *> start(uint64_t timeout, uint64_t repeat) {
+        uvcxx::callback<> start(uint64_t timeout, uint64_t repeat) {
             auto err = uv_timer_start(*this, raw_callback, timeout, repeat);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
             auto data = get_data<data_t>();

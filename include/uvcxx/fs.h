@@ -19,7 +19,7 @@ namespace uv {
         using supper = req_extend_t<uv_fs_t, req_t>;
 
         [[nodiscard]]
-        uv_fs_type get_type() const {
+        uv_fs_type get_fs_type() const {
             return uv_fs_get_type(*this);
         }
 

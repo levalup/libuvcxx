@@ -55,7 +55,7 @@ namespace uv {
         };
 
         int cancel() {
-            auto err = uv_cancel(m_raw.get());
+            auto err = uv_cancel(*this);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
             return err;
         }
@@ -67,7 +67,7 @@ namespace uv {
 
         [[nodiscard]]
         void *get_data() const {
-            return uv_req_get_data(m_raw.get());
+            return uv_req_get_data(*this);
         }
 
         /**
@@ -75,12 +75,12 @@ namespace uv {
          * @param data
          */
         void set_data(void *data) {
-            uv_req_set_data(m_raw.get(), data);
+            uv_req_set_data(*this, data);
         }
 
         [[nodiscard]]
         uv_req_type get_type() const {
-            return uv_req_get_type(m_raw.get());
+            return uv_req_get_type(*this);
         }
 
         [[nodiscard]]
@@ -176,8 +176,11 @@ namespace uv {
                 auto err = data->check(req, args...);
                 // cancel request will not do anything
                 if (err == UV_ECANCELED) return;
-                if (err < 0) throw uvcxx::exception(err);
-                proxy.resolve(req, args...);
+                if (err < 0) {
+                    proxy.template reject<uvcxx::errcode>(err);
+                } else {
+                    proxy.resolve(req, args...);
+                }
             } catch (...) {
                 proxy.reject(std::current_exception());
             }
