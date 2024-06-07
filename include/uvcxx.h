@@ -22,6 +22,7 @@
 #include "uvcxx/timer.h"
 #include "uvcxx/req.h"
 #include "uvcxx/shutdown.h"
+#include "uvcxx/signal.h"
 #include "uvcxx/stream.h"
 #include "uvcxx/tcp.h"
 #include "uvcxx/timer.h"

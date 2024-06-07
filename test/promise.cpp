@@ -3,6 +3,8 @@
 // L.eval: Let programmer get rid of only work jobs.
 //
 
+#include <cmath>
+
 #include "uvcxx/cxx/promise.h"
 
 int main() {
@@ -13,7 +15,7 @@ int main() {
         std::cout << "got " << i << " " << j << std::endl;
         throw std::logic_error("i");
     });
-    promise<void> v;
+    promise<> v;
     v.then([]() {}).except([](const std::exception &e) {}).finally([](){});
 
     {

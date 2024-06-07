@@ -33,7 +33,8 @@ int main() {
 ### Idle [OK]
 ### Poll [OK]
 ### TCP [OK]
-### Signal [ing]
+### Signal [OK]
+### Process [ing]
 
 ### Async [OK]
 
@@ -41,6 +42,23 @@ int main() {
 
 > Note: `readdir`, `scandir` require additional encapsulation to achieve C++style.
 >     So the interfaces are not currently supported and will be introduced in the future.
+
+## Exception
+
+`libuvcxx` uses exception to handle exceptions.
+
+Most interfaces that don't often encounter errors will throw an `uvcxx::errcode` exception upon failure.
+This type of exception is thrown to facilitate the flexible use of interfaces in `promise` or `callback` contexts.
+
+Certain interfaces that frequently encounter errors will not throw exceptions.
+In such cases, the success of the interface call should be judged by the return value, for example, uv::process_t::spawn.
+
+If you're not sure whether an interface will throw an exception, please directly refer to the implementation code of the corresponding interface.
+After all, we are an open-source, header-only library.
+
+You can use the macro definition `UVCXX_NO_EXCEPTION` before `#include <uvcxx.h>` to prevent interfaces from throwing exceptions.
+However, in the current version, exceptions are still used to handle some transactions.
+Future versions may consider finding suitable ways to completely eliminate the use of exceptions.
 
 ## Adjusted API
 

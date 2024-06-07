@@ -35,7 +35,7 @@ namespace uv {
         idle_t() : self(default_loop()) {}
 
         explicit idle_t(const loop_t &loop) {
-            (void)uv_idle_init(loop, *this);
+            (void) uv_idle_init(loop, *this);
             // data will be deleted in close action
             set_data(new data_t(*this));
         }

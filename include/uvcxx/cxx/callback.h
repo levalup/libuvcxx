@@ -301,15 +301,6 @@ namespace uvcxx {
         class callback_proxy;
     };
 
-    template<>
-    class callback<void> : public callback<> {
-    public:
-        using self = callback;
-        using supper = callback<>;
-
-        using supper::supper;
-    };
-
     template<typename...T>
     using callback_t = callback<T...>;
 
@@ -345,10 +336,6 @@ namespace uvcxx {
         void operator()(const T &...v) {
             this->emit(v...);
         }
-    };
-
-    template<>
-    class callback_proxy<void> : public callback_proxy<> {
     };
 
     template<typename... T>
@@ -390,14 +377,6 @@ namespace uvcxx {
 
     private:
         std::shared_ptr<callback_core> m_core;
-    };
-
-    template<>
-    class callback_emitter<void> : public callback_emitter<> {
-        using self = callback_emitter;
-        using supper = callback_emitter<>;
-
-        using supper::supper;
     };
 
     template<typename V, typename... T>
@@ -490,15 +469,6 @@ namespace uvcxx {
     private:
         callback_emitter<V...> m_emitter;
         wrapper_t m_wrapper;
-    };
-
-    template<typename... T>
-    class callback_cast<callback<void>, T...> : callback_cast<callback < >, T ...> {
-    public:
-        using self = callback_cast;
-        using supper = callback_cast<callback<>, T...>;
-
-        using supper::supper;
     };
 }
 

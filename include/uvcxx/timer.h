@@ -35,7 +35,7 @@ namespace uv {
         timer_t() : self(default_loop()) {}
 
         explicit timer_t(const loop_t &loop) {
-            (void)uv_timer_init(loop, *this);
+            (void) uv_timer_init(loop, *this);
             // data will be deleted in close action
             set_data(new data_t(*this));
         }
@@ -74,9 +74,9 @@ namespace uv {
             return uv_timer_get_repeat(*this);
         }
 
-        operator raw_t*() { return raw<raw_t>(); }
+        operator raw_t *() { return raw<raw_t>(); }
 
-        operator raw_t*() const { return raw<raw_t>(); }
+        operator raw_t *() const { return raw<raw_t>(); }
 
     private:
         static void raw_callback(raw_t *handle) {

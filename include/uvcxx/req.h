@@ -54,6 +54,16 @@ namespace uv {
             std::shared_ptr<raw_t> m_req;
         };
 
+        [[nodiscard]]
+        void *data() const {
+            return raw<raw_t>()->data;
+        }
+
+        [[nodiscard]]
+        uv_req_type type() const {
+            return raw<raw_t>()->type;
+        }
+
         int cancel() {
             auto err = uv_cancel(*this);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
@@ -86,6 +96,12 @@ namespace uv {
         [[nodiscard]]
         const char *type_name() const {
             return uv_req_type_name(m_raw->type);
+        }
+
+        template<typename T>
+        [[nodiscard]]
+        T *data() const {
+            return (T *) m_raw->data;
         }
 
         template<typename T>

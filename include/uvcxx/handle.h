@@ -75,6 +75,21 @@ namespace uv {
         };
 
         [[nodiscard]]
+        loop_t loop() const {
+            return loop_t::borrow(raw<raw_t>()->loop);
+        }
+
+        [[nodiscard]]
+        uv_handle_type type() const {
+            return raw<raw_t>()->type;
+        }
+
+        [[nodiscard]]
+        void *data() const {
+            return raw<raw_t>()->data;
+        }
+
+        [[nodiscard]]
         bool is_active() const {
             return uv_is_active(*this);
         }
@@ -129,16 +144,6 @@ namespace uv {
             return uv_handle_size(m_raw->type);
         }
 
-        [[nodiscard]]
-        loop_t loop() const {
-            return loop_t::borrow(uv_handle_get_loop(*this));
-        }
-
-        [[nodiscard]]
-        void *get_data() const {
-            return uv_handle_get_data(*this);
-        }
-
         /**
          * Never use this method on your own as it may result in failure.
          * @param data
@@ -159,8 +164,14 @@ namespace uv {
 
         template<typename T>
         [[nodiscard]]
-        T *get_data() const {
+        T *data() const {
             return (T *) m_raw->data;
+        }
+
+        template<typename T>
+        [[nodiscard]]
+        T *get_data() const {
+            return (T *) m_raw->data;;
         }
 
         operator raw_t *() { return m_raw.get(); }
@@ -262,7 +273,7 @@ namespace uv {
 namespace uvcxx {
     /**
      * Keep the reference of the `handle` and close it when there are no references to it.
-     * No relationship to `uv_ref` and `uv_unref`
+     * No relationship to `uv_ref` and `uv_unref`.
      * Usage:
      * ```
      * {

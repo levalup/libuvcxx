@@ -68,7 +68,7 @@ namespace uv {
 
         [[nodiscard]]
         uvcxx::callback<int, int> start(int events) {
-            auto data = (data_t *) (get_data());
+            auto data = get_data<data_t>();
 
             if (!data->initialized) UVCXX_THROW_OR_RETURN(UV_EINVAL, nullptr);
 

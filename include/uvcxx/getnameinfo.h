@@ -17,8 +17,17 @@ namespace uv {
 
         [[nodiscard]]
         loop_t loop() const {
-            auto loop = raw<supper::raw_t>()->loop;
-            return loop_t::borrow(loop);
+            return loop_t::borrow(raw<raw_t>()->loop);
+        }
+
+        [[nodiscard]]
+        const char *host() const {
+            return raw<raw_t>()->host;
+        }
+
+        [[nodiscard]]
+        const char *service() const {
+            return raw<raw_t>()->service;
         }
     };
 

@@ -35,7 +35,7 @@ namespace uv {
         check_t() : self(default_loop()) {}
 
         explicit check_t(const loop_t &loop) {
-            (void)uv_check_init(loop, *this);
+            (void) uv_check_init(loop, *this);
             // data will be deleted in close action
             set_data(new data_t(*this));
         }

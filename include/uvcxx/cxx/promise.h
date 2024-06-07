@@ -300,15 +300,6 @@ namespace uvcxx {
         class promise_proxy;
     };
 
-    template<>
-    class promise<void> : public promise<> {
-    public:
-        using self = promise;
-        using supper = promise<>;
-
-        using supper::supper;
-    };
-
     template<typename...T>
     using promise_t = promise<T...>;
 
@@ -340,10 +331,6 @@ namespace uvcxx {
                 this->resolve(v...);
             }, v);
         }
-    };
-
-    template<>
-    class promise_proxy<void> : public promise_proxy<> {
     };
 
     template<typename... T>
@@ -385,14 +372,6 @@ namespace uvcxx {
 
     private:
         std::shared_ptr<promise_core> m_core;
-    };
-
-    template<>
-    class promise_emitter<void> : public promise_emitter<> {
-        using self = promise_emitter;
-        using supper = promise_emitter<>;
-
-        using supper::supper;
     };
 
     template<typename V, typename... T>
@@ -486,15 +465,6 @@ namespace uvcxx {
     private:
         promise_emitter<V...> m_emitter;
         wrapper_t m_wrapper;
-    };
-
-    template<typename... T>
-    class promise_cast<promise<void>, T...> : promise_cast<promise < >, T ...> {
-    public:
-        using self = promise_cast;
-        using supper = promise_cast<promise<>, T...>;
-
-        using supper::supper;
     };
 }
 

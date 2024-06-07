@@ -25,8 +25,8 @@ namespace uv {
             using supper = supper::data_t;
 
             uvcxx::callback_emitter<> listen_cb;    //< already check status
-            uvcxx::callback_emitter<ssize_t, const uv_buf_t*> read_cb;
-            uvcxx::callback_emitter<size_t, uv_buf_t*> alloc_cb;
+            uvcxx::callback_emitter<ssize_t, const uv_buf_t *> read_cb;
+            uvcxx::callback_emitter<size_t, uv_buf_t *> alloc_cb;
 
             explicit data_t(stream_t &handle)
                     : supper(handle) {
@@ -44,6 +44,11 @@ namespace uv {
         };
 
         [[nodiscard]]
+        size_t write_queue_size() const {
+            return raw<raw_t>()->write_queue_size;
+        }
+
+        [[nodiscard]]
         uvcxx::promise<> shutdown(const shutdown_t &req) {
             return ::uv::shutdown(req, *this);
         }
@@ -58,19 +63,19 @@ namespace uv {
             auto err = uv_listen(*this, backlog, raw_listen_callback);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
 
-            auto data = this->get_data<data_t>();
+            auto data = this->data<data_t>();
             return data->listen_cb.callback();
         }
 
         [[nodiscard]]
-        uvcxx::callback<size_t, uv_buf_t*> alloc() {
+        uvcxx::callback<size_t, uv_buf_t *> alloc() {
             auto data = get_data<data_t>();
             // memory alloc can not register multi-times callback
             return data->alloc_cb.callback().call(nullptr);
         }
 
         [[nodiscard]]
-        uvcxx::callback<ssize_t, const uv_buf_t*> read_start(uint64_t timeout, uint64_t repeat) {
+        uvcxx::callback<ssize_t, const uv_buf_t *> read_start(uint64_t timeout, uint64_t repeat) {
             auto err = uv_read_start(*this, raw_alloc_callback, raw_read_callback);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
             auto data = get_data<data_t>();
@@ -93,23 +98,23 @@ namespace uv {
 
         [[nodiscard]]
         uvcxx::promise<> write2(
-                const write_t &req, const uv_buf_t bufs[], unsigned int nbufs, uv_stream_t* send_handle) {
+                const write_t &req, const uv_buf_t bufs[], unsigned int nbufs, uv_stream_t *send_handle) {
             return ::uv::write2(req, *this, bufs, nbufs, send_handle);
         }
 
         [[nodiscard]]
-        uvcxx::promise<> write2(const uv_buf_t bufs[], unsigned int nbufs, uv_stream_t* send_handle) {
+        uvcxx::promise<> write2(const uv_buf_t bufs[], unsigned int nbufs, uv_stream_t *send_handle) {
             return ::uv::write2(*this, bufs, nbufs, send_handle);
         }
 
         [[nodiscard]]
         uvcxx::promise<> write(
-                const write_t &req, const uv_buf_t bufs[], unsigned int nbufs, uv_stream_t* send_handle) {
+                const write_t &req, const uv_buf_t bufs[], unsigned int nbufs, uv_stream_t *send_handle) {
             return ::uv::write2(req, *this, bufs, nbufs, send_handle);
         }
 
         [[nodiscard]]
-        uvcxx::promise<> write(const uv_buf_t bufs[], unsigned int nbufs, uv_stream_t* send_handle) {
+        uvcxx::promise<> write(const uv_buf_t bufs[], unsigned int nbufs, uv_stream_t *send_handle) {
             return ::uv::write2(*this, bufs, nbufs, send_handle);
         }
 
@@ -117,7 +122,7 @@ namespace uv {
             return uv_try_write(*this, bufs, nbufs);
         }
 
-        int try_write2(const uv_buf_t bufs[], unsigned int nbufs, uv_stream_t* send_handle) noexcept {
+        int try_write2(const uv_buf_t bufs[], unsigned int nbufs, uv_stream_t *send_handle) noexcept {
             return uv_try_write2(*this, bufs, nbufs, send_handle);
         }
 
@@ -140,17 +145,25 @@ namespace uv {
             return uv_stream_get_write_queue_size(*this);
         }
 
-        operator raw_t*() { return raw<raw_t>(); }
+        operator raw_t *() { return raw<raw_t>(); }
 
-        operator raw_t*() const { return raw<raw_t>(); }
+        operator raw_t *() const { return raw<raw_t>(); }
+
+        static self borrow(raw_t *raw) {
+            return self{std::shared_ptr<uv_handle_t>((uv_handle_t *) raw, [](uv_handle_t *) {})};
+        }
+
+    protected:
+        explicit stream_t(std::shared_ptr<uv_handle_t> raw)
+                : supper(std::move(raw)) {}
 
     private:
-        static void raw_alloc_callback(uv_handle_t *handle, size_t suggested_size, uv_buf_t* buf) {
+        static void raw_alloc_callback(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
             auto data = (data_t *) (handle->data);
             data->alloc_cb.emit(suggested_size, buf);
         }
 
-        static void raw_read_callback(raw_t *handle, ssize_t nread, const uv_buf_t* buf) {
+        static void raw_read_callback(raw_t *handle, ssize_t nread, const uv_buf_t *buf) {
             auto data = (data_t *) (handle->data);
             data->read_cb.emit(nread, buf);
         }
@@ -196,10 +209,10 @@ namespace uv {
         [[nodiscard]]
         uvcxx::callback<stream_t> listen_accept(int backlog) {
             this->listen(backlog).call(nullptr).call([this]() {
-                auto data = this->get_data<data_t>();
+                auto data = this->data<data_t>();
                 data->accept_cb.emit(this->accept());
             });
-            auto data = this->get_data<data_t>();
+            auto data = this->data<data_t>();
             return data->accept_cb.callback();
         }
 
@@ -208,15 +221,35 @@ namespace uv {
         [[nodiscard]]
         uvcxx::callback<std::shared_ptr<acceptable_stream_t>> listen_accept_v2(int backlog) {
             this->listen(backlog).call(nullptr).call([this]() {
-                auto data = this->get_data<data_t>();
+                auto data = this->data<data_t>();
                 data->accept_v2_cb.emit(this->accept_v2());
             });
-            auto data = this->get_data<data_t>();
+            auto data = this->data<data_t>();
             return data->accept_v2_cb.callback();
         }
 
         virtual std::shared_ptr<acceptable_stream_t> accept_v2() = 0;
     };
+
+    [[nodiscard]]
+    stream_t connect_t::handle() const {
+        return stream_t::borrow(raw<raw_t>()->handle);
+    }
+
+    [[nodiscard]]
+    stream_t shutdown_t::handle() const {
+        return stream_t::borrow(raw<raw_t>()->handle);
+    }
+
+    [[nodiscard]]
+    stream_t write_t::handle() const {
+        return stream_t::borrow(raw<raw_t>()->handle);
+    }
+
+    [[nodiscard]]
+    stream_t write_t::send_handle() const {
+        return stream_t::borrow(raw<raw_t>()->send_handle);
+    }
 }
 
 #endif //LIBUVCXX_STREAM_H

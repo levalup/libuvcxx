@@ -19,6 +19,36 @@ namespace uv {
         using supper = req_extend_t<uv_fs_t, req_t>;
 
         [[nodiscard]]
+        loop_t loop() const {
+            return loop_t::borrow(raw<raw_t>()->loop);
+        }
+
+        [[nodiscard]]
+        uv_fs_type fs_type() const {
+            return raw<raw_t>()->fs_type;
+        }
+
+        [[nodiscard]]
+        const char *path() const {
+            return raw<raw_t>()->path;
+        }
+
+        [[nodiscard]]
+        ssize_t result() const {
+            return raw<raw_t>()->result;
+        }
+
+        [[nodiscard]]
+        uv_stat_t statbuf() const {
+            return raw<raw_t>()->statbuf;
+        }
+
+        [[nodiscard]]
+        void *ptr() const {
+            return raw<raw_t>()->ptr;
+        }
+
+        [[nodiscard]]
         uv_fs_type get_fs_type() const {
             return uv_fs_get_type(*this);
         }
@@ -45,6 +75,12 @@ namespace uv {
 
         uv_stat_t *get_statbuf() {
             return uv_fs_get_statbuf(*this);
+        }
+
+        template<typename T>
+        [[nodiscard]]
+        T *ptr() const {
+            return (T *) raw<raw_t>()->ptr;
         }
     };
 
