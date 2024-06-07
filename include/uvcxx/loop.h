@@ -16,12 +16,6 @@
 #include "cxx/except.h"
 
 namespace uv {
-    enum run_mode {
-        RUN_DEFAULT = UV_RUN_DEFAULT,
-        RUN_ONCE = UV_RUN_ONCE,
-        RUN_NOWAIT = UV_RUN_NOWAIT,
-    };
-
     class loop_t {
     public:
         using self = loop_t;
@@ -53,13 +47,13 @@ namespace uv {
         }
 
         int run() {
-            auto err = uv_run(m_raw.get(), UV_RUN_DEFAULT);
+            auto err = uv_run(*this, UV_RUN_DEFAULT);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
             return err;
         }
 
-        int run(run_mode mode) {
-            auto err = uv_run(m_raw.get(), uv_run_mode(mode));
+        int run(uv_run_mode mode) {
+            auto err = uv_run(*this, mode);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
             return err;
         }

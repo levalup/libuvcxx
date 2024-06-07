@@ -67,7 +67,7 @@ namespace uv {
             return data->listen_cb.callback();
         }
 
-        int accept(const stream_t &client) {
+        int accept(stream_t &client) {
             auto err = uv_accept(*this, client);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
             return err;
@@ -238,22 +238,22 @@ namespace uv {
     };
 
     [[nodiscard]]
-    stream_t connect_t::handle() const {
+    inline stream_t connect_t::handle() const {
         return stream_t::borrow(raw<raw_t>()->handle);
     }
 
     [[nodiscard]]
-    stream_t shutdown_t::handle() const {
+    inline stream_t shutdown_t::handle() const {
         return stream_t::borrow(raw<raw_t>()->handle);
     }
 
     [[nodiscard]]
-    stream_t write_t::handle() const {
+    inline stream_t write_t::handle() const {
         return stream_t::borrow(raw<raw_t>()->handle);
     }
 
     [[nodiscard]]
-    stream_t write_t::send_handle() const {
+    inline stream_t write_t::send_handle() const {
         return stream_t::borrow(raw<raw_t>()->send_handle);
     }
 }

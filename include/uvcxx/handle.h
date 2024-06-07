@@ -241,6 +241,8 @@ namespace uv {
         using supper = B;
         using raw_t = T;
 
+        using supper::supper;
+
         handle_extend_t()
                 : supper(make_shared()) {
             this->set_data(nullptr);

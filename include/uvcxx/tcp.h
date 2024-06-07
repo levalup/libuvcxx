@@ -17,8 +17,9 @@ namespace uv {
 
         using raw_t = uv_tcp_t;
 
-        tcp_t() : self(default_loop()) {
-        }
+        tcp_t() : self(default_loop()) {}
+
+        tcp_t(int flags) : self(default_loop(), flags) {}
 
         explicit tcp_t(const loop_t &loop) {
             (void) uv_tcp_init(loop, *this);
