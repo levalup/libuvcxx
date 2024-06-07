@@ -43,7 +43,7 @@ namespace uv {
     };
 
     [[nodiscard]]
-    uvcxx::promise<> shutdown(const shutdown_t &req, uv_stream_t *handle) {
+    inline uvcxx::promise<> shutdown(const shutdown_t &req, uv_stream_t *handle) {
         auto err = uv_shutdown(req, handle, shutdown_t::data_t::raw_callback);
         if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
         auto data = req.get_data<shutdown_t::data_t>();
@@ -51,7 +51,7 @@ namespace uv {
     }
 
     [[nodiscard]]
-    uvcxx::promise<> shutdown(uv_stream_t *handle) {
+    inline uvcxx::promise<> shutdown(uv_stream_t *handle) {
         return shutdown({}, handle);
     }
 }

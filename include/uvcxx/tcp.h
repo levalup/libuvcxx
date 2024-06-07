@@ -32,6 +32,24 @@ namespace uv {
             set_data(new data_t(*this));
         }
 
+        int send_buffer_size(int *value) {
+            auto err = uv_send_buffer_size(*this, value);
+            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
+            return err;
+        }
+
+        int recv_buffer_size(int *value) {
+            auto err = uv_recv_buffer_size(*this, value);
+            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
+            return err;
+        }
+
+        int fileno(uv_os_fd_t *fd) const {
+            auto err = uv_fileno(*this, fd);
+            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
+            return err;
+        }
+
         stream_t accept() override {
             self client(this->loop());
             uvcxx::defer close_client([&]() { client.close(nullptr); });
@@ -52,24 +70,6 @@ namespace uv {
 
             close_client.release();
             return client;
-        }
-
-        int accept(const stream_t &client) {
-            auto err = uv_accept(*this, client);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
-        }
-
-        int send_buffer_size(int *value) {
-            auto err = uv_send_buffer_size(raw(), value);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
-        }
-
-        int recv_buffer_size(int *value) {
-            auto err = uv_recv_buffer_size(raw(), value);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
         }
 
         int open(uv_os_sock_t sock) {

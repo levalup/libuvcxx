@@ -43,7 +43,7 @@ namespace uv {
     };
 
     [[nodiscard]]
-    uvcxx::promise<> tcp_connect(const connect_t &req, uv_tcp_t *handle, const sockaddr *addr) {
+    inline uvcxx::promise<> tcp_connect(const connect_t &req, uv_tcp_t *handle, const sockaddr *addr) {
         auto err = uv_tcp_connect(req, handle, addr, connect_t::data_t::raw_callback);
         if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
         auto data = req.get_data<connect_t::data_t>();
@@ -51,8 +51,33 @@ namespace uv {
     }
 
     [[nodiscard]]
-    uvcxx::promise<> tcp_connect(uv_tcp_t *handle, const sockaddr *addr) {
+    inline uvcxx::promise<> tcp_connect(uv_tcp_t *handle, const sockaddr *addr) {
         return tcp_connect({}, handle, addr);
+    }
+
+    [[nodiscard]]
+    inline uvcxx::promise<> pipe_connect(const connect_t &req, uv_pipe_t *handle, const char *name) {
+        uv_pipe_connect(req, handle, name, connect_t::data_t::raw_callback);
+        auto data = req.get_data<connect_t::data_t>();
+        return data->promise.promise();
+    }
+
+    [[nodiscard]]
+    inline uvcxx::promise<> pipe_connect(uv_pipe_t *handle, const char *name) {
+        return pipe_connect({}, handle, name);
+    }
+
+    [[nodiscard]]
+    inline uvcxx::promise<> pipe_connect2(
+            const connect_t &req, uv_pipe_t *handle, const char *name, size_t namelen, unsigned int flags) {
+        uv_pipe_connect2(req, handle, name, namelen, flags, connect_t::data_t::raw_callback);
+        auto data = req.get_data<connect_t::data_t>();
+        return data->promise.promise();
+    }
+
+    [[nodiscard]]
+    inline uvcxx::promise<> pipe_connect2(uv_pipe_t *handle, const char *name, size_t namelen, unsigned int flags) {
+        return pipe_connect2({}, handle, name, namelen, flags);
     }
 }
 

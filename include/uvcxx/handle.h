@@ -234,15 +234,6 @@ namespace uv {
         }
     };
 
-    class handle_fd_t : virtual public handle_t {
-    public:
-        int fileno(uv_os_fd_t *fd) const {
-            auto err = uv_fileno(raw(), fd);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
-        }
-    };
-
     template<typename T, typename B, typename=typename std::enable_if_t<std::is_base_of_v<handle_t, B>>>
     class handle_extend_t : public B {
     public:

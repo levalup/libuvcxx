@@ -34,7 +34,8 @@ int main() {
 ### Poll [OK]
 ### TCP [OK]
 ### Signal [OK]
-### Process [ing]
+### Process [delay]
+### Pipe [OK]
 
 ### Async [OK]
 

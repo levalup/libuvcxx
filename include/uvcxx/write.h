@@ -46,7 +46,7 @@ namespace uv {
     };
 
     [[nodiscard]]
-    uvcxx::promise<> write(const write_t &req, uv_stream_t *handle, const uv_buf_t bufs[], unsigned int nbufs) {
+    inline uvcxx::promise<> write(const write_t &req, uv_stream_t *handle, const uv_buf_t bufs[], unsigned int nbufs) {
         auto err = uv_write(req, handle, bufs, nbufs, write_t::data_t::raw_callback);
         if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
         auto data = req.get_data<write_t::data_t>();
@@ -54,12 +54,12 @@ namespace uv {
     }
 
     [[nodiscard]]
-    uvcxx::promise<> write(uv_stream_t *handle, const uv_buf_t bufs[], unsigned int nbufs) {
+    inline uvcxx::promise<> write(uv_stream_t *handle, const uv_buf_t bufs[], unsigned int nbufs) {
         return write({}, handle, bufs, nbufs);
     }
 
     [[nodiscard]]
-    uvcxx::promise<> write2(
+    inline uvcxx::promise<> write2(
             const write_t &req,
             uv_stream_t *handle, const uv_buf_t bufs[], unsigned int nbufs, uv_stream_t *send_handle) {
         auto err = uv_write2(req, handle, bufs, nbufs, send_handle, write_t::data_t::raw_callback);
@@ -69,20 +69,20 @@ namespace uv {
     }
 
     [[nodiscard]]
-    uvcxx::promise<> write2(
+    inline uvcxx::promise<> write2(
             uv_stream_t *handle, const uv_buf_t bufs[], unsigned int nbufs, uv_stream_t *send_handle) {
         return write2({}, handle, bufs, nbufs, send_handle);
     }
 
     [[nodiscard]]
-    uvcxx::promise<> write(
+    inline uvcxx::promise<> write(
             const write_t &req,
             uv_stream_t *handle, const uv_buf_t bufs[], unsigned int nbufs, uv_stream_t *send_handle) {
         return write2(req, handle, bufs, nbufs, send_handle);
     }
 
     [[nodiscard]]
-    uvcxx::promise<> write(
+    inline uvcxx::promise<> write(
             uv_stream_t *handle, const uv_buf_t bufs[], unsigned int nbufs, uv_stream_t *send_handle) {
         return write2({}, handle, bufs, nbufs, send_handle);
     }
