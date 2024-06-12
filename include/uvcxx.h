@@ -23,6 +23,7 @@
 #include "uvcxx/pipe.h"
 #include "uvcxx/poll.h"
 #include "uvcxx/prepare.h"
+#include "uvcxx/random.h"
 #include "uvcxx/timer.h"
 #include "uvcxx/req.h"
 #include "uvcxx/shutdown.h"
@@ -33,6 +34,7 @@
 #include "uvcxx/tty.h"
 #include "uvcxx/udp.h"
 #include "uvcxx/udp_send.h"
+#include "uvcxx/utilities.h"
 #include "uvcxx/work.h"
 #include "uvcxx/write.h"
 

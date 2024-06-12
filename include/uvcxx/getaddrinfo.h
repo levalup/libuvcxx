@@ -98,5 +98,4 @@ namespace uv {
     }
 }
 
-
 #endif //LIBUVCXX_GETADDRINFO_H
