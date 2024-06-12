@@ -8,12 +8,10 @@
 int main() {
     uv::loop_t loop;
     int64_t counter = 0;
-    uv::idle_t(loop).start().call([&](uv::idle_t *idle) {
+    uv::idle_t(loop).start().call([&]() {
         counter++;
         if (counter >= 1000) {
-            idle->close().then([]() {
-                std::cout << "closed" << std::endl;
-            });
+            throw uvcxx::close_handle();
         }
         std::cout << counter << std::endl;
     });
