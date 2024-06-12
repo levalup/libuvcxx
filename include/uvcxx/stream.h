@@ -24,7 +24,7 @@ namespace uv {
             using self = data_t;
             using supper = supper::data_t;
 
-            uvcxx::callback_emitter<> listen_cb;    //< already check status
+            uvcxx::callback_emitter<int> listen_cb;
             uvcxx::callback_emitter<ssize_t, const uv_buf_t *> read_cb;
             uvcxx::callback_emitter<size_t, uv_buf_t *> alloc_cb;
 
@@ -59,7 +59,7 @@ namespace uv {
         }
 
         [[nodiscard]]
-        uvcxx::callback<> listen(int backlog) {
+        uvcxx::callback<int> listen(int backlog) {
             auto err = uv_listen(*this, backlog, raw_listen_callback);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
 
@@ -81,7 +81,7 @@ namespace uv {
         }
 
         [[nodiscard]]
-        uvcxx::callback<ssize_t, const uv_buf_t *> read_start(uint64_t timeout, uint64_t repeat) {
+        uvcxx::callback<ssize_t, const uv_buf_t *> read_start() {
             auto err = uv_read_start(*this, raw_alloc_callback, raw_read_callback);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
             auto data = get_data<data_t>();
@@ -176,11 +176,7 @@ namespace uv {
 
         static void raw_listen_callback(raw_t *handle, int status) {
             auto data = (data_t *) (handle->data);
-            if (status < 0) {
-                data->listen_cb.raise<uvcxx::errcode>(status);
-            } else {
-                data->listen_cb.emit();
-            }
+            data->listen_cb.emit(status);
         }
     };
 
@@ -197,16 +193,13 @@ namespace uv {
             using supper = stream_t::data_t;
 
             uvcxx::callback_emitter<stream_t> accept_cb;
-            uvcxx::callback_emitter<std::shared_ptr<acceptable_stream_t>> accept_v2_cb;
 
             explicit data_t(acceptable_stream_t &handle)
                     : supper(handle) {
                 handle.watch(accept_cb);
-                handle.watch(accept_v2_cb);
             }
 
             void close() noexcept override {
-                accept_v2_cb.finalize();
                 accept_cb.finalize();
                 supper::close();
             }
@@ -214,26 +207,18 @@ namespace uv {
 
         virtual stream_t accept() = 0;
 
-        virtual std::shared_ptr<acceptable_stream_t> accept_v2() = 0;
-
         [[nodiscard]]
         uvcxx::callback<stream_t> listen_accept(int backlog) {
-            this->listen(backlog).call(nullptr).call([this]() {
+            this->listen(backlog).call(nullptr).call([this](int status) {
                 auto data = this->data<data_t>();
-                data->accept_cb.emit(this->accept());
+                if (status < 0) {
+                    data->accept_cb.raise<uvcxx::errcode>(status);
+                } else {
+                    data->accept_cb.emit(this->accept());
+                }
             });
             auto data = this->data<data_t>();
             return data->accept_cb.callback();
-        }
-
-        [[nodiscard]]
-        uvcxx::callback<std::shared_ptr<acceptable_stream_t>> listen_accept_v2(int backlog) {
-            this->listen(backlog).call(nullptr).call([this]() {
-                auto data = this->data<data_t>();
-                data->accept_v2_cb.emit(this->accept_v2());
-            });
-            auto data = this->data<data_t>();
-            return data->accept_v2_cb.callback();
         }
     };
 

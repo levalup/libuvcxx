@@ -17,8 +17,7 @@ namespace uv {
 
         using raw_t = uv_pipe_t;
 
-        pipe_t(bool ipc) : self(default_loop(), ipc) {
-        }
+        explicit pipe_t(bool ipc) : self(default_loop(), ipc) {}
 
         explicit pipe_t(const loop_t &loop, bool ipc) {
             (void) uv_pipe_init(loop, *this, int(ipc));
@@ -54,17 +53,6 @@ namespace uv {
             uvcxx::defer close_client([&]() { client.close(nullptr); });
 
             auto err = uv_accept(*this, client);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-
-            close_client.release();
-            return client;
-        }
-
-        std::shared_ptr<acceptable_stream_t> accept_v2() override {
-            auto client = std::make_shared<self>(this->loop());
-            uvcxx::defer close_client([&]() { client->close(nullptr); });
-
-            auto err = uv_accept(*this, *client);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
 
             close_client.release();

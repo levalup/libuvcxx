@@ -62,17 +62,6 @@ namespace uv {
             return client;
         }
 
-        std::shared_ptr<acceptable_stream_t> accept_v2() override {
-            auto client = std::make_shared<self>(this->loop());
-            uvcxx::defer close_client([&]() { client->close(nullptr); });
-
-            auto err = uv_accept(*this, *client);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-
-            close_client.release();
-            return client;
-        }
-
         int open(uv_os_sock_t sock) {
             auto err = uv_tcp_open(*this, sock);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
