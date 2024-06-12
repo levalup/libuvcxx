@@ -20,38 +20,33 @@ int main() {
 }
 ```
 
+Note that all the `handle` and `request` `data` members are used to store data related to C++ operations, so please do not use them.
+
+If you need to use context, use the capture list of `lambda`.
+
+The `handle`‘s `data` will be recycled after `close`, so be sure to call `close` after the `handle` is confirmed to not be used anymore.
+
+The `request`'s `data` will be recycled after the callback is completed, so most of the time there is no need to consider resource recycling issues.
+
 ## 2. Schedule
 
-### Loop [OK]
-
-### Req [OK]
-### Handle [OK]
-
-### Timer [OK]
-### Prepare [OK]
-### Check [OK]
-### Idle [OK]
-### Async [OK]
-### Poll [OK]
-### TCP [OK]
-### Signal [OK]
-### Pipe [OK]
-### TTY [OK]
-### UDP [OK]
-### FS Event [OK]
-### FS Poll [OK]
-### DNS [OK]
-### Shared Library [OK]
-### Work [OK]
-### Metrics [OK]
 ### Process [delay]
-### Utilities [delay]
+
+> This section mainly focuses on encapsulating options to facilitate the manipulation of starting processes.
+
 ### Thread [ing]
+
+> Convert most operations to C++ interface style.
 
 ### File system operations [OK: 90%]
 
 > Note: `readdir`, `scandir` require additional encapsulation to achieve C++style.
 >     So the interfaces are not currently supported and will be introduced in the future.
+
+### Others
+
+Most of the interfaces have been encapsulated or the reasons for not encapsulating have been explained.
+The next work of `libuvcxx` is mainly about the above content.
 
 ## Exception
 
