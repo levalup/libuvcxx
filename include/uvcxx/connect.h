@@ -34,19 +34,19 @@ namespace uv {
             int check(raw_t *, int status) noexcept override { return status; }
         };
 
-        connect_t() {
-            set_data(new data_t(*this));
-        }
-
         [[nodiscard]]
         stream_t handle() const;
     };
 
     [[nodiscard]]
     inline uvcxx::promise<> tcp_connect(const connect_t &req, uv_tcp_t *handle, const sockaddr *addr) {
+        auto data = new connect_t::data_t(req);
+        uvcxx::defer_delete delete_data(data);
+
         auto err = uv_tcp_connect(req, handle, addr, connect_t::data_t::raw_callback);
         if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
-        auto data = req.get_data<connect_t::data_t>();
+
+        delete_data.release();
         return data->promise.promise();
     }
 
@@ -57,8 +57,12 @@ namespace uv {
 
     [[nodiscard]]
     inline uvcxx::promise<> pipe_connect(const connect_t &req, uv_pipe_t *handle, const char *name) {
+        auto data = new connect_t::data_t(req);
+        uvcxx::defer_delete delete_data(data);
+
         uv_pipe_connect(req, handle, name, connect_t::data_t::raw_callback);
-        auto data = req.get_data<connect_t::data_t>();
+
+        delete_data.release();
         return data->promise.promise();
     }
 
@@ -70,8 +74,13 @@ namespace uv {
     [[nodiscard]]
     inline uvcxx::promise<> pipe_connect2(
             const connect_t &req, uv_pipe_t *handle, const char *name, size_t namelen, unsigned int flags) {
-        uv_pipe_connect2(req, handle, name, namelen, flags, connect_t::data_t::raw_callback);
-        auto data = req.get_data<connect_t::data_t>();
+        auto data = new connect_t::data_t(req);
+        uvcxx::defer_delete delete_data(data);
+
+        auto err = uv_pipe_connect2(req, handle, name, namelen, flags, connect_t::data_t::raw_callback);
+        if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
+
+        delete_data.release();
         return data->promise.promise();
     }
 

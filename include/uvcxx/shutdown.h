@@ -34,19 +34,19 @@ namespace uv {
             int check(raw_t *, int status) noexcept override { return status; }
         };
 
-        shutdown_t() {
-            set_data(new data_t(*this));
-        }
-
         [[nodiscard]]
         stream_t handle() const;
     };
 
     [[nodiscard]]
     inline uvcxx::promise<> shutdown(const shutdown_t &req, uv_stream_t *handle) {
+        auto data = new shutdown_t::data_t(req);
+        uvcxx::defer_delete delete_data(data);
+
         auto err = uv_shutdown(req, handle, shutdown_t::data_t::raw_callback);
         if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
-        auto data = req.get_data<shutdown_t::data_t>();
+
+        delete_data.release();
         return data->promise.promise();
     }
 

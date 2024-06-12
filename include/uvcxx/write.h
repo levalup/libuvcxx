@@ -34,10 +34,6 @@ namespace uv {
             int check(raw_t *, int status) noexcept override { return status; }
         };
 
-        write_t() {
-            set_data(new data_t(*this));
-        }
-
         [[nodiscard]]
         stream_t handle() const;
 
@@ -47,9 +43,13 @@ namespace uv {
 
     [[nodiscard]]
     inline uvcxx::promise<> write(const write_t &req, uv_stream_t *handle, const uv_buf_t bufs[], unsigned int nbufs) {
+        auto data = new write_t::data_t(req);
+        uvcxx::defer_delete delete_data(data);
+
         auto err = uv_write(req, handle, bufs, nbufs, write_t::data_t::raw_callback);
         if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
-        auto data = req.get_data<write_t::data_t>();
+
+        delete_data.release();
         return data->promise.promise();
     }
 
@@ -62,9 +62,13 @@ namespace uv {
     inline uvcxx::promise<> write2(
             const write_t &req,
             uv_stream_t *handle, const uv_buf_t bufs[], unsigned int nbufs, uv_stream_t *send_handle) {
+        auto data = new write_t::data_t(req);
+        uvcxx::defer_delete delete_data(data);
+
         auto err = uv_write2(req, handle, bufs, nbufs, send_handle, write_t::data_t::raw_callback);
         if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
-        auto data = req.get_data<write_t::data_t>();
+
+        delete_data.release();
         return data->promise.promise();
     }
 

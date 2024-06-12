@@ -92,6 +92,20 @@ namespace uv {
             return err;
         }
 
+        uint64_t metrics_idle_time() {
+            return uv_metrics_idle_time(*this);
+        }
+
+        int metrics_info(uv_metrics_t *metrics) {
+            return uv_metrics_info(*this, metrics);
+        }
+
+        uv_metrics_t metrics_info() {
+            uv_metrics_t metrics{};
+            (void) uv_metrics_info(*this, &metrics);
+            return metrics;
+        }
+
         [[nodiscard]]
         void *get_data() const {
             return uv_loop_get_data(*this);
