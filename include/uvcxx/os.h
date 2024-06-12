@@ -9,9 +9,12 @@
 #include <uv.h>
 
 namespace uv {
-    inline uv_os_fd_t get_osfhandle(int fd) { return uv_get_osfhandle(fd); }
-
-    inline int open_osfhandle(uv_os_fd_t os_fd) { return uv_open_osfhandle(os_fd); }
+    /**
+     * `libuv` has many operating system-related interfaces,
+     *     while `libuvcxx` is mainly designed for the convenient use of `handle` and `request`.
+     * Therefore, no additional encapsulation is provided for simple and easy-to-use functions.
+     * If you want to use related interfaces, please continue to use the `uv_*` version in C language.
+     */
 }
 
 #endif //LIBUVCXX_OS_H
