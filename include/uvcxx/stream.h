@@ -19,30 +19,6 @@ namespace uv {
 
         using supper::supper;
 
-        class data_t : supper::data_t {
-        public:
-            using self = data_t;
-            using supper = supper::data_t;
-
-            uvcxx::callback_emitter<int> listen_cb;
-            uvcxx::callback_emitter<ssize_t, const uv_buf_t *> read_cb;
-            uvcxx::callback_emitter<size_t, uv_buf_t *> alloc_cb;
-
-            explicit data_t(stream_t &handle)
-                    : supper(handle) {
-                handle.watch(listen_cb);
-                handle.watch(read_cb);
-                handle.watch(alloc_cb);
-            }
-
-            void close() noexcept override {
-                alloc_cb.finalize();
-                read_cb.finalize();
-                listen_cb.finalize();
-                supper::close();
-            }
-        };
-
         [[nodiscard]]
         size_t write_queue_size() const {
             return raw<raw_t>()->write_queue_size;
@@ -151,9 +127,10 @@ namespace uv {
             return uv_stream_get_write_queue_size(*this);
         }
 
-        operator raw_t *() { return raw<raw_t>(); }
+    public:
+        operator uv_stream_t *() { return raw<raw_t>(); }
 
-        operator raw_t *() const { return raw<raw_t>(); }
+        operator uv_stream_t *() const { return raw<raw_t>(); }
 
         static self borrow(raw_t *raw) {
             return self{borrow_t(raw)};
@@ -161,19 +138,44 @@ namespace uv {
 
     private:
         static void raw_alloc_callback(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
-            auto data = (data_t *) (handle->data);
+            auto data = (data_t * )(handle->data);
             data->alloc_cb.emit(suggested_size, buf);
         }
 
         static void raw_read_callback(raw_t *handle, ssize_t nread, const uv_buf_t *buf) {
-            auto data = (data_t *) (handle->data);
+            auto data = (data_t * )(handle->data);
             data->read_cb.emit(nread, buf);
         }
 
         static void raw_listen_callback(raw_t *handle, int status) {
-            auto data = (data_t *) (handle->data);
+            auto data = (data_t * )(handle->data);
             data->listen_cb.emit(status);
         }
+
+    protected:
+        class data_t : supper::data_t {
+        public:
+            using self = data_t;
+            using supper = supper::data_t;
+
+            uvcxx::callback_emitter<int> listen_cb;
+            uvcxx::callback_emitter<ssize_t, const uv_buf_t *> read_cb;
+            uvcxx::callback_emitter<size_t, uv_buf_t *> alloc_cb;
+
+            explicit data_t(stream_t &handle)
+                    : supper(handle) {
+                handle.watch(listen_cb);
+                handle.watch(read_cb);
+                handle.watch(alloc_cb);
+            }
+
+            void close() noexcept override {
+                alloc_cb.finalize();
+                read_cb.finalize();
+                listen_cb.finalize();
+                supper::close();
+            }
+        };
     };
 
     class acceptable_stream_t : public stream_t {
@@ -183,6 +185,23 @@ namespace uv {
 
         using supper::supper;
 
+        virtual stream_t accept() = 0;
+
+        [[nodiscard]]
+        uvcxx::callback<stream_t> listen_accept(int backlog) {
+            this->listen(backlog).call(nullptr).call([this](int status) {
+                auto data = this->data<data_t>();
+                if (status < 0) {
+                    data->accept_cb.raise<uvcxx::errcode>(status);
+                } else {
+                    data->accept_cb.emit(this->accept());
+                }
+            });
+            auto data = this->data<data_t>();
+            return data->accept_cb.callback();
+        }
+
+    protected:
         class data_t : supper::data_t {
         public:
             using self = data_t;
@@ -200,22 +219,6 @@ namespace uv {
                 supper::close();
             }
         };
-
-        virtual stream_t accept() = 0;
-
-        [[nodiscard]]
-        uvcxx::callback<stream_t> listen_accept(int backlog) {
-            this->listen(backlog).call(nullptr).call([this](int status) {
-                auto data = this->data<data_t>();
-                if (status < 0) {
-                    data->accept_cb.raise<uvcxx::errcode>(status);
-                } else {
-                    data->accept_cb.emit(this->accept());
-                }
-            });
-            auto data = this->data<data_t>();
-            return data->accept_cb.callback();
-        }
     };
 
     [[nodiscard]]

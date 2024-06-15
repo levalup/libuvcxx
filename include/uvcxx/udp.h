@@ -14,39 +14,16 @@ namespace uv {
     public:
         using self = udp_t;
         using supper = inherit_handle_t<uv_udp_t, handle_t>;
-        using raw_t = uv_udp_t;
 
         using supper::supper;
 
-        class data_t : supper::data_t {
-        public:
-            using self = data_t;
-            using supper = supper::data_t;
-
-            uvcxx::callback_emitter<ssize_t, const uv_buf_t *, const sockaddr *, unsigned> recv_cb;
-            uvcxx::callback_emitter<size_t, uv_buf_t *> alloc_cb;
-
-            explicit data_t(udp_t &handle)
-                    : supper(handle) {
-                handle.watch(recv_cb);
-                handle.watch(alloc_cb);
-            }
-
-            void close() noexcept override {
-                alloc_cb.finalize();
-                recv_cb.finalize();
-                supper::close();
-            }
-        };
-
         udp_t() : self(default_loop()) {}
 
-        udp_t(int flags) : self(default_loop(), flags) {}
+        explicit udp_t(int flags) : self(default_loop(), flags) {}
 
         explicit udp_t(const loop_t &loop) {
+            set_data(new data_t(*this));    //< data will be deleted in close action
             (void) uv_udp_init(loop, *this);
-            // data will be deleted in close action
-            set_data(new data_t(*this));
         }
 
         explicit udp_t(const loop_t &loop, int flags) {
@@ -215,24 +192,41 @@ namespace uv {
 
     public:
         static self borrow(raw_t *raw) {
-            return self{std::shared_ptr<uv_handle_t>((uv_handle_t *) raw, [](uv_handle_t *) {})};
+            return self{borrow_t(raw)};
         }
-
-    protected:
-        explicit udp_t(std::shared_ptr<uv_handle_t> raw)
-                : supper(std::move(raw)) {}
 
     private:
         static void raw_alloc_callback(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
-            auto data = (data_t *) (handle->data);
+            auto data = (data_t * )(handle->data);
             data->alloc_cb.emit(suggested_size, buf);
         }
 
         static void raw_recv_callback(
                 raw_t *handle, ssize_t nread, const uv_buf_t *buf, const sockaddr *addr, unsigned flags) {
-            auto data = (data_t *) (handle->data);
+            auto data = (data_t * )(handle->data);
             data->recv_cb.emit(nread, buf, addr, flags);
         }
+
+        class data_t : supper::data_t {
+        public:
+            using self = data_t;
+            using supper = supper::data_t;
+
+            uvcxx::callback_emitter<ssize_t, const uv_buf_t *, const sockaddr *, unsigned> recv_cb;
+            uvcxx::callback_emitter<size_t, uv_buf_t *> alloc_cb;
+
+            explicit data_t(udp_t &handle)
+                    : supper(handle) {
+                handle.watch(recv_cb);
+                handle.watch(alloc_cb);
+            }
+
+            void close() noexcept override {
+                alloc_cb.finalize();
+                recv_cb.finalize();
+                supper::close();
+            }
+        };
     };
 
     [[nodiscard]]

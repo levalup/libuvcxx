@@ -14,27 +14,8 @@ namespace uv {
         using self = async_t;
         using supper = inherit_handle_t<uv_async_t, handle_t>;
 
-        class data_t : supper::data_t {
-        public:
-            using self = data_t;
-            using supper = supper::data_t;
-
-            uvcxx::callback_emitter<> send_cb;
-
-            explicit data_t(async_t &handle)
-                    : supper(handle) {
-                handle.watch(send_cb);
-            }
-
-            void close() noexcept final {
-                // finally at close, make queue safe
-                send_cb.finalize();
-            }
-        };
-
         async_t() {
-            // data will be deleted in close action
-            set_data(new data_t(*this));
+            set_data(new data_t(*this));    //< data will be deleted in close action
         }
 
         [[nodiscard]]
@@ -45,7 +26,6 @@ namespace uv {
         [[nodiscard]]
         uvcxx::callback<> init(const loop_t &loop) {
             auto data = get_data<data_t>();
-
             auto err = uv_async_init(loop, *this, raw_callback);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);;
             return data->send_cb.callback();
@@ -59,9 +39,26 @@ namespace uv {
 
     private:
         static void raw_callback(raw_t *handle) {
-            auto data = (data_t *) (handle->data);
+            auto data = (data_t * )(handle->data);
             data->send_cb.emit();
         }
+
+        class data_t : supper::data_t {
+        public:
+            using self = data_t;
+            using supper = supper::data_t;
+
+            uvcxx::callback_emitter<> send_cb;
+
+            explicit data_t(async_t &handle)
+                    : supper(handle) {
+                handle.watch(send_cb);
+            }
+
+            void close() noexcept final {
+                send_cb.finalize();
+            }
+        };
     };
 }
 

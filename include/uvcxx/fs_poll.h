@@ -7,7 +7,7 @@
 #define LIBUVCXX_FS_POLL_H
 
 #include "handle.h"
-#include "platform.h"
+#include "uvcxx/utils/platform.h"
 
 namespace uv {
     class fs_poll_t : public inherit_handle_t<uv_fs_poll_t, handle_t> {
@@ -15,30 +15,11 @@ namespace uv {
         using self = fs_poll_t;
         using supper = inherit_handle_t<uv_fs_poll_t, handle_t>;
 
-        class data_t : supper::data_t {
-        public:
-            using self = data_t;
-            using supper = supper::data_t;
-
-            uvcxx::callback_emitter<int, const uv_stat_t *, const uv_stat_t *> start_cb;
-
-            explicit data_t(fs_poll_t &handle)
-                    : supper(handle) {
-                handle.watch(start_cb);
-            }
-
-            void close() noexcept final {
-                // finally at close, make queue safe
-                start_cb.finalize();
-            }
-        };
-
         fs_poll_t() : self(default_loop()) {}
 
         explicit fs_poll_t(const loop_t &loop) {
+            set_data(new data_t(*this));    //< data will be deleted in close action
             (void) uv_fs_poll_init(loop, *this);
-            // data will be deleted in close action
-            set_data(new data_t(*this));
         }
 
         [[nodiscard]]
@@ -62,6 +43,23 @@ namespace uv {
             auto data = (data_t *) (handle->data);
             data->start_cb.emit(status, prev, curr);
         }
+
+        class data_t : supper::data_t {
+        public:
+            using self = data_t;
+            using supper = supper::data_t;
+
+            uvcxx::callback_emitter<int, const uv_stat_t *, const uv_stat_t *> start_cb;
+
+            explicit data_t(fs_poll_t &handle)
+                    : supper(handle) {
+                handle.watch(start_cb);
+            }
+
+            void close() noexcept final {
+                start_cb.finalize();
+            }
+        };
     };
 }
 

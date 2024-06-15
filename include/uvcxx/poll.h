@@ -14,28 +14,8 @@ namespace uv {
         using self = poll_t;
         using supper = inherit_handle_t<uv_poll_t, handle_t>;
 
-        class data_t : supper::data_t {
-        public:
-            using self = data_t;
-            using supper = supper::data_t;
-
-            bool initialized{false};
-            uvcxx::callback_emitter<int, int> start_cb;
-
-            explicit data_t(poll_t &handle)
-                    : supper(handle) {
-                handle.watch(start_cb);
-            }
-
-            void close() noexcept final {
-                // finally at close, make queue safe
-                start_cb.finalize();
-            }
-        };
-
         poll_t() {
-            // data will be deleted in close action
-            set_data(new data_t(*this));
+            set_data(new data_t(*this));    //< data will be deleted in close action
         }
 
         self &init(const loop_t &loop, int fd) {
@@ -70,7 +50,9 @@ namespace uv {
         uvcxx::callback<int, int> start(int events) {
             auto data = get_data<data_t>();
 
-            if (!data->initialized) UVCXX_THROW_OR_RETURN(UV_EINVAL, nullptr);
+            if (!data->initialized) {
+                UVCXX_THROW_OR_RETURN(UV_EINVAL, nullptr, "should call `init` or `init_socket` first");
+            }
 
             auto err = uv_poll_start(*this, events, raw_callback);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
@@ -83,9 +65,27 @@ namespace uv {
 
     private:
         static void raw_callback(raw_t *handle, int status, int events) {
-            auto data = (data_t *) (handle->data);
+            auto data = (data_t * )(handle->data);
             data->start_cb.emit(status, events);
         }
+
+        class data_t : supper::data_t {
+        public:
+            using self = data_t;
+            using supper = supper::data_t;
+
+            bool initialized{false};
+            uvcxx::callback_emitter<int, int> start_cb;
+
+            explicit data_t(poll_t &handle)
+                    : supper(handle) {
+                handle.watch(start_cb);
+            }
+
+            void close() noexcept final {
+                start_cb.finalize();
+            }
+        };
     };
 }
 

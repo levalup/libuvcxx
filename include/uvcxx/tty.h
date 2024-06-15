@@ -14,10 +14,7 @@ namespace uv {
         using self = tty_t;
         using supper = inherit_handle_t<uv_tty_t, stream_t>;
 
-        using raw_t = uv_tty_t;
-
-        tty_t(uv_file fd, int unused) : self(default_loop(), fd, unused) {
-        }
+        tty_t(uv_file fd, int unused) : self(default_loop(), fd, unused) {}
 
         explicit tty_t(const loop_t &loop, uv_file fd, int unused) {
             (void) uv_tty_init(loop, *this, fd, unused);

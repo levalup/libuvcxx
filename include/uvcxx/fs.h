@@ -101,7 +101,7 @@ namespace uv {
                 promise_cast_t promise;
 
                 explicit callback_t(const cxx_req_t &req, typename promise_cast_t::wrapper_t wrapper)
-                        : supper(req), promise(promise_t(), std::move(wrapper)) {
+                        : supper(req), promise(std::move(wrapper)) {
                 }
 
                 uvcxx::promise_proxy<raw_req_t *> &proxy() noexcept final {
@@ -129,7 +129,7 @@ namespace uv {
                         typename callback_t<T...>::promise_cast_t::wrapper_t wrapper,
                         FUNC func, const loop_t &loop, const cxx_req_t &req, ARGS &&...args) const {
                     auto *data = new callback_t<T...>(req, std::move(wrapper));
-                    uvcxx::defer delete_data(std::default_delete<callback_t<T...>>(), data);
+                    uvcxx::defer_delete delete_data(data);
 
                     auto err = std::invoke(
                             func,

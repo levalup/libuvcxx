@@ -16,6 +16,13 @@ namespace uv {
         using self = write_t;
         using supper = inherit_req_t<uv_write_t, req_t>;
 
+        [[nodiscard]]
+        stream_t handle() const;
+
+        [[nodiscard]]
+        stream_t send_handle() const;
+
+    public:
         class data_t : public req_callback_t<raw_t, int> {
         public:
             using self = data_t;
@@ -33,12 +40,6 @@ namespace uv {
 
             int check(raw_t *, int status) noexcept override { return status; }
         };
-
-        [[nodiscard]]
-        stream_t handle() const;
-
-        [[nodiscard]]
-        stream_t send_handle() const;
     };
 
     [[nodiscard]]

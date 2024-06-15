@@ -15,6 +15,12 @@ namespace uv {
         using self = work_t;
         using supper = inherit_req_t<uv_work_t, req_t>;
 
+        [[nodiscard]]
+        loop_t loop() const {
+            return loop_t::borrow(raw<raw_t>()->loop);
+        }
+
+    public:
         class data_t : public req_callback_t<uv_work_t, int> {
         public:
             using self = data_t;
@@ -34,17 +40,10 @@ namespace uv {
             void finalize(uv_work_t *, int) noexcept final {}
 
             int check(uv_work_t *, int status) noexcept final { return status; }
+
+            static void raw_work_callback(uv_work_t *) {}
         };
-
-        [[nodiscard]]
-        loop_t loop() const {
-            return loop_t::borrow(raw<raw_t>()->loop);
-        }
     };
-
-    namespace inner::work {
-        static void raw_work_callback(uv_work_t *) {}
-    }
 
     [[nodiscard]]
     inline uvcxx::promise<> queue_work(const loop_t &loop, const work_t &req) {
@@ -53,7 +52,7 @@ namespace uv {
 
         auto err = uv_queue_work(
                 loop, req,
-                inner::work::raw_work_callback,
+                work_t::data_t::raw_work_callback,
                 work_t::data_t::raw_callback);
         if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
 

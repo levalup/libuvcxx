@@ -26,22 +26,15 @@ namespace uv {
 
         lib_t &operator=(const lib_t &) = delete;
 
-        lib_t(lib_t &&that) noexcept {
-            std::swap(m_lib, that.m_lib);
-            std::swap(m_opened, that.m_opened);
-        }
+        lib_t(lib_t &&that) noexcept = default;
 
-        lib_t &operator=(lib_t &&that) noexcept {
-            std::swap(m_lib, that.m_lib);
-            std::swap(m_opened, that.m_opened);
-            return *this;
-        }
+        lib_t &operator=(lib_t &&that) noexcept = default;
 
         lib_t(std::nullptr_t) {}
 
         explicit lib_t(const char *filename) {
             auto err = uv_dlopen(filename, *this);
-            if (err < 0) throw uvcxx::errcode(err);
+            if (err < 0) throw uvcxx::errcode(err, "can not open `", filename, "`");
             m_opened = true;
         }
 
@@ -59,7 +52,7 @@ namespace uv {
                 m_opened = false;
             }
             auto err = uv_dlopen(filename, *this);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
+            if (err < 0) UVCXX_THROW_OR_RETURN(err, err, "can not open `", filename, "`");
             m_opened = true;
             return err;
         }
@@ -73,21 +66,21 @@ namespace uv {
 
         [[nodiscard]]
         const char *error() const {
-            if (!m_opened) UVCXX_THROW_OR_RETURN(UV_EPERM, "");
+            if (!m_opened) UVCXX_THROW_OR_RETURN(UV_EPERM, "", "cannot operate on a closed lib");
             return uv_dlerror(*this);
         }
 
-        int sym(const char *name, void **ptr) {
-            if (!m_opened) UVCXX_THROW_OR_RETURN(UV_EPERM, UV_EPERM);
+        int sym(const char *name, void **ptr) const {
+            if (!m_opened) UVCXX_THROW_OR_RETURN(UV_EPERM, UV_EPERM, "cannot operate on a closed lib");
             auto err = uv_dlsym(*this, name, ptr);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
+            if (err < 0) UVCXX_THROW_OR_RETURN(err, err, "cannot find symbol `", name, "`");
 
             return err;
         }
 
         template<typename FUNC, typename std::enable_if_t<std::is_function_v<FUNC>, int> = 0>
         [[nodiscard]]
-        FUNC *sym(const char *name) {
+        FUNC *sym(const char *name) const {
             FUNC *func;
             auto err = sym(name, &func);
             if (err < 0) return nullptr;
@@ -96,7 +89,7 @@ namespace uv {
 
         operator raw_t *() { return &m_lib; }
 
-        operator const raw_t *() const { return &m_lib; }
+        operator raw_t *() const { return (raw_t *) &m_lib; }
 
     private:
         uv_lib_t m_lib{};

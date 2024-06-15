@@ -29,54 +29,47 @@ namespace uv {
         const char *service() const {
             return raw<raw_t>()->service;
         }
-    };
 
-    namespace inner::getnameinfo {
-        using cxx_req_t = getnameinfo_t;
-        using raw_req_t = cxx_req_t::raw_t;
-
-        template<typename... T>
-        class callback_t : public req_callback_t<raw_req_t, int, const char *, const char *> {
+    public:
+        class callback_t : public req_callback_t<raw_t, int, const char *, const char *> {
         public:
             using self = callback_t;
-            using supper = req_callback_t<raw_req_t, int, const char *, const char *>;
+            using supper = req_callback_t<raw_t, int, const char *, const char *>;
 
-            using promise_t = uvcxx::promise<T...>;
-            using promise_cast_t = uvcxx::promise_cast<promise_t, raw_req_t *, int, const char *, const char *>;
+            using promise_t = uvcxx::promise<const char *, const char *>;
+            using promise_cast_t = uvcxx::promise_cast<promise_t, raw_t *, int, const char *, const char *>;
 
             promise_cast_t promise;
 
-            explicit callback_t(const cxx_req_t &req, typename promise_cast_t::wrapper_t wrapper)
-                    : supper(req), promise(promise_t(), std::move(wrapper)) {
+            explicit callback_t(const getnameinfo_t &req)
+                    : supper(req), promise([](uv_getnameinfo_t *req, int, const char *hostname, const char *service) {
+                return std::make_tuple(hostname, service);
+            }) {
             }
 
             typename promise_cast_t::supper &proxy() noexcept final {
                 return promise;
             }
 
-            void finalize(raw_req_t *, int, const char *, const char *) noexcept final {
+            void finalize(raw_t *, int, const char *, const char *) noexcept final {
             }
 
-            int check(raw_req_t *, int status, const char *, const char *) noexcept final {
+            int check(raw_t *, int status, const char *, const char *) noexcept final {
                 return status;
             }
         };
-    }
+    };
 
     [[nodiscard]]
     inline uvcxx::promise<const char *, const char *> getnameinfo(
             const loop_t &loop, const getnameinfo_t &req,
             const sockaddr *addr, int flags) {
-        using raw_req_t = inner::getnameinfo::raw_req_t;
-        using callback_t = inner::getnameinfo::callback_t<const char *, const char *>;
-        auto *data = new callback_t(
-                req, [](raw_req_t *, int, const char *hostname, const char *service) {
-                    return std::make_tuple(hostname, service);
-                });
-        uvcxx::defer delete_data(std::default_delete<callback_t>(), data);
+        auto *data = new getnameinfo_t::callback_t(req);
+        uvcxx::defer_delete delete_data(data);
 
-        auto err = uv_getnameinfo(loop, data->req<raw_req_t>(), callback_t::raw_callback, addr, flags);
+        auto err = uv_getnameinfo(loop, req, getnameinfo_t::callback_t::raw_callback, addr, flags);
         if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
+
         delete_data.release();
         return data->promise.promise();
     }

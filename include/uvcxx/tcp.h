@@ -15,16 +15,13 @@ namespace uv {
         using self = tcp_t;
         using supper = inherit_handle_t<uv_tcp_t, acceptable_stream_t>;
 
-        using raw_t = uv_tcp_t;
-
         tcp_t() : self(default_loop()) {}
 
-        tcp_t(int flags) : self(default_loop(), flags) {}
+        explicit tcp_t(int flags) : self(default_loop(), flags) {}
 
         explicit tcp_t(const loop_t &loop) {
+            set_data(new data_t(*this));    //< data will be deleted in close action
             (void) uv_tcp_init(loop, *this);
-            // data will be deleted in close action
-            set_data(new data_t(*this));
         }
 
         explicit tcp_t(const loop_t &loop, int flags) {

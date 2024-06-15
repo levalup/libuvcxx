@@ -26,45 +26,6 @@ namespace uv {
 
         using supper::supper;
 
-        /**
-         * the uv_req_t->data must be the sub-class of data_t
-         */
-        class data_t {
-        public:
-            static constexpr uint64_t MAGIC = 0x554332055443320;
-            uint64_t magic = MAGIC;
-
-            static bool is_it(void *data) {
-                return data && ((data_t *) data)->magic == MAGIC;
-            }
-
-            explicit data_t(const req_t &req)
-                    : m_req(req.shared_raw()) {
-                if (m_req->data) throw uvcxx::errcode(UV_EPERM, "duplicated initialization of data");
-                m_req->data = this;
-            }
-
-            virtual ~data_t() {
-                m_req->data = nullptr;
-            };
-
-            raw_t *req() { return m_req.get(); }
-
-            [[nodiscard]]
-            const raw_t *req() const { return m_req.get(); }
-
-            template<typename T>
-            T *req() { return (T *) m_req.get(); }
-
-            template<typename T>
-            [[nodiscard]]
-            const T *req() const { return (const T *) m_req.get(); }
-
-        private:
-            // store the instance of `req` to avoid resource release caused by no external reference
-            std::shared_ptr<raw_t> m_req;
-        };
-
         [[nodiscard]]
         void *data() const {
             return raw<raw_t>()->data;
@@ -121,6 +82,47 @@ namespace uv {
             return (T *) raw()->data;
         }
 
+    public:
+        /**
+         * the uv_req_t->data must be the sub-class of data_t
+         */
+        class data_t {
+        public:
+            static constexpr uint64_t MAGIC = 0x554332055443320;
+            uint64_t magic = MAGIC;
+
+            static bool is_it(void *data) {
+                return data && ((data_t *) data)->magic == MAGIC;
+            }
+
+            explicit data_t(const req_t &req)
+                    : m_req(req.shared_raw()) {
+                if (m_req->data) throw uvcxx::errcode(UV_EPERM, "duplicated initialization of data");
+                m_req->data = this;
+            }
+
+            virtual ~data_t() {
+                m_req->data = nullptr;
+            };
+
+            raw_t *req() { return m_req.get(); }
+
+            [[nodiscard]]
+            const raw_t *req() const { return m_req.get(); }
+
+            template<typename T>
+            T *req() { return (T *) m_req.get(); }
+
+            template<typename T>
+            [[nodiscard]]
+            const T *req() const { return (const T *) m_req.get(); }
+
+        private:
+            // store the instance of `req` to avoid resource release caused by no external reference
+            std::shared_ptr<raw_t> m_req;
+        };
+
+    protected:
         static self borrow(raw_t *raw) {
             return self{borrow_t(raw)};
         }

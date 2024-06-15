@@ -15,6 +15,7 @@ namespace uv {
         using self = random_t;
         using supper = inherit_req_t<uv_random_t, req_t>;
 
+    public:
         class data_t : public req_callback_t<raw_t, int, void *, size_t> {
         public:
             using self = data_t;

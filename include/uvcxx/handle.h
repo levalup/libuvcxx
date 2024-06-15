@@ -40,6 +40,110 @@ namespace uv {
 
         using supper::supper;
 
+        [[nodiscard]]
+        loop_t loop() const {
+            return loop_t::borrow(raw<raw_t>()->loop);
+        }
+
+        [[nodiscard]]
+        uv_handle_type type() const {
+            return raw<raw_t>()->type;
+        }
+
+        [[nodiscard]]
+        void *data() const {
+            return raw<raw_t>()->data;
+        }
+
+        [[nodiscard]]
+        bool is_active() const {
+            return uv_is_active(*this);
+        }
+
+        [[nodiscard]]
+        bool is_closing() const {
+            return uv_is_closing(*this);
+        }
+
+        void ref() {
+            uv_ref(*this);
+        }
+
+        void unref() {
+            uv_unref(*this);
+        }
+
+        bool has_ref() {
+            return uv_has_ref(*this);
+        }
+
+        [[nodiscard]]
+        size_t size() const {
+            return uv_handle_size(raw()->type);
+        }
+
+        /**
+         * Never use this method on your own as it may result in failure.
+         * @param data
+         */
+        void set_data(void *data) {
+            uv_handle_set_data(*this, data);
+        }
+
+        [[nodiscard]]
+        uv_handle_type get_type() const {
+            return uv_handle_get_type(*this);
+        }
+
+        [[nodiscard]]
+        const char *type_name() const {
+            return uv_handle_type_name(raw()->type);
+        }
+
+        void close(std::nullptr_t) {
+            auto data = get_data<data_t>();
+            if (!data_t::is_it(data)) {
+                throw uvcxx::errcode(UV_EPERM, "close non-libuvcxx handle is not permitted");
+            }
+
+            // Ensure that the handle will only be closed once, avoiding multiple invocations of close
+            //     due to the use of asynchronous queues in the callback's `queue` working mode.
+            bool closed = false;
+            if (!data->closed.compare_exchange_strong(closed, true)) return;
+
+            uv_close(*this, raw_close_callback);
+        }
+
+        [[nodiscard("use close(nullptr) instead")]]
+        uvcxx::promise<> close() {
+            auto data = get_data<data_t>();
+            if (!data_t::is_it(data)) {
+                throw uvcxx::errcode(UV_EPERM, "close non-libuvcxx handle is not permitted");
+            }
+
+            // Ensure that the handle will only be closed once, avoiding multiple invocations of close
+            //     due to the use of asynchronous queues in the callback's `queue` working mode.
+            bool closed = false;
+            if (!data->closed.compare_exchange_strong(closed, true)) return {};
+
+            data->close_cb = decltype(data->close_cb)();
+            uv_close(*this, raw_close_callback);
+
+            return data->close_cb.promise();
+        }
+
+        template<typename T>
+        [[nodiscard]]
+        T *data() const {
+            return (T *) raw()->data;
+        }
+
+        template<typename T>
+        [[nodiscard]]
+        T *get_data() const {
+            return (T *) raw()->data;;
+        }
+
         /**
          * the uv_handle_t->data must be the sub-class of data_t
          */
@@ -84,110 +188,6 @@ namespace uv {
             // store the instance of `handle` to avoid resource release caused by no external reference
             std::shared_ptr<raw_t> m_handle;
         };
-
-        [[nodiscard]]
-        loop_t loop() const {
-            return loop_t::borrow(raw<raw_t>()->loop);
-        }
-
-        [[nodiscard]]
-        uv_handle_type type() const {
-            return raw<raw_t>()->type;
-        }
-
-        [[nodiscard]]
-        void *data() const {
-            return raw<raw_t>()->data;
-        }
-
-        [[nodiscard]]
-        bool is_active() const {
-            return uv_is_active(*this);
-        }
-
-        [[nodiscard]]
-        bool is_closing() const {
-            return uv_is_closing(*this);
-        }
-
-        void close(std::nullptr_t) {
-            auto data = get_data<data_t>();
-            if (!data_t::is_it(data)) {
-                throw uvcxx::errcode(UV_EPERM, "close non-libuvcxx handle is not permitted");
-            }
-
-            // Ensure that the handle will only be closed once, avoiding multiple invocations of close
-            //     due to the use of asynchronous queues in the callback's `queue` working mode.
-            bool closed = false;
-            if (!data->closed.compare_exchange_strong(closed, true)) return;
-
-            uv_close(*this, raw_close_callback);
-        }
-
-        [[nodiscard("use close(nullptr) instead")]]
-        uvcxx::promise<> close() {
-            auto data = get_data<data_t>();
-            if (!data_t::is_it(data)) {
-                throw uvcxx::errcode(UV_EPERM, "close non-libuvcxx handle is not permitted");
-            }
-
-            // Ensure that the handle will only be closed once, avoiding multiple invocations of close
-            //     due to the use of asynchronous queues in the callback's `queue` working mode.
-            bool closed = false;
-            if (!data->closed.compare_exchange_strong(closed, true)) return {};
-
-            data->close_cb = decltype(data->close_cb)();
-            uv_close(*this, raw_close_callback);
-
-            return data->close_cb.promise();
-        }
-
-        void ref() {
-            uv_ref(*this);
-        }
-
-        void unref() {
-            uv_unref(*this);
-        }
-
-        bool has_ref() {
-            return uv_has_ref(*this);
-        }
-
-        [[nodiscard]]
-        size_t size() const {
-            return uv_handle_size(raw()->type);
-        }
-
-        /**
-         * Never use this method on your own as it may result in failure.
-         * @param data
-         */
-        void set_data(void *data) {
-            uv_handle_set_data(*this, data);
-        }
-
-        [[nodiscard]]
-        uv_handle_type get_type() const {
-            return uv_handle_get_type(*this);
-        }
-
-        [[nodiscard]]
-        const char *type_name() const {
-            return uv_handle_type_name(raw()->type);
-        }
-
-        template<typename T>
-        [[nodiscard]]
-        T *data() const {
-            return (T *) raw()->data;
-        }
-
-        template<typename T>
-        [[nodiscard]]
-        T *get_data() const {
-            return (T *) raw()->data;;
-        }
 
     protected:
         static self borrow(raw_t *raw) {

@@ -16,6 +16,10 @@ namespace uv {
         using self = udp_send_t;
         using supper = inherit_req_t<uv_udp_send_t, req_t>;
 
+        [[nodiscard]]
+        udp_t handle() const;
+
+    public:
         class data_t : public req_callback_t<raw_t, int> {
         public:
             using self = data_t;
@@ -33,9 +37,6 @@ namespace uv {
 
             int check(raw_t *, int status) noexcept override { return status; }
         };
-
-        [[nodiscard]]
-        udp_t handle() const;
     };
 
     [[nodiscard]]

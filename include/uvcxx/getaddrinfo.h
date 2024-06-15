@@ -24,55 +24,48 @@ namespace uv {
         struct addrinfo *addrinfo() const {
             return raw<raw_t>()->addrinfo;
         }
-    };
 
-    namespace inner::getaddrinfo {
-        using cxx_req_t = getaddrinfo_t;
-        using raw_req_t = cxx_req_t::raw_t;
-
-        template<typename... T>
-        class callback_t : public req_callback_t<raw_req_t, int, addrinfo *> {
+    public:
+        class callback_t : public req_callback_t<raw_t, int, ::addrinfo *> {
         public:
             using self = callback_t;
-            using supper = req_callback_t<raw_req_t, int, addrinfo *>;
+            using supper = req_callback_t<raw_t, int, ::addrinfo *>;
 
-            using promise_t = uvcxx::promise<T...>;
-            using promise_cast_t = uvcxx::promise_cast<uvcxx::promise<T...>, raw_req_t *, int, addrinfo *>;
+            using promise_t = uvcxx::promise<::addrinfo *>;
+            using promise_cast_t = uvcxx::promise_cast<uvcxx::promise<::addrinfo *>, raw_t *, int, ::addrinfo *>;
 
             promise_cast_t promise;
 
-            explicit callback_t(const cxx_req_t &req, typename promise_cast_t::wrapper_t wrapper)
-                    : supper(req), promise(promise_t(), std::move(wrapper)) {
+            explicit callback_t(const getaddrinfo_t &req)
+                    : supper(req), promise([](raw_t *, int, ::addrinfo *ai) {
+                return ai;
+            }) {
             }
 
             typename promise_cast_t::supper &proxy() noexcept final {
                 return promise;
             }
 
-            void finalize(raw_req_t *, int, addrinfo *ai) noexcept final {
+            void finalize(raw_t *, int, ::addrinfo *ai) noexcept final {
                 uv_freeaddrinfo(ai);
             }
 
-            int check(raw_req_t *, int status, addrinfo *) noexcept final {
+            int check(raw_t *, int status, ::addrinfo *) noexcept final {
                 return status;
             }
         };
-    }
+    };
 
     [[nodiscard]]
     inline uvcxx::promise<addrinfo *> getaddrinfo(
             const loop_t &loop, const getaddrinfo_t &req,
             const char *node, const char *service, const addrinfo *hints = nullptr) {
-        using raw_req_t = inner::getaddrinfo::raw_req_t;
-        using callback_t = inner::getaddrinfo::callback_t<addrinfo *>;
-        auto *data = new callback_t(
-                req, [](raw_req_t *, int, addrinfo *res) {
-                    return res;
-                });
-        uvcxx::defer delete_data(std::default_delete<callback_t>(), data);
+        auto *data = new getaddrinfo_t::callback_t(req);
+        uvcxx::defer_delete delete_data(data);
 
-        auto err = uv_getaddrinfo(loop, data->req<raw_req_t>(), callback_t::raw_callback, node, service, hints);
+        auto err = uv_getaddrinfo(loop, req, getaddrinfo_t::callback_t::raw_callback, node, service, hints);
         if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
+
         delete_data.release();
         return data->promise.promise();
     }

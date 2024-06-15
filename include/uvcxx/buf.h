@@ -111,11 +111,13 @@ namespace uv {
         void free() { m_raw->free(); }
 
         template<class Size, typename = typename std::enable_if_t<std::is_integral_v<Size>>>
-        void malloc(size_t size) { m_raw->malloc(size); }
+        void malloc(Size size) { m_raw->malloc(size); }
 
-        void realloc(size_t size) { m_raw->realloc(size); }
+        template<class Size, typename = typename std::enable_if_t<std::is_integral_v<Size>>>
+        void realloc(Size size) { m_raw->realloc(size); }
 
-        void reserve(size_t size) { m_raw->reserve(size); }
+        template<class Size, typename = typename std::enable_if_t<std::is_integral_v<Size>>>
+        void reserve(Size size) { m_raw->reserve(size); }
 
         char *base() { return m_raw->base; }
 
@@ -136,7 +138,8 @@ namespace uv {
         [[nodiscard]]
         size_t size() const { return size_t(m_raw->len); }
 
-        void resize(size_t size) { m_raw->realloc(size); }
+        template<class Size, typename = typename std::enable_if_t<std::is_integral_v<Size>>>
+        void resize(Size size) { m_raw->realloc(size); }
 
         operator raw_t *() { return m_raw.get(); }
 

@@ -14,30 +14,11 @@ namespace uv {
         using self = prepare_t;
         using supper = inherit_handle_t<uv_prepare_t, handle_t>;
 
-        class data_t : supper::data_t {
-        public:
-            using self = data_t;
-            using supper = supper::data_t;
-
-            uvcxx::callback_emitter<> start_cb;
-
-            explicit data_t(prepare_t &handle)
-                    : supper(handle) {
-                handle.watch(start_cb);
-            }
-
-            void close() noexcept final {
-                // finally at close, make queue safe
-                start_cb.finalize();
-            }
-        };
-
         prepare_t() : self(default_loop()) {}
 
         explicit prepare_t(const loop_t &loop) {
+            set_data(new data_t(*this));    //< data will be deleted in close action
             (void) uv_prepare_init(loop, *this);
-            // data will be deleted in close action
-            set_data(new data_t(*this));
         }
 
         [[nodiscard]]
@@ -57,6 +38,23 @@ namespace uv {
             auto data = (data_t *) (handle->data);
             data->start_cb.emit();
         }
+
+        class data_t : supper::data_t {
+        public:
+            using self = data_t;
+            using supper = supper::data_t;
+
+            uvcxx::callback_emitter<> start_cb;
+
+            explicit data_t(prepare_t &handle)
+                    : supper(handle) {
+                handle.watch(start_cb);
+            }
+
+            void close() noexcept final {
+                start_cb.finalize();
+            }
+        };
     };
 }
 

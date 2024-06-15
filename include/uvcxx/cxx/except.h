@@ -25,20 +25,31 @@ namespace uvcxx {
         using self = errcode;
         using supper = exception;
 
-        template<typename I, typename=typename std::enable_if_t<std::is_integral_v<I>>>
-        explicit errcode(I errcode, const std::string_view &msg = "") : self(int(errcode), msg) {}
+        explicit errcode(int errcode)
+                : supper(Message(errcode)), m_errcode(errcode) {}
 
-        explicit errcode(int errcode, const std::string_view &msg = "")
-                : supper(Message(errcode, msg)), m_errcode(errcode) {}
+        template<typename ...Args>
+        explicit errcode(int errcode, const Args &...args)
+                : supper(Message(errcode, args...)), m_errcode(errcode) {}
 
-        static std::string Message(int errcode, const std::string_view &msg = "") {
+        template<typename I, typename=typename std::enable_if_t<std::is_convertible_v<int, I>>>
+        explicit errcode(I errcode)
+                : self(int(errcode)) {}
+
+        template<typename I, typename ...Args, typename=typename std::enable_if_t<std::is_convertible_v<int, I>>>
+        explicit errcode(I errcode, const Args &...args)
+                : self(int(errcode), args...) {}
+
+        static std::string Message(int errcode) {
             std::ostringstream oss;
-            oss << uv_err_name(errcode);
-            oss << "(" << errcode << "): ";
-            oss << uv_strerror(errcode);
-            if (!msg.empty()) {
-                oss << "; " << msg;
-            }
+            Concat(oss, uv_err_name(errcode), "(", errcode, "): ", uv_strerror(errcode));
+            return oss.str();
+        }
+
+        template<typename T, typename ...Args>
+        static std::string Message(int errcode, const T &arg, const Args &...args) {
+            std::ostringstream oss;
+            Concat(oss, uv_err_name(errcode), "(", errcode, "): ", uv_strerror(errcode), "; ", arg, args...);
             return oss.str();
         }
 
@@ -47,17 +58,44 @@ namespace uvcxx {
 
         operator int() const { return m_errcode; }
 
+        template<typename I, typename=typename std::enable_if_t<std::is_convertible_v<int, I>>>
+        bool operator==(I v) { return m_errcode == int(v); }
+
+        template<typename I, typename=typename std::enable_if_t<std::is_convertible_v<int, I>>>
+        bool operator!=(I v) { return m_errcode != int(v); }
+
+        template<typename I, typename=typename std::enable_if_t<std::is_convertible_v<int, I>>>
+        bool operator<=(I v) { return m_errcode <= int(v); }
+
+        template<typename I, typename=typename std::enable_if_t<std::is_convertible_v<int, I>>>
+        bool operator>=(I v) { return m_errcode >= int(v); }
+
+        template<typename I, typename=typename std::enable_if_t<std::is_convertible_v<int, I>>>
+        bool operator<(I v) { return m_errcode < int(v); }
+
+        template<typename I, typename=typename std::enable_if_t<std::is_convertible_v<int, I>>>
+        bool operator>(I v) { return m_errcode > int(v); }
+
     private:
         int m_errcode = 0;
+
+        static std::ostream &Concat(std::ostream &out) {
+            return out;
+        }
+
+        template<typename T, typename ...Args>
+        static std::ostream &Concat(std::ostream &out, const T &arg, const Args &...args) {
+            return Concat(out << arg, args...);
+        }
     };
 }
 
 #if defined(UVCXX_NO_EXCEPTION)
-#define UVCXX_THROW(code) return
-#define UVCXX_THROW_OR_RETURN(code, ret) return ret
+#define UVCXX_THROW(code, ...) return
+#define UVCXX_THROW_OR_RETURN(code, ret, ...) return ret
 #else
-#define UVCXX_THROW(code) throw ::uvcxx::errcode(code)
-#define UVCXX_THROW_OR_RETURN(code, ret) throw ::uvcxx::errcode(code)
+#define UVCXX_THROW(code, ...) throw ::uvcxx::errcode(code, ## __VA_ARGS__)
+#define UVCXX_THROW_OR_RETURN(code, ret, ...) throw ::uvcxx::errcode(code, ## __VA_ARGS__)
 #endif
 
 #endif //LIBUVCXX_EXCEPT_H

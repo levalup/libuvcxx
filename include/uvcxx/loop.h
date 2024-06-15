@@ -25,23 +25,6 @@ namespace uv {
 
         using supper::supper;
 
-        class data_t {
-        public:
-            static constexpr uint64_t MAGIC = 0x1155665044332210;
-            uint64_t magic = MAGIC;
-
-            // use to make sure this loop close.
-            std::mutex closing;
-            std::atomic<bool> closed{false};
-
-            static bool is_it(void *data) {
-                return data && ((data_t *) data)->magic == MAGIC;
-            }
-
-        public:
-            virtual ~data_t() = default;
-        };
-
         loop_t() : self(make_shared()) {}
 
         int close() {
@@ -140,6 +123,24 @@ namespace uv {
         static self borrow(raw_t *raw) {
             return self{borrow_t(raw)};
         }
+
+    public:
+        class data_t {
+        public:
+            static constexpr uint64_t MAGIC = 0x1155665044332210;
+            uint64_t magic = MAGIC;
+
+            // use to make sure this loop close.
+            std::mutex closing;
+            std::atomic<bool> closed{false};
+
+            static bool is_it(void *data) {
+                return data && ((data_t *) data)->magic == MAGIC;
+            }
+
+        public:
+            virtual ~data_t() = default;
+        };
 
     private:
         static int close_loop(raw_t *raw, data_t *data) {
