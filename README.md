@@ -1,5 +1,9 @@
 # libuvcxx
 
+[![License](https://img.shields.io/badge/license-MIT-blue.svg?logo=)](LICENSE)
+[![libuv](https://img.shields.io/badge/libuv-v1.48.0-green?logo=libuv&logoColor=green&link=https%3A%2F%2Fgithub.com%2Flibuv%2Flibuv)](https://github.com/libuv/libuv)
+<img src="https://img.shields.io/badge/C++-17-%23512BD4.svg?logo=C%2B%2B&logoColor=%23512BD4">
+
 > C++ wrapper for libuv, header only.
 
 ## 1. Usage
