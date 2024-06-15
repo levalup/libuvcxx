@@ -41,16 +41,12 @@ namespace uvcxx {
                 : self(int(errcode), args...) {}
 
         static std::string Message(int errcode) {
-            std::ostringstream oss;
-            Concat(oss, uv_err_name(errcode), "(", errcode, "): ", uv_strerror(errcode));
-            return oss.str();
+            return Concat(uv_err_name(errcode), "(", errcode, "): ", uv_strerror(errcode));
         }
 
         template<typename T, typename ...Args>
         static std::string Message(int errcode, const T &arg, const Args &...args) {
-            std::ostringstream oss;
-            Concat(oss, uv_err_name(errcode), "(", errcode, "): ", uv_strerror(errcode), "; ", arg, args...);
-            return oss.str();
+            return Concat(uv_err_name(errcode), "(", errcode, "): ", uv_strerror(errcode), "; ", arg, args...);
         }
 
         [[nodiscard]]
@@ -79,13 +75,11 @@ namespace uvcxx {
     private:
         int m_errcode = 0;
 
-        static std::ostream &Concat(std::ostream &out) {
-            return out;
-        }
-
-        template<typename T, typename ...Args>
-        static std::ostream &Concat(std::ostream &out, const T &arg, const Args &...args) {
-            return Concat(out << arg, args...);
+        template<typename ...Args>
+        static std::string Concat(const Args &...args) {
+            std::ostringstream oss;
+            (oss << ... << args);
+            return oss.str();
         }
     };
 }
