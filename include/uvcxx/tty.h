@@ -9,10 +9,10 @@
 #include "stream.h"
 
 namespace uv {
-    class tty_t : public handle_extend_t<uv_tty_t, stream_t> {
+    class tty_t : public inherit_handle_t<uv_tty_t, stream_t> {
     public:
         using self = tty_t;
-        using supper = handle_extend_t<uv_tty_t, stream_t>;
+        using supper = inherit_handle_t<uv_tty_t, stream_t>;
 
         using raw_t = uv_tty_t;
 

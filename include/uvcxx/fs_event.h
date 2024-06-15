@@ -10,10 +10,10 @@
 #include "platform.h"
 
 namespace uv {
-    class fs_event_t : public handle_extend_t<uv_fs_event_t, handle_t> {
+    class fs_event_t : public inherit_handle_t<uv_fs_event_t, handle_t> {
     public:
         using self = fs_event_t;
-        using supper = handle_extend_t<uv_fs_event_t, handle_t>;
+        using supper = inherit_handle_t<uv_fs_event_t, handle_t>;
 
         class data_t : supper::data_t {
         public:

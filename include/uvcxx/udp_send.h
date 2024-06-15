@@ -11,10 +11,10 @@
 namespace uv {
     class udp_t;
 
-    class udp_send_t : public req_extend_t<uv_udp_send_t, req_t> {
+    class udp_send_t : public inherit_req_t<uv_udp_send_t, req_t> {
     public:
         using self = udp_send_t;
-        using supper = req_extend_t<uv_udp_send_t, req_t>;
+        using supper = inherit_req_t<uv_udp_send_t, req_t>;
 
         class data_t : public req_callback_t<raw_t, int> {
         public:

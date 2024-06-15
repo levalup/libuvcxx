@@ -9,10 +9,10 @@
 #include "handle.h"
 
 namespace uv {
-    class idle_t : public handle_extend_t<uv_idle_t, handle_t> {
+    class idle_t : public inherit_handle_t<uv_idle_t, handle_t> {
     public:
         using self = idle_t;
-        using supper = handle_extend_t<uv_idle_t, handle_t>;
+        using supper = inherit_handle_t<uv_idle_t, handle_t>;
 
         class data_t : supper::data_t {
         public:

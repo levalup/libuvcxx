@@ -11,6 +11,7 @@
 #include "cxx/defer.h"
 #include "cxx/except.h"
 #include "cxx/promise.h"
+#include "inner/base.h"
 
 namespace uv {
     /**
@@ -18,18 +19,27 @@ namespace uv {
      * Please do not modify data.
      * The data' resources will be freed after each request action finished.
      */
-    class req_t {
+    class req_t : public uvcxx::shared_raw_base_t<uv_req_t> {
     public:
         using self = req_t;
-        using raw_t = uv_req_t;
+        using supper = uvcxx::shared_raw_base_t<uv_req_t>;
+
+        using supper::supper;
 
         /**
          * the uv_req_t->data must be the sub-class of data_t
          */
         class data_t {
         public:
+            static constexpr uint64_t MAGIC = 0x554332055443320;
+            uint64_t magic = MAGIC;
+
+            static bool is_it(void *data) {
+                return data && ((data_t *) data)->magic == MAGIC;
+            }
+
             explicit data_t(const req_t &req)
-                    : m_req(req.m_raw) {
+                    : m_req(req.shared_raw()) {
                 m_req->data = this;
             }
 
@@ -72,7 +82,7 @@ namespace uv {
 
         [[nodiscard]]
         size_t size() const {
-            return uv_req_size(m_raw->type);
+            return uv_req_size(raw()->type);
         }
 
         [[nodiscard]]
@@ -95,58 +105,34 @@ namespace uv {
 
         [[nodiscard]]
         const char *type_name() const {
-            return uv_req_type_name(m_raw->type);
+            return uv_req_type_name(raw()->type);
         }
 
         template<typename T>
         [[nodiscard]]
         T *data() const {
-            return (T *) m_raw->data;
+            return (T *) raw()->data;
         }
 
         template<typename T>
         [[nodiscard]]
         T *get_data() const {
-            return (T *) m_raw->data;
+            return (T *) raw()->data;
         }
-
-        operator raw_t *() { return m_raw.get(); }
-
-        operator raw_t *() const { return m_raw.get(); }
-
-        explicit operator bool() { return bool(m_raw); }
 
         static self borrow(raw_t *raw) {
-            return self{std::shared_ptr<raw_t>(raw, [](raw_t *) {})};
+            return self{borrow_t(raw)};
         }
-
-    protected:
-        explicit req_t(std::shared_ptr<raw_t> raw)
-                : m_raw(std::move(raw)) {}
-
-        raw_t *raw() { return m_raw.get(); }
-
-        raw_t *raw() const { return m_raw.get(); }
-
-        template<typename T>
-        T *raw() { return (T *) (m_raw.get()); }
-
-        template<typename T>
-        T *raw() const { return (T *) (m_raw.get()); }
-
-    private:
-        // store the instance of `req` to avoid resource release caused by no external reference
-        std::shared_ptr<raw_t> m_raw;
     };
 
     template<typename T, typename B, typename=typename std::enable_if_t<std::is_base_of_v<req_t, B>>>
-    class req_extend_t : public B {
+    class inherit_req_t : public B {
     public:
-        using self = req_extend_t;
+        using self = inherit_req_t;
         using supper = B;
         using raw_t = T;
 
-        req_extend_t()
+        inherit_req_t()
                 : supper(make_shared()) {
             this->set_data(nullptr);
         }
@@ -154,10 +140,6 @@ namespace uv {
         operator T *() { return this->template raw<T>(); }
 
         operator T *() const { return this->template raw<T>(); }
-
-    protected:
-        explicit req_extend_t(const std::shared_ptr<T> &raw)
-                : supper(std::reinterpret_pointer_cast<uv_req_t>(raw)) {}
 
     private:
         static std::shared_ptr<uv_req_t> make_shared() {

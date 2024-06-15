@@ -13,10 +13,10 @@
 #include "req.h"
 
 namespace uv {
-    class fs_t : public req_extend_t<uv_fs_t, req_t> {
+    class fs_t : public inherit_req_t<uv_fs_t, req_t> {
     public:
         using self = fs_t;
-        using supper = req_extend_t<uv_fs_t, req_t>;
+        using supper = inherit_req_t<uv_fs_t, req_t>;
 
         [[nodiscard]]
         loop_t loop() const {

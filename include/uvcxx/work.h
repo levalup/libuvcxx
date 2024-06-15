@@ -10,10 +10,10 @@
 #include "req.h"
 
 namespace uv {
-    class work_t : public req_extend_t<uv_work_t, req_t> {
+    class work_t : public inherit_req_t<uv_work_t, req_t> {
     public:
         using self = work_t;
-        using supper = req_extend_t<uv_work_t, req_t>;
+        using supper = inherit_req_t<uv_work_t, req_t>;
 
         class data_t : public req_callback_t<uv_work_t, int> {
         public:

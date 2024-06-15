@@ -10,10 +10,10 @@
 #include "stream.h"
 
 namespace uv {
-    class tcp_t : public handle_extend_t<uv_tcp_t, acceptable_stream_t> {
+    class tcp_t : public inherit_handle_t<uv_tcp_t, acceptable_stream_t> {
     public:
         using self = tcp_t;
-        using supper = handle_extend_t<uv_tcp_t, acceptable_stream_t>;
+        using supper = inherit_handle_t<uv_tcp_t, acceptable_stream_t>;
 
         using raw_t = uv_tcp_t;
 

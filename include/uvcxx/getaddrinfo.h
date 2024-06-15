@@ -10,10 +10,10 @@
 #include "req.h"
 
 namespace uv {
-    class getaddrinfo_t : public req_extend_t<uv_getaddrinfo_t, req_t> {
+    class getaddrinfo_t : public inherit_req_t<uv_getaddrinfo_t, req_t> {
     public:
         using self = getaddrinfo_t;
-        using supper = req_extend_t<uv_getaddrinfo_t, req_t>;
+        using supper = inherit_req_t<uv_getaddrinfo_t, req_t>;
 
         [[nodiscard]]
         loop_t loop() const {

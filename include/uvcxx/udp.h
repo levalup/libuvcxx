@@ -10,10 +10,10 @@
 #include "udp_send.h"
 
 namespace uv {
-    class udp_t : public handle_extend_t<uv_udp_t, handle_t> {
+    class udp_t : public inherit_handle_t<uv_udp_t, handle_t> {
     public:
         using self = udp_t;
-        using supper = handle_extend_t<uv_udp_t, handle_t>;
+        using supper = inherit_handle_t<uv_udp_t, handle_t>;
         using raw_t = uv_udp_t;
 
         using supper::supper;

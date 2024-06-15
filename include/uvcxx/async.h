@@ -9,10 +9,10 @@
 #include "handle.h"
 
 namespace uv {
-    class async_t : public handle_extend_t<uv_async_t, handle_t> {
+    class async_t : public inherit_handle_t<uv_async_t, handle_t> {
     public:
         using self = async_t;
-        using supper = handle_extend_t<uv_async_t, handle_t>;
+        using supper = inherit_handle_t<uv_async_t, handle_t>;
 
         class data_t : supper::data_t {
         public:

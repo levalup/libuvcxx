@@ -10,6 +10,7 @@
 
 #include "cxx/callback.h"
 #include "cxx/promise.h"
+#include "inner/base.h"
 
 #include "loop.h"
 
@@ -32,22 +33,31 @@ namespace uv {
      * Q: Why not `close` in destructor?
      * A: Because the destructor only be called after it is closed.
      */
-    class handle_t {
+    class handle_t : public uvcxx::shared_raw_base_t<uv_handle_t> {
     public:
         using self = handle_t;
-        using raw_t = uv_handle_t;
+        using supper = uvcxx::shared_raw_base_t<uv_handle_t>;
+
+        using supper::supper;
 
         /**
          * the uv_handle_t->data must be the sub-class of data_t
          */
         class data_t {
         public:
+            static constexpr uint64_t MAGIC = 0x1155665044332210;
+            uint64_t magic = MAGIC;
+
             std::atomic<bool> closed{false};
             uvcxx::promise_emitter<> close_cb = nullptr;
 
+            static bool is_it(void *data) {
+                return data && ((data_t *) data)->magic == MAGIC;
+            }
+
         public:
             explicit data_t(const handle_t &handle)
-                    : m_handle(handle.m_raw) {
+                    : m_handle(handle.shared_raw()) {
                 m_handle->data = this;
             }
 
@@ -100,8 +110,10 @@ namespace uv {
         }
 
         void close(std::nullptr_t) {
-            assert(m_raw->data != nullptr);
-            auto data = (data_t *) m_raw->data;
+            auto data = get_data<data_t>();
+            if (!data_t::is_it(data)) {
+                throw uvcxx::errcode(UV_EPERM, "close non-libuvcxx handle is not permitted");
+            }
 
             // Ensure that the handle will only be closed once, avoiding multiple invocations of close
             //     due to the use of asynchronous queues in the callback's `queue` working mode.
@@ -113,8 +125,10 @@ namespace uv {
 
         [[nodiscard("use close(nullptr) instead")]]
         uvcxx::promise<> close() {
-            assert(m_raw->data != nullptr);
-            auto data = (data_t *) m_raw->data;
+            auto data = get_data<data_t>();
+            if (!data_t::is_it(data)) {
+                throw uvcxx::errcode(UV_EPERM, "close non-libuvcxx handle is not permitted");
+            }
 
             // Ensure that the handle will only be closed once, avoiding multiple invocations of close
             //     due to the use of asynchronous queues in the callback's `queue` working mode.
@@ -141,7 +155,7 @@ namespace uv {
 
         [[nodiscard]]
         size_t size() const {
-            return uv_handle_size(m_raw->type);
+            return uv_handle_size(raw()->type);
         }
 
         /**
@@ -159,47 +173,25 @@ namespace uv {
 
         [[nodiscard]]
         const char *type_name() const {
-            return uv_handle_type_name(m_raw->type);
+            return uv_handle_type_name(raw()->type);
         }
 
         template<typename T>
         [[nodiscard]]
         T *data() const {
-            return (T *) m_raw->data;
+            return (T *) raw()->data;
         }
 
         template<typename T>
         [[nodiscard]]
         T *get_data() const {
-            return (T *) m_raw->data;;
-        }
-
-        operator raw_t *() { return m_raw.get(); }
-
-        operator raw_t *() const { return m_raw.get(); }
-
-        explicit operator bool() { return bool(m_raw); }
-
-        static self borrow(raw_t *raw) {
-            return self{std::shared_ptr<raw_t>(raw, [](raw_t *) {})};
+            return (T *) raw()->data;;
         }
 
     protected:
-        explicit handle_t(std::shared_ptr<raw_t> raw)
-                : m_raw(std::move(raw)) {}
-
-        raw_t *raw() { return m_raw.get(); }
-
-        raw_t *raw() const { return m_raw.get(); }
-
-        template<typename T>
-        T *raw() { return (T *) (m_raw.get()); }
-
-        template<typename T>
-        T *raw() const { return (T *) (m_raw.get()); }
-
-    private:
-        std::shared_ptr<raw_t> m_raw;
+        static self borrow(raw_t *raw) {
+            return self{borrow_t(raw)};
+        }
 
     private:
         static void raw_close_callback(raw_t *raw) {
@@ -235,15 +227,15 @@ namespace uv {
     };
 
     template<typename T, typename B, typename=typename std::enable_if_t<std::is_base_of_v<handle_t, B>>>
-    class handle_extend_t : public B {
+    class inherit_handle_t : public B {
     public:
-        using self = handle_extend_t;
+        using self = inherit_handle_t;
         using supper = B;
         using raw_t = T;
 
         using supper::supper;
 
-        handle_extend_t()
+        inherit_handle_t()
                 : supper(make_shared()) {
             this->set_data(nullptr);
         }
@@ -251,10 +243,6 @@ namespace uv {
         operator T *() { return this->template raw<T>(); }
 
         operator T *() const { return this->template raw<T>(); }
-
-    protected:
-        explicit handle_extend_t(const std::shared_ptr<T> &raw)
-                : supper(std::reinterpret_pointer_cast<uv_handle_t>(raw)) {}
 
     private:
         static std::shared_ptr<uv_handle_t> make_shared() {

@@ -26,16 +26,19 @@ namespace uvcxx {
         using supper = exception;
 
         template<typename I, typename=typename std::enable_if_t<std::is_integral_v<I>>>
-        explicit errcode(I errcode) : self(int(errcode)) {}
+        explicit errcode(I errcode, const std::string_view &msg = "") : self(int(errcode), msg) {}
 
-        explicit errcode(int errcode)
-                : supper(Message(errcode)), m_errcode(errcode) {}
+        explicit errcode(int errcode, const std::string_view &msg = "")
+                : supper(Message(errcode, msg)), m_errcode(errcode) {}
 
-        static std::string Message(int errcode) {
+        static std::string Message(int errcode, const std::string_view &msg = "") {
             std::ostringstream oss;
             oss << uv_err_name(errcode);
             oss << "(" << errcode << "): ";
             oss << uv_strerror(errcode);
+            if (!msg.empty()) {
+                oss << "; " << msg;
+            }
             return oss.str();
         }
 

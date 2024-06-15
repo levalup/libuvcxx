@@ -10,10 +10,10 @@
 #include "req.h"
 
 namespace uv {
-    class getnameinfo_t : public req_extend_t<uv_getnameinfo_t, req_t> {
+    class getnameinfo_t : public inherit_req_t<uv_getnameinfo_t, req_t> {
     public:
         using self = getnameinfo_t;
-        using supper = req_extend_t<uv_getnameinfo_t, req_t>;
+        using supper = inherit_req_t<uv_getnameinfo_t, req_t>;
 
         [[nodiscard]]
         loop_t loop() const {

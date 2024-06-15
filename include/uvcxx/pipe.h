@@ -10,10 +10,10 @@
 #include "stream.h"
 
 namespace uv {
-    class pipe_t : public handle_extend_t<uv_pipe_t, acceptable_stream_t> {
+    class pipe_t : public inherit_handle_t<uv_pipe_t, acceptable_stream_t> {
     public:
         using self = pipe_t;
-        using supper = handle_extend_t<uv_pipe_t, acceptable_stream_t>;
+        using supper = inherit_handle_t<uv_pipe_t, acceptable_stream_t>;
 
         using raw_t = uv_pipe_t;
 

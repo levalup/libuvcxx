@@ -156,12 +156,8 @@ namespace uv {
         operator raw_t *() const { return raw<raw_t>(); }
 
         static self borrow(raw_t *raw) {
-            return self{std::shared_ptr<uv_handle_t>((uv_handle_t *) raw, [](uv_handle_t *) {})};
+            return self{borrow_t(raw)};
         }
-
-    protected:
-        explicit stream_t(std::shared_ptr<uv_handle_t> raw)
-                : supper(std::move(raw)) {}
 
     private:
         static void raw_alloc_callback(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {

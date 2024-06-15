@@ -11,10 +11,10 @@
 namespace uv {
     class stream_t;
 
-    class shutdown_t : public req_extend_t<uv_shutdown_t, req_t> {
+    class shutdown_t : public inherit_req_t<uv_shutdown_t, req_t> {
     public:
         using self = shutdown_t;
-        using supper = req_extend_t<uv_shutdown_t, req_t>;
+        using supper = inherit_req_t<uv_shutdown_t, req_t>;
 
         class data_t : public req_callback_t<raw_t, int> {
         public:

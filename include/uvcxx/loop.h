@@ -9,34 +9,52 @@
 #include <atomic>
 #include <memory>
 #include <mutex>
+#include <cassert>
 
 #include <uv.h>
 
 #include "cxx/defer.h"
 #include "cxx/except.h"
+#include "inner/base.h"
 
 namespace uv {
-    class loop_t {
+    class loop_t : public uvcxx::shared_raw_base_t<uv_loop_t> {
     public:
         using self = loop_t;
-        using raw_t = uv_loop_t;
+        using supper = uvcxx::shared_raw_base_t<uv_loop_t>;
+
+        using supper::supper;
 
         class data_t {
         public:
-            virtual ~data_t() = default;
+            static constexpr uint64_t MAGIC = 0x1155665044332210;
+            uint64_t magic = MAGIC;
 
             // use to make sure this loop close.
             std::mutex closing;
             std::atomic<bool> closed{false};
+
+            static bool is_it(void *data) {
+                return data && ((data_t *) data)->magic == MAGIC;
+            }
+
+        public:
+            virtual ~data_t() = default;
         };
 
         loop_t() : self(make_shared()) {}
 
         int close() {
-            auto data = (data_t *) m_raw->data;
-            auto err = close_loop(*this, data);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            auto data = (data_t *) raw()->data;
+            if (data_t::is_it(data)) {
+                auto err = close_loop(*this, data);
+                if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
+                return err;
+            } else {
+                auto err = uv_loop_close(raw());
+                if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
+                return err;
+            }
         }
 
         template<typename T>
@@ -119,21 +137,9 @@ namespace uv {
             uv_loop_set_data(*this, data);
         }
 
-    public:
-        operator raw_t *() { return m_raw.get(); }
-
-        operator raw_t *() const { return m_raw.get(); }
-
-        explicit operator bool() { return bool(m_raw); }
-
         static self borrow(raw_t *raw) {
-            return self{std::shared_ptr<raw_t>(raw, [](raw_t *) {})};
+            return self{borrow_t(raw)};
         }
-
-    private:
-        std::shared_ptr<raw_t> m_raw;
-
-        explicit loop_t(decltype(m_raw) raw) : m_raw(std::move(raw)) {}
 
     private:
         static int close_loop(raw_t *raw, data_t *data) {
