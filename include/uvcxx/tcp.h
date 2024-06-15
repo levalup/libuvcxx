@@ -17,18 +17,22 @@ namespace uv {
 
         tcp_t() : self(default_loop()) {}
 
-        explicit tcp_t(int flags) : self(default_loop(), flags) {}
-
         explicit tcp_t(const loop_t &loop) {
             set_data(new data_t(*this));    //< data will be deleted in close action
             (void) uv_tcp_init(loop, *this);
         }
+
+#if UVCXX_SATISFY_VERSION(1, 7, 0)
+
+        explicit tcp_t(int flags) : self(default_loop(), flags) {}
 
         explicit tcp_t(const loop_t &loop, int flags) {
             (void) uv_tcp_init_ex(loop, *this, flags);
             // data will be deleted in close action
             set_data(new data_t(*this));
         }
+
+#endif
 
         int send_buffer_size(int *value) {
             auto err = uv_send_buffer_size(*this, value);
@@ -110,7 +114,35 @@ namespace uv {
         uvcxx::promise<> connect(const sockaddr *addr) {
             return ::uv::tcp_connect(*this, addr);
         }
+
+#if UVCXX_SATISFY_VERSION(1, 32, 0)
+
+        void close_reset(std::nullptr_t) {
+            close_for([&](void (*cb)(uv_handle_t *)) {
+                uv_tcp_close_reset(*this, cb);
+            });
+        }
+
+        [[nodiscard("use close_reset(nullptr) instead")]]
+        uvcxx::promise<> close_reset() {
+            return close_for_promise([&](void (*cb)(uv_handle_t *)) {
+                uv_tcp_close_reset(*this, cb);
+            });
+        }
+
+#endif
     };
+
+#if UVCXX_SATISFY_VERSION(1, 41, 0)
+
+    [[nodiscard]]
+    inline int socketpair(int type, int protocol, uv_os_sock_t socket_vector[2], int flags0, int flags1) {
+        auto err = uv_socketpair(type, protocol, socket_vector, flags0, flags1);
+        if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
+        return err;
+    }
+
+#endif
 }
 
 #endif //LIBUVCXX_TCP_H

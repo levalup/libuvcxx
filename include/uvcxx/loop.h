@@ -16,6 +16,7 @@
 #include "cxx/defer.h"
 #include "cxx/except.h"
 #include "inner/base.h"
+#include "utils/version.h"
 
 namespace uv {
     class loop_t : public uvcxx::shared_raw_base_t<uv_loop_t> {
@@ -26,6 +27,22 @@ namespace uv {
         using supper::supper;
 
         loop_t() : self(make_shared()) {}
+
+        [[nodiscard]]
+        void *data() const {
+            return raw()->data;
+        }
+
+#if UVCXX_SATISFY_VERSION(1, 0, 2)
+
+        template<typename T>
+        int configure(uv_loop_option option, T value) {
+            auto err = uv_loop_configure(*this, option, value);
+            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
+            return err;
+        }
+
+#endif
 
         int close() {
             auto data = (data_t *) raw()->data;
@@ -38,13 +55,6 @@ namespace uv {
                 if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
                 return err;
             }
-        }
-
-        template<typename T>
-        int configure(uv_loop_option option, T value) {
-            auto err = uv_loop_configure(*this, option, value);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
         }
 
         int run() {
@@ -87,15 +97,25 @@ namespace uv {
             uv_walk(*this, walk_cb, arg);
         }
 
+#if UVCXX_SATISFY_VERSION(1, 12, 0)
+
         int fork() {
             auto err = uv_loop_fork(*this);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
             return err;
         }
 
+#endif
+
+#if UVCXX_SATISFY_VERSION(1, 39, 0)
+
         uint64_t metrics_idle_time() {
             return uv_metrics_idle_time(*this);
         }
+
+#endif
+
+#if UVCXX_SATISFY_VERSION(1, 45, 0)
 
         int metrics_info(uv_metrics_t *metrics) {
             return uv_metrics_info(*this, metrics);
@@ -107,19 +127,34 @@ namespace uv {
             return metrics;
         }
 
+#endif
+
         [[nodiscard]]
         void *get_data() const {
-            return uv_loop_get_data(*this);
+            return raw()->data;
+        }
+
+        template<typename T>
+        [[nodiscard]]
+        T *data() const {
+            return (T *) raw()->data;
+        }
+
+        template<typename T>
+        [[nodiscard]]
+        T *get_data() const {
+            return (T *) raw()->data;
         }
 
         /**
-         * Never use this method on your own as it may result in failure.
+         * DO NOT this method on your own as it may result in unexpected failure.
          * @param data
          */
         void set_data(void *data) {
-            uv_loop_set_data(*this, data);
+            raw()->data = data;
         }
 
+    public:
         static self borrow(raw_t *raw) {
             return self{borrow_t(raw)};
         }

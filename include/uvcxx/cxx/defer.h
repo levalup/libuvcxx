@@ -19,7 +19,7 @@ namespace uvcxx {
         defer &operator=(const defer &) = delete;
 
         template<typename FUNC, typename... Args,
-                typename = typename std::enable_if_t<std::is_invocable_v<FUNC, Args...>>>
+                typename std::enable_if_t<std::is_invocable_v<FUNC, Args...>, int> = 0>
         explicit defer(FUNC finalizer, Args &&... args)
                 : m_finalizer(self::bind(finalizer, std::forward<Args>(args)...)) {
         }
@@ -50,17 +50,15 @@ namespace uvcxx {
         }
 
     protected:
-        template<typename FUNC, typename... Args>
-        static
-        typename std::enable_if_t<std::is_invocable_r_v<void, FUNC, Args...>, std::function<void()>>
-        bind(FUNC func, Args &&... args) {
+        template<typename FUNC, typename... Args, typename std::enable_if_t<
+                std::is_invocable_r_v<void, FUNC, Args...>, int> = 0>
+        static std::function<void()> bind(FUNC func, Args &&... args) {
             return std::bind(func, std::forward<Args>(args)...);
         }
 
-        template<typename FUNC, typename... Args>
-        static
-        typename std::enable_if_t<!std::is_invocable_r_v<void, FUNC, Args...>, std::function<void()>>
-        bind(FUNC func, Args &&... args) {
+        template<typename FUNC, typename... Args, typename std::enable_if_t<
+                !std::is_invocable_r_v<void, FUNC, Args...>, int> = 0>
+        static std::function<void()> bind(FUNC func, Args &&... args) {
             return [void_call = std::bind(func, std::forward<Args>(args)...)]() -> void {
                 (void) void_call();
             };

@@ -13,11 +13,13 @@
 
 #include <uv.h>
 
+#include "version.h"
+
 namespace uvcxx {
     template<typename T, typename std::enable_if_t<
             std::is_convertible_v<std::string, decltype(std::to_string(std::declval<const T &>()))>,
             int> = 0>
-    inline std::string to_string(const T &t) {
+    inline decltype(auto) to_string(const T &t) {
         return std::to_string(t);
     }
 
@@ -126,6 +128,8 @@ namespace uvcxx {
         });
     }
 
+#if UVCXX_SATISFY_VERSION(1, 2, 0)
+
     inline const char *to_string(uv_tty_mode_t t) {
         switch (t) {
             UVCXX_DEFAULT("unknown");
@@ -134,6 +138,8 @@ namespace uvcxx {
             UVCXX_CASE(UV_TTY_MODE_IO, "io");
         }
     }
+
+#endif
 
     inline const char *to_string(uv_tty_vtermstate_t t) {
         switch (t) {

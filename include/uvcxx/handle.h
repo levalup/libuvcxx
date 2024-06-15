@@ -52,7 +52,7 @@ namespace uv {
 
         [[nodiscard]]
         void *data() const {
-            return raw<raw_t>()->data;
+            return raw()->data;
         }
 
         [[nodiscard]]
@@ -82,54 +82,41 @@ namespace uv {
             return uv_handle_size(raw()->type);
         }
 
-        /**
-         * Never use this method on your own as it may result in failure.
-         * @param data
-         */
-        void set_data(void *data) {
-            uv_handle_set_data(*this, data);
+        [[nodiscard]]
+        loop_t get_loop() const {
+            return loop();
         }
 
         [[nodiscard]]
         uv_handle_type get_type() const {
-            return uv_handle_get_type(*this);
+            return raw()->type;
         }
+
+#if UVCXX_SATISFY_VERSION(1, 19, 0)
 
         [[nodiscard]]
         const char *type_name() const {
             return uv_handle_type_name(raw()->type);
         }
 
+#endif
+
         void close(std::nullptr_t) {
-            auto data = get_data<data_t>();
-            if (!data_t::is_it(data)) {
-                throw uvcxx::errcode(UV_EPERM, "close non-libuvcxx handle is not permitted");
-            }
-
-            // Ensure that the handle will only be closed once, avoiding multiple invocations of close
-            //     due to the use of asynchronous queues in the callback's `queue` working mode.
-            bool closed = false;
-            if (!data->closed.compare_exchange_strong(closed, true)) return;
-
-            uv_close(*this, raw_close_callback);
+            close_for([&](void (*cb)(raw_t *)) {
+                uv_close(*this, cb);
+            });
         }
 
         [[nodiscard("use close(nullptr) instead")]]
         uvcxx::promise<> close() {
-            auto data = get_data<data_t>();
-            if (!data_t::is_it(data)) {
-                throw uvcxx::errcode(UV_EPERM, "close non-libuvcxx handle is not permitted");
-            }
+            return close_for_promise([&](void (*cb)(raw_t *)) {
+                uv_close(*this, cb);
+            });
+        }
 
-            // Ensure that the handle will only be closed once, avoiding multiple invocations of close
-            //     due to the use of asynchronous queues in the callback's `queue` working mode.
-            bool closed = false;
-            if (!data->closed.compare_exchange_strong(closed, true)) return {};
-
-            data->close_cb = decltype(data->close_cb)();
-            uv_close(*this, raw_close_callback);
-
-            return data->close_cb.promise();
+        [[nodiscard]]
+        void *get_data() const {
+            return raw()->data;
         }
 
         template<typename T>
@@ -144,6 +131,47 @@ namespace uv {
             return (T *) raw()->data;;
         }
 
+        /**
+         * DO NOT this method on your own as it may result in unexpected failure.
+         * @param data
+         */
+        void set_data(void *data) {
+            raw()->data = data;
+        }
+
+    protected:
+        void close_for(const std::function<void(void (*)(raw_t *))> &close) const {
+            auto data = get_data<data_t>();
+            if (!data_t::is_it(data)) {
+                throw uvcxx::errcode(UV_EPERM, "close non-libuvcxx handle is not permitted");
+            }
+
+            // Ensure that the handle will only be closed once, avoiding multiple invocations of close
+            //     due to the use of asynchronous queues in the callback's `queue` working mode.
+            bool closed = false;
+            if (!data->closed.compare_exchange_strong(closed, true)) return;
+
+            close(raw_close_callback);
+        }
+
+        uvcxx::promise<> close_for_promise(const std::function<void(void (*)(raw_t *))> &close) const {
+            auto data = get_data<data_t>();
+            if (!data_t::is_it(data)) {
+                throw uvcxx::errcode(UV_EPERM, "close non-libuvcxx handle is not permitted");
+            }
+
+            // Ensure that the handle will only be closed once, avoiding multiple invocations of close
+            //     due to the use of asynchronous queues in the callback's `queue` working mode.
+            bool closed = false;
+            if (!data->closed.compare_exchange_strong(closed, true)) return {};
+
+            data->close_cb = decltype(data->close_cb)();
+            close(raw_close_callback);
+
+            return data->close_cb.promise();
+        }
+
+    public:
         /**
          * the uv_handle_t->data must be the sub-class of data_t
          */

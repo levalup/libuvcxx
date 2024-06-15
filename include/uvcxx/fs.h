@@ -50,31 +50,35 @@ namespace uv {
 
         [[nodiscard]]
         uv_fs_type get_fs_type() const {
-            return uv_fs_get_type(*this);
+            return raw<raw_t>()->fs_type;
         }
 
         [[nodiscard]]
         ssize_t get_result() const {
-            return uv_fs_get_result(*this);
+            return raw<raw_t>()->result;
         }
+
+#if UVCXX_SATISFY_VERSION(1, 38, 0)
 
         [[nodiscard]]
         int get_system_error() const {
             return uv_fs_get_system_error(*this);
         }
 
+#endif
+
         [[nodiscard]]
         void *get_ptr() const {
-            return uv_fs_get_ptr(*this);
+            return raw<raw_t>()->ptr;
         }
 
         [[nodiscard]]
         const char *get_path() const {
-            return uv_fs_get_path(*this);
+            return raw<raw_t>()->path;
         }
 
         uv_stat_t *get_statbuf() {
-            return uv_fs_get_statbuf(*this);
+            return &raw<raw_t>()->statbuf;
         }
 
         template<typename T>
@@ -432,6 +436,8 @@ namespace uv {
             return mkdtemp(default_loop(), fs, tpl);
         }
 
+#if UVCXX_SATISFY_VERSION(1, 34, 0)
+
         [[nodiscard]]
         inline uvcxx::promise<int, const char *> mkstemp(const loop_t &loop, const fs_t &fs, const char *tpl) {
             return inner::invoker<int, const char *>()(
@@ -454,6 +460,8 @@ namespace uv {
             return mkstemp(default_loop(), fs, tpl);
         }
 
+#endif
+
         [[nodiscard]]
         inline uvcxx::promise<int> rmdir(const loop_t &loop, const fs_t &fs, const char *path) {
             return inner::invoker<int>()(
@@ -475,6 +483,8 @@ namespace uv {
         inline uvcxx::promise<int> rmdir(const fs_t &fs, const char *path) {
             return rmdir(default_loop(), fs, path);
         }
+
+#if UVCXX_SATISFY_VERSION(1, 28, 0)
 
         [[nodiscard]]
         inline uvcxx::promise<uv_dir_t *> opendir(const loop_t &loop, const fs_t &fs, const char *path) {
@@ -519,6 +529,8 @@ namespace uv {
         inline uvcxx::promise<int> closedir(const fs_t &fs, uv_dir_t *dir) {
             return closedir(default_loop(), fs, dir);
         }
+
+#endif
 
         [[nodiscard]]
         inline uvcxx::promise<uv_stat_t *> stat(const loop_t &loop, const fs_t &fs, const char *path) {
@@ -586,6 +598,8 @@ namespace uv {
             return lstat(default_loop(), fs, path);
         }
 
+#if UVCXX_SATISFY_VERSION(1, 31, 0)
+
         [[nodiscard]]
         inline uvcxx::promise<uv_statfs_t *> statfs(const loop_t &loop, const fs_t &fs, const char *path) {
             return inner::invoker<uv_statfs_t *>()(
@@ -607,6 +621,8 @@ namespace uv {
         inline uvcxx::promise<uv_statfs_t *> statfs(const fs_t &fs, const char *path) {
             return statfs(default_loop(), fs, path);
         }
+
+#endif
 
         [[nodiscard]]
         inline uvcxx::promise<int> rename(
@@ -698,6 +714,8 @@ namespace uv {
             return ftruncate(default_loop(), fs, file, offset);
         }
 
+#if UVCXX_SATISFY_VERSION(1, 14, 0)
+
         [[nodiscard]]
         inline uvcxx::promise<int> copyfile(
                 const loop_t &loop, const fs_t &fs, const char *path, const char *new_path, int flags) {
@@ -720,6 +738,8 @@ namespace uv {
         inline uvcxx::promise<int> copyfile(const fs_t &fs, const char *path, const char *new_path, int flags) {
             return copyfile(default_loop(), fs, path, new_path, flags);
         }
+
+#endif
 
         [[nodiscard]]
         inline uvcxx::promise<ssize_t> sendfile(
@@ -951,6 +971,8 @@ namespace uv {
             return readlink(default_loop(), fs, path);
         }
 
+#if UVCXX_SATISFY_VERSION(1, 8, 0)
+
         [[nodiscard]]
         inline uvcxx::promise<const char *> realpath(const loop_t &loop, const fs_t &fs, const char *path) {
             return inner::invoker<const char *>()(
@@ -972,6 +994,8 @@ namespace uv {
         inline uvcxx::promise<const char *> realpath(const fs_t &fs, const char *path) {
             return realpath(default_loop(), fs, path);
         }
+
+#endif
 
         [[nodiscard]]
         inline uvcxx::promise<int> chown(

@@ -39,6 +39,10 @@ namespace uv {
             return client;
         }
 
+#if !UVCXX_SATISFY_VERSION(1, 2, 0)
+        using uv_tty_mode_t = int;
+#endif
+
         int set_mode(uv_tty_mode_t mode) {
             auto err = uv_tty_set_mode(*this, mode);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
@@ -63,6 +67,8 @@ namespace uv {
             uv_tty_set_vterm_state(state);
         }
 
+#if UVCXX_SATISFY_VERSION(1, 40, 0)
+
         inline int get_vterm_state(uv_tty_vtermstate_t *state) {
             auto err = uv_tty_get_vterm_state(state);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
@@ -75,6 +81,8 @@ namespace uv {
             if (err < 0) throw uvcxx::errcode(err);
             return state;
         }
+
+#endif
     }
 }
 

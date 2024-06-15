@@ -104,9 +104,13 @@ namespace uv {
             return uv_try_write(*this, bufs, nbufs);
         }
 
+#if UVCXX_SATISFY_VERSION(1, 42, 0)
+
         int try_write2(const uv_buf_t bufs[], unsigned int nbufs, uv_stream_t *send_handle) noexcept {
             return uv_try_write2(*this, bufs, nbufs, send_handle);
         }
+
+#endif
 
         [[nodiscard]]
         bool is_readable() const {
@@ -122,10 +126,14 @@ namespace uv {
             return uv_stream_set_blocking(*this, blocking);
         }
 
+#if UVCXX_SATISFY_VERSION(1, 19, 0)
+
         [[nodiscard]]
         size_t get_write_queue_size() const {
             return uv_stream_get_write_queue_size(*this);
         }
+
+#endif
 
     public:
         operator uv_stream_t *() { return raw<raw_t>(); }

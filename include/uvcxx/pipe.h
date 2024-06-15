@@ -70,11 +70,15 @@ namespace uv {
             return err;
         }
 
+#if UVCXX_SATISFY_VERSION(1, 46, 0)
+
         int bind2(const char *name, size_t namelen, unsigned int flags) {
             auto err = uv_pipe_bind2(*this, name, namelen, flags);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
             return err;
         }
+
+#endif
 
         [[nodiscard]]
         uvcxx::promise<> connect(const connect_t &req, const char *name) {
@@ -86,6 +90,8 @@ namespace uv {
             return ::uv::pipe_connect(*this, name);
         }
 
+#if UVCXX_SATISFY_VERSION(1, 46, 0)
+
         [[nodiscard]]
         uvcxx::promise<> connect2(const connect_t &req, const char *name, size_t namelen, unsigned int flags) {
             return ::uv::pipe_connect2(req, *this, name, namelen, flags);
@@ -96,17 +102,23 @@ namespace uv {
             return ::uv::pipe_connect2(*this, name, namelen, flags);
         }
 
+#endif
+
         int getsockname(char *buffer, size_t *size) const {
             auto err = uv_pipe_getsockname(*this, buffer, size);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
             return err;
         }
 
+#if UVCXX_SATISFY_VERSION(1, 3, 0)
+
         int getpeername(char *buffer, size_t *size) const {
             auto err = uv_pipe_getpeername(*this, buffer, size);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
             return err;
         }
+
+#endif
 
         void pending_instances(int count) const {
             uv_pipe_pending_instances(*this, count);
@@ -122,16 +134,24 @@ namespace uv {
             return uv_pipe_pending_type(*this);
         }
 
+#if UVCXX_SATISFY_VERSION(1, 16, 0)
+
         int chmod(int flags) {
             auto err = uv_pipe_chmod(*this, flags);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
             return err;
         }
+
+#endif
     };
+
+#if UVCXX_SATISFY_VERSION(1, 41, 0)
 
     inline int pipe(uv_file fds[2], int read_flags, int write_flags) {
         return uv_pipe(fds, read_flags, write_flags);
     }
+
+#endif
 }
 
 #endif //LIBUVCXX_PIPE_H

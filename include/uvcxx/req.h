@@ -12,6 +12,7 @@
 #include "cxx/except.h"
 #include "cxx/promise.h"
 #include "inner/base.h"
+#include "utils/version.h"
 
 namespace uv {
     /**
@@ -48,26 +49,22 @@ namespace uv {
         }
 
         [[nodiscard]]
-        void *get_data() const {
-            return uv_req_get_data(*this);
-        }
-
-        /**
-         * Never use this method on your own as it may result in failure.
-         * @param data
-         */
-        void set_data(void *data) {
-            uv_req_set_data(*this, data);
-        }
-
-        [[nodiscard]]
         uv_req_type get_type() const {
-            return uv_req_get_type(*this);
+            return raw()->type;
         }
+
+#if UVCXX_SATISFY_VERSION(1, 19, 0)
 
         [[nodiscard]]
         const char *type_name() const {
             return uv_req_type_name(raw()->type);
+        }
+
+#endif
+
+        [[nodiscard]]
+        void *get_data() const {
+            return raw()->data;
         }
 
         template<typename T>
@@ -80,6 +77,14 @@ namespace uv {
         [[nodiscard]]
         T *get_data() const {
             return (T *) raw()->data;
+        }
+
+        /**
+         * DO NOT this method on your own as it may result in unexpected failure.
+         * @param data
+         */
+        void set_data(void *data) {
+            raw()->data = data;
         }
 
     public:

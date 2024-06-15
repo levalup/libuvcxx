@@ -19,18 +19,22 @@ namespace uv {
 
         udp_t() : self(default_loop()) {}
 
-        explicit udp_t(int flags) : self(default_loop(), flags) {}
-
         explicit udp_t(const loop_t &loop) {
             set_data(new data_t(*this));    //< data will be deleted in close action
             (void) uv_udp_init(loop, *this);
         }
+
+#if UVCXX_SATISFY_VERSION(1, 7, 0)
+
+        explicit udp_t(int flags) : self(default_loop(), flags) {}
 
         explicit udp_t(const loop_t &loop, int flags) {
             (void) uv_udp_init_ex(loop, *this, flags);
             // data will be deleted in close action
             set_data(new data_t(*this));
         }
+
+#endif
 
         [[nodiscard]]
         size_t send_queue_size() const {
@@ -72,6 +76,8 @@ namespace uv {
             return err;
         }
 
+#if UVCXX_SATISFY_VERSION(1, 27, 0)
+
         int connect(const sockaddr *addr) {
             auto err = uv_udp_connect(*this, addr);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
@@ -83,6 +89,8 @@ namespace uv {
             if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
             return err;
         }
+
+#endif
 
         int getsockname(struct sockaddr *name, int *namelen) const {
             auto err = uv_udp_getsockname(*this, name, namelen);
@@ -99,6 +107,8 @@ namespace uv {
             return err;
         }
 
+#if UVCXX_SATISFY_VERSION(1, 32, 0)
+
         int set_source_membership(
                 const char *multicast_addr, const char *interface_addr, const char *source_addr,
                 uv_membership membership) const {
@@ -107,6 +117,8 @@ namespace uv {
             if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
             return err;
         }
+
+#endif
 
         int set_multicast_loop(bool on) {
             auto err = uv_udp_set_multicast_loop(*this, int(on));
@@ -152,7 +164,6 @@ namespace uv {
             return uv_udp_try_send(*this, bufs, nbufs, addr);
         }
 
-
         [[nodiscard]]
         uvcxx::callback<size_t, uv_buf_t *> alloc() {
             auto data = get_data<data_t>();
@@ -169,16 +180,22 @@ namespace uv {
             return data->recv_cb.callback();
         }
 
+#if UVCXX_SATISFY_VERSION(1, 39, 0)
+
         [[nodiscard]]
         bool using_recvmmsg() const {
             return uv_udp_using_recvmmsg(*this);
         }
+
+#endif
 
         int recv_stop() {
             auto err = uv_udp_recv_stop(*this);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
             return err;
         }
+
+#if UVCXX_SATISFY_VERSION(1, 19, 0)
 
         [[nodiscard]]
         size_t get_send_queue_size() const {
@@ -189,6 +206,8 @@ namespace uv {
         size_t get_send_queue_count() const {
             return uv_udp_get_send_queue_count(*this);
         }
+
+#endif
 
     public:
         static self borrow(raw_t *raw) {

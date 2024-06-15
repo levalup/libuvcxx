@@ -34,6 +34,8 @@ namespace uv {
             return data->start_cb.callback();
         }
 
+#if UVCXX_SATISFY_VERSION(1, 12, 0)
+
         [[nodiscard]]
         uvcxx::callback<int> start_oneshot(uint64_t timeout, int signum) {
             auto err = uv_signal_start_oneshot(*this, raw_callback, signum);
@@ -41,6 +43,8 @@ namespace uv {
             auto data = get_data<data_t>();
             return data->start_cb.callback();
         }
+
+#endif
 
         int stop() {
             auto err = uv_signal_stop(*this);

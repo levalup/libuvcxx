@@ -65,7 +65,7 @@ namespace uv {
 
     private:
         static void raw_callback(raw_t *handle, int status, int events) {
-            auto data = (data_t * )(handle->data);
+            auto data = (data_t *) (handle->data);
             data->start_cb.emit(status, events);
         }
 

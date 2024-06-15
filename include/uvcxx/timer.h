@@ -50,10 +50,14 @@ namespace uv {
             return uv_timer_get_repeat(*this);
         }
 
+#if UVCXX_SATISFY_VERSION(1, 40, 0)
+
         [[nodiscard]]
         uint64_t get_due_in() const {
             return uv_timer_get_repeat(*this);
         }
+
+#endif
 
     private:
         static void raw_callback(raw_t *handle) {
