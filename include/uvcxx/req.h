@@ -40,6 +40,7 @@ namespace uv {
 
             explicit data_t(const req_t &req)
                     : m_req(req.shared_raw()) {
+                if (m_req->data) throw uvcxx::errcode(UV_EPERM, "duplicated initialization of data");
                 m_req->data = this;
             }
 
@@ -164,6 +165,10 @@ namespace uv {
         static void raw_callback(REQ *req, ARGS... args) {
             auto data = (self *) (req->data);
             if (!data) return;
+
+            // set `data` to `nullptr` so that `req` can be reused in the promise's callback.
+            req->data = nullptr;
+
             uvcxx::defer delete_data(std::default_delete<self>(), data);
             uvcxx::defer finalize_data([&]() { data->finalize(req, args...); });
 
