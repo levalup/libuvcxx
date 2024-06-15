@@ -8,9 +8,9 @@
 
 #include <cassert>
 
-#include "cxx/callback.h"
-#include "cxx/promise.h"
 #include "inner/base.h"
+#include "utils/callback.h"
+#include "utils/promise.h"
 
 #include "loop.h"
 

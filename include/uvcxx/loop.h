@@ -13,10 +13,10 @@
 
 #include <uv.h>
 
-#include "cxx/defer.h"
 #include "cxx/except.h"
+#include "cxx/version.h"
 #include "inner/base.h"
-#include "utils/version.h"
+#include "utils/defer.h"
 
 namespace uv {
     class loop_t : public uvcxx::shared_raw_base_t<uv_loop_t> {
