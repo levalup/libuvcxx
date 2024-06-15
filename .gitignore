@@ -1,4 +1,8 @@
-/.idea/
+/.idea/*
+!/.idea/*.iml
+!/.idea/encodings.xml
+!/.idea/misc.xml
+!/.idea/modules.xml
 
 /bin/
 /cmake-build-*/
