@@ -71,22 +71,77 @@ namespace uvcxx {
     };
 
     template<typename T>
-    struct is_shared_raw {
-    private:
-        template<typename K>
-        static std::true_type check(const shared_raw_base_t<K> &) { return {}; }
-
-        static std::false_type check(...) { return {}; }
-
+    class pointer_raw_base_t : public base_t {
     public:
-        static constexpr auto value = decltype(check(std::declval<T>()))::value;
+        using self = pointer_raw_base_t;
+        using raw_t = T;
+
+        pointer_raw_base_t(const pointer_raw_base_t &) = delete;
+
+        pointer_raw_base_t &operator=(const pointer_raw_base_t &) = delete;
+
+        pointer_raw_base_t(pointer_raw_base_t &&that) noexcept {
+            this->operator=(std::move(that));
+        }
+
+        pointer_raw_base_t &operator=(pointer_raw_base_t &&that) noexcept {
+            std::swap(m_raw, that.m_raw);
+            return *this;
+        };
+
+        pointer_raw_base_t(std::nullptr_t) {}
+
+        pointer_raw_base_t()
+                : m_raw(new raw_t()) {}
+
+        virtual ~pointer_raw_base_t() {
+            delete m_raw;
+        }
+
+        operator bool() const { return m_raw; }
+
+        operator raw_t *() { return m_raw; }
+
+        operator raw_t *() const { return m_raw; }
+
+    protected:
+        raw_t *raw() { return m_raw; }
+
+        raw_t *raw() const { return m_raw; }
+
+        template<typename K>
+        K *raw() { return (K *) m_raw; }
+
+        template<typename K>
+        K *raw() const { return (K *) m_raw; }
+
+    private:
+        raw_t *m_raw = nullptr;
     };
 
     template<typename T>
     class inherit_raw_base_t : public base_t, public T {
     public:
         using self = inherit_raw_base_t;
+        using supper = T;
         using raw_t = T;
+
+        inherit_raw_base_t(const inherit_raw_base_t &) = default;
+
+        inherit_raw_base_t &operator=(const inherit_raw_base_t &) = default;
+
+        inherit_raw_base_t(inherit_raw_base_t &&that) noexcept {
+            this->operator=(std::move(that));
+        }
+
+        inherit_raw_base_t &operator=(inherit_raw_base_t &&that) noexcept {
+            std::swap(*((T *) this), *((T *) &that));
+            return *this;
+        };
+
+        inherit_raw_base_t() : supper() {}
+
+        explicit inherit_raw_base_t(raw_t raw) : supper(std::move(raw)) {}
 
         operator raw_t *() { return this; }
 
@@ -109,6 +164,23 @@ namespace uvcxx {
     public:
         using self = extend_raw_base_t;
         using raw_t = T;
+
+        extend_raw_base_t(const extend_raw_base_t &) = default;
+
+        extend_raw_base_t &operator=(const extend_raw_base_t &) = default;
+
+        extend_raw_base_t(extend_raw_base_t &&that) noexcept {
+            this->operator=(std::move(that));
+        }
+
+        extend_raw_base_t &operator=(extend_raw_base_t &&that) noexcept {
+            std::swap(m_raw, that.m_raw);
+            return *this;
+        };
+
+        extend_raw_base_t() = default;
+
+        explicit extend_raw_base_t(raw_t raw) : m_raw(std::move(raw)) {}
 
         operator raw_t *() { return &m_raw; }
 

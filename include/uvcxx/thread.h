@@ -81,9 +81,14 @@ namespace uv {
 
         thread_t &operator=(const thread_t &) = delete;
 
-        thread_t(thread_t &&that) noexcept = default;
+        thread_t(thread_t &&that) noexcept {
+            this->operator=(std::move(that));
+        }
 
-        thread_t &operator=(thread_t &&that) noexcept = default;
+        thread_t &operator=(thread_t &&that) noexcept {
+            std::swap(m_thread, that.m_thread);
+            return *this;
+        }
 
         thread_t(std::nullptr_t) {}
 

@@ -1,6 +1,6 @@
 # libuvcxx
 
-[![License](https://img.shields.io/badge/License-MIT-blue.svg?logo=)](
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](
     LICENSE)
 [![libuv](https://img.shields.io/badge/libuv-v1.48.0-green?logo=libuv&logoColor=green)](
     https://github.com/libuv/libuv)
@@ -13,6 +13,7 @@
     https://github.com/levalup/libuvcxx/actions/workflows/build.yml)
 [![Release](https://github.com/levalup/libuvcxx/actions/workflows/release.yml/badge.svg)](
     https://github.com/levalup/libuvcxx/actions/workflows/release.yml)
+
 > C++ wrapper for libuv, header only.
 
 ## 1. Usage
@@ -50,6 +51,10 @@ The `request`'s `data` will be recycled after the callback is completed, so most
 ### Thread [ing]
 
 > Convert most operations to C++ interface style.
+
+Q: Do we still need to C style `thread` and `mutex` since we have already used C++17?
+
+A: For fun!
 
 ### File system operations [OK: 90%]
 
