@@ -3,8 +3,10 @@
 // L.eval: Let programmer get rid of only work jobs.
 //
 
-#ifndef LIBUVCXX_UTILITIES_H
-#define LIBUVCXX_UTILITIES_H
+#ifndef LIBUVCXX_UTILITY_H
+#define LIBUVCXX_UTILITY_H
+
+#include "cxx/version.h"
 
 namespace uv {
     /**
@@ -14,6 +16,12 @@ namespace uv {
      * If you need to use the related interfaces, please continue to utilize the `uv_*` versions in C language.
      * The implementation of `uv_random`-related interfaces can be found in `random.h`.
      */
+
+#if UVCXX_SATISFY_VERSION(1, 34, 0)
+
+    inline void sleep(unsigned int msec) { return uv_sleep(msec); }
+
+#endif
 }
 
-#endif //LIBUVCXX_UTILITIES_H
+#endif //LIBUVCXX_UTILITY_H
