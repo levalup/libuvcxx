@@ -1,6 +1,6 @@
 # Libuvcxx is a header only library, so only the source code needs to be packaged.
 
-name: Create Release and Upload Asset
+name: Release
 
 on:
   push:
@@ -18,7 +18,7 @@ jobs:
       - name: Package project files
         if: success()
         run: |
-          zip -r archives.zip examples/ include/ tests/ CHANGELOG.md LICENSE README.md
+          zip -r archives.zip examples/ include/ tests/ CHANGELOG.md CMakeLists.txt LICENSE README.md
 
       - name: Get the tag name
         if: success()
@@ -35,7 +35,9 @@ jobs:
           tag_name: ${{ steps.get_tag.outputs.TAG }}
           release_name: Release ${{ steps.get_tag.outputs.TAG }}
           body: |
-            See the CHANGELOG.md for details on this release.
+            See the
+            [CHANGELOG](${{ github.server_url }}/${{ github.repository }}/blob/${{ steps.get_tag.outputs.TAG }}/CHANGELOG.md)
+            for details on this release.
           draft: false
           prerelease: false
 

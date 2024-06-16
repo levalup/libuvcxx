@@ -1,12 +1,18 @@
 # libuvcxx
 
-[![License](https://img.shields.io/badge/License-MIT-blue.svg?logo=)](LICENSE)
-[![libuv](https://img.shields.io/badge/libuv-v1.48.0-green?logo=libuv&logoColor=green)](https://github.com/libuv/libuv)
-[![C++](https://img.shields.io/badge/C++-17-%23512BD4.svg?logo=C%2B%2B&logoColor=%23512BD4)](https://en.cppreference.com/w/cpp/17)
-[![CMake](https://img.shields.io/badge/CMake-v3.9-%23064F8C?logo=cmake&logoColor=%23064F8C)](https://cmake.org)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg?logo=)](
+    LICENSE)
+[![libuv](https://img.shields.io/badge/libuv-v1.48.0-green?logo=libuv&logoColor=green)](
+    https://github.com/libuv/libuv)
+[![C++](https://img.shields.io/badge/C++-17-%23512BD4.svg?logo=C%2B%2B&logoColor=%23512BD4)](
+    https://en.cppreference.com/w/cpp/17)
+[![CMake](https://img.shields.io/badge/CMake-v3.9-%23064F8C?logo=cmake&logoColor=%23064F8C)](
+    https://cmake.org)
 
-[![build](https://img.shields.io/github/check-runs/levalup/libuvcxx/master)]()
-
+[![Build](https://github.com/levalup/libuvcxx/actions/workflows/build.yml/badge.svg)](
+    https://github.com/levalup/libuvcxx/actions/workflows/build.yml)
+[![Release](https://github.com/levalup/libuvcxx/actions/workflows/release.yml/badge.svg)](
+    https://github.com/levalup/libuvcxx/actions/workflows/release.yml)
 > C++ wrapper for libuv, header only.
 
 ## 1. Usage
