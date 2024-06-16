@@ -16,11 +16,11 @@ int main() {
         throw std::logic_error("i");
     });
     promise<> v;
-    v.then([]() {}).except([](const std::exception &e) {}).finally([](){});
+    v.then([]() {}).except([](const std::exception &e) {}).finally([]() {});
 
     {
         promise_emitter pm(a);
-        promise_cast<decltype(a), float> t(a, [](float a){
+        promise_cast<decltype(a), float> t(a, [](float a) {
             return std::make_tuple(std::floor(a), std::ceil(a));
         });
         t.resolve(12.6);

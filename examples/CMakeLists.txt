@@ -29,10 +29,10 @@ foreach (path ${FILES})
 
         # check if target exists
         list(FIND TARGETS "${PREFIX}-${dir}" TARGET_INDEX)
-        if(TARGET_INDEX GREATER -1)
+        if (TARGET_INDEX GREATER -1)
             target_sources(${PREFIX}-${dir} PUBLIC ${DIR_SRC})
             continue()
-        endif()
+        endif ()
 
         # add executable
         add_executable(${PREFIX}-${dir} ${DIR_SRC} ${HEADERS})
@@ -47,10 +47,10 @@ foreach (path ${FILES})
 
         # check if target exists
         list(FIND TARGETS "${PREFIX}-${file}" TARGET_INDEX)
-        if(TARGET_INDEX GREATER -1)
+        if (TARGET_INDEX GREATER -1)
             target_sources(${PREFIX}-${file} PUBLIC ${path})
             continue()
-        endif()
+        endif ()
 
         # add executable
         add_executable(${PREFIX}-${file} ${path} ${HEADERS})

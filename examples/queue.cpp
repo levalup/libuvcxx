@@ -17,7 +17,7 @@ int main() {
     q.push(1, 0);
     q.push(1, 2);
     q.close();
-    for (auto [i, j] : q) {
+    for (auto [i, j]: q) {
         std::cout << i << " " << j << std::endl;
     }
 

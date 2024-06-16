@@ -8,7 +8,7 @@
 int main() {
     uv::fs::open("a.txt", O_CREAT | O_RDONLY, 0777).then([&](int fd) {
         std::cout << "open fd = " << fd << std::endl;
-        (void)uv::fs::close(fd);
+        (void) uv::fs::close(fd);
         // throw uvcxx::exception(UV_EAGAIN);
         throw std::logic_error("throw logic after close");
     }).except<uvcxx::errcode>([](const uvcxx::errcode &e) {

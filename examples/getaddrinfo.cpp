@@ -18,8 +18,8 @@ int main() {
             "baidu.com", nullptr, &hints
     ).then([](addrinfo *ai) {
         char addr[INET6_ADDRSTRLEN];
-        for (addrinfo* info = ai; info != nullptr; info = info->ai_next) {
-            uv_ip4_name((struct sockaddr_in*)info->ai_addr, addr, sizeof(addr));
+        for (addrinfo *info = ai; info != nullptr; info = info->ai_next) {
+            uv_ip4_name((struct sockaddr_in *) info->ai_addr, addr, sizeof(addr));
             std::cout << "Found address: " << addr << std::endl;
             uv::getnameinfo(info->ai_addr, 0).then([](const char *hostname, const char *service) {
                 std::cout << "Name: " << hostname << " " << service << std::endl;
