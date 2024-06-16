@@ -3,18 +3,15 @@
 name: Create Release and Upload Asset
 
 on:
-  workflow_run:
-    workflows: ["CMake on multiple platforms"]
-    types:
-      - completed
+  push:
+    tags:
+      - 'r*'
 
 jobs:
   create-release:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && startsWith(github.ref, 'refs/tags/r') }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
