@@ -72,6 +72,8 @@ namespace uv {
         return pipe_connect({}, handle, name);
     }
 
+#if UVCXX_SATISFY_VERSION(1, 46, 0)
+
     [[nodiscard]]
     inline uvcxx::promise<> pipe_connect2(
             const connect_t &req, uv_pipe_t *handle, const char *name, size_t namelen, unsigned int flags) {
@@ -89,6 +91,8 @@ namespace uv {
     inline uvcxx::promise<> pipe_connect2(uv_pipe_t *handle, const char *name, size_t namelen, unsigned int flags) {
         return pipe_connect2({}, handle, name, namelen, flags);
     }
+
+#endif
 }
 
 #endif //LIBUVCXX_CONNECT_H

@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
-if (EXISTS "libuv/CMakeLists.txt")
+if (EXISTS "${PROJECT_SOURCE_DIR}/libuv/CMakeLists.txt")
     # compile static libuv
     option(LIBUV_BUILD_SHARED "" OFF)
     option(LIBUV_BUILD_TESTS "" OFF)
@@ -15,6 +15,8 @@ if (EXISTS "libuv/CMakeLists.txt")
     # using libuv
     include_directories(libuv/include)
     link_libraries(libuv::libuv)
+
+    message(STATUS "Using submodule libuv")
 else ()
     # find libuv in system
     find_path(LIBUV_INCLUDE_DIR NAMES uv.h)
@@ -33,6 +35,8 @@ else ()
         include_directories(${LIBUV_INCLUDE_DIRS})
         link_libraries(PkgConfig::LIBUV)
     endif ()
+
+    message(STATUS "Using system libuv")
 endif ()
 
 include_directories(include)

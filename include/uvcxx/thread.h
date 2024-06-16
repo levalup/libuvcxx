@@ -9,7 +9,7 @@
 #include <atomic>
 #include <functional>
 
-#include "uv.h"
+#include <uv.h>
 
 #include "uvcxx/cxx/except.h"
 #include "uvcxx/cxx/version.h"
@@ -124,6 +124,8 @@ namespace uv {
             return uv_thread_equal(*this, other);
         }
 
+#if UVCXX_SATISFY_VERSION(1, 48, 0)
+
         int setpriority(int priority) {
             auto err = uv_thread_setpriority(m_thread->tid, priority);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
@@ -143,6 +145,8 @@ namespace uv {
             if (err < 0) UVCXX_THROW_OR_RETURN(err, 0);
             return priority;
         }
+
+#endif
 
         bool operator==(const self &other) const {
             return equal(other);
