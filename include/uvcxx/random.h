@@ -10,6 +10,8 @@
 #include "req.h"
 
 namespace uv {
+#if UVCXX_SATISFY_VERSION(1, 33, 0)
+
     class random_t : public inherit_req_t<uv_random_t, req_t> {
     public:
         using self = random_t;
@@ -70,6 +72,8 @@ namespace uv {
             void *buf, size_t buflen, unsigned int flags) {
         return random(default_loop(), req, buf, buflen, flags);
     }
+
+#endif
 }
 
 #endif //LIBUVCXX_RANDOM_H
