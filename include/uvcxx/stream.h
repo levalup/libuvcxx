@@ -163,15 +163,12 @@ namespace uv {
     protected:
         class data_t : supper::data_t {
         public:
-            using self = data_t;
-            using supper = supper::data_t;
-
             uvcxx::callback_emitter<int> listen_cb;
             uvcxx::callback_emitter<ssize_t, const uv_buf_t *> read_cb;
             uvcxx::callback_emitter<size_t, uv_buf_t *> alloc_cb;
 
             explicit data_t(stream_t &handle)
-                    : supper(handle) {
+                    : supper::data_t(handle) {
                 handle.watch(listen_cb);
                 handle.watch(read_cb);
                 handle.watch(alloc_cb);
@@ -181,7 +178,7 @@ namespace uv {
                 alloc_cb.finalize();
                 read_cb.finalize();
                 listen_cb.finalize();
-                supper::close();
+                supper::data_t::close();
             }
         };
     };
@@ -212,19 +209,16 @@ namespace uv {
     protected:
         class data_t : supper::data_t {
         public:
-            using self = data_t;
-            using supper = stream_t::data_t;
-
             uvcxx::callback_emitter<stream_t> accept_cb;
 
             explicit data_t(acceptable_stream_t &handle)
-                    : supper(handle) {
+                    : supper::data_t(handle) {
                 handle.watch(accept_cb);
             }
 
             void close() noexcept override {
                 accept_cb.finalize();
-                supper::close();
+                supper::data_t::close();
             }
         };
     };

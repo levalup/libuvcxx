@@ -6,6 +6,7 @@
 #ifndef LIBUVCXX_THREAD_H
 #define LIBUVCXX_THREAD_H
 
+#include <atomic>
 #include <functional>
 
 #include "uv.h"

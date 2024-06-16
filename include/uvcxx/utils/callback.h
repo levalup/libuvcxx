@@ -139,18 +139,18 @@ namespace uvcxx {
      * @note Call `call`, `raise`, `finally`, `get_queue` before run or while callback.
      */
     template<typename... T>
-    class callback {
+    class callback_t {
     public:
-        using self = callback;
+        using self = callback_t;
         using type = std::tuple<T...>;
 
         using on_call_t = std::function<void(const T &...)>;
         using on_except_t = std::function<bool(std::exception_ptr)>;
         using on_finally_t = std::function<void()>;
 
-        callback() : m_core(std::make_shared<callback_core>()) {}
+        callback_t() : m_core(std::make_shared<callback_core>()) {}
 
-        callback(std::nullptr_t) : m_core(nullptr) {}
+        callback_t(std::nullptr_t) : m_core(nullptr) {}
 
         explicit operator bool() const { return bool(m_core); }
 
@@ -289,7 +289,7 @@ namespace uvcxx {
     private:
         std::shared_ptr<callback_core> m_core;
 
-        explicit callback(decltype(m_core) core) : m_core(std::move(core)) {}
+        explicit callback_t(decltype(m_core) core) : m_core(std::move(core)) {}
 
     private:
         template<typename... K>
@@ -300,9 +300,6 @@ namespace uvcxx {
         friend
         class callback_proxy;
     };
-
-    template<typename...T>
-    using callback_t = callback<T...>;
 
     template<typename... T>
     class callback_proxy {
@@ -348,7 +345,7 @@ namespace uvcxx {
 
         callback_emitter(std::nullptr_t) : m_core(nullptr) {}
 
-        explicit callback_emitter(const callback<T...> &p)
+        explicit callback_emitter(const callback_t<T...> &p)
                 : m_core(p.m_core) {}
 
         explicit operator bool() const { return bool(m_core); }
@@ -373,7 +370,7 @@ namespace uvcxx {
         }
 
         [[nodiscard]]
-        callback<T...> callback() const { return callback_t<T...>{m_core}; }
+        callback_t<T...> callback() const { return callback_t<T...>{m_core}; }
 
     private:
         std::shared_ptr<callback_core> m_core;
@@ -383,7 +380,7 @@ namespace uvcxx {
     class callback_cast;
 
     template<typename... V, typename... T>
-    class callback_cast<callback<V...>, T...> : public callback_proxy<T...> {
+    class callback_cast<callback_t<V...>, T...> : public callback_proxy<T...> {
     public:
         using self = callback_cast;
         using supper = callback_proxy<T...>;
@@ -403,12 +400,12 @@ namespace uvcxx {
 
         callback_cast(std::nullptr_t) : m_emitter(nullptr) {}
 
-        callback_cast(const callback<V...> &p, wrapper_t wrapper)
+        callback_cast(const callback_t<V...> &p, wrapper_t wrapper)
                 : m_emitter(p), m_wrapper(std::move(wrapper)) {}
 
         template<typename FUNC, std::enable_if_t<
                 std::is_constructible_v<wrapper_t, FUNC>, int> = 0>
-        callback_cast(const callback<V...> &p, FUNC wrapper)
+        callback_cast(const callback_t<V...> &p, FUNC wrapper)
                 : self(p, wrapper_t(wrapper)) {}
 
         template<typename FUNC, std::enable_if_t<
@@ -416,7 +413,7 @@ namespace uvcxx {
                 sizeof...(V) == 1 && std::is_convertible_v<
                         decltype(std::declval<FUNC>()(std::declval<const T &>()...)),
                         typename first_element<value_t>::type>, int> = 0>
-        callback_cast(const callback<V...> &p, FUNC wrapper)
+        callback_cast(const callback_t<V...> &p, FUNC wrapper)
                 : self(p, wrapper_t([wrapper = std::move(wrapper)](const T &...value) -> value_t {
             return std::make_tuple(wrapper(value...));
         })) {}
@@ -426,14 +423,14 @@ namespace uvcxx {
                 sizeof...(V) == 0 && std::is_same_v<
                         decltype(std::declval<FUNC>()(std::declval<const T &>()...)),
                         void>, int> = 0>
-        callback_cast(const callback<V...> &p, FUNC wrapper)
+        callback_cast(const callback_t<V...> &p, FUNC wrapper)
                 : self(p, wrapper_t([wrapper = std::move(wrapper)](const T &...value) -> value_t {
             wrapper(value...);
             return std::make_tuple();
         })) {}
 
         template<typename FUNC, std::enable_if_t<
-                std::is_constructible_v<self, const callback<V...> &, FUNC>, int> = 0>
+                std::is_constructible_v<self, const callback_t<V...> &, FUNC>, int> = 0>
         explicit callback_cast(FUNC wrapper)
                 : self(callback_t<V...>(), wrapper_t(wrapper)) {}
 
@@ -464,12 +461,15 @@ namespace uvcxx {
         }
 
         [[nodiscard]]
-        callback<V...> callback() const { return m_emitter.callback(); }
+        callback_t<V...> callback() const { return m_emitter.callback(); }
 
     private:
         callback_emitter<V...> m_emitter;
         wrapper_t m_wrapper;
     };
+
+    template<typename...T>
+    using callback = callback_t<T...>;
 }
 
 #endif //LIBUVCXX_CALLBACK_H

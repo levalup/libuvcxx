@@ -4,6 +4,7 @@
 //
 
 #include <iostream>
+#include <cstring>
 
 #include "uvcxx/buf.h"
 

@@ -138,18 +138,18 @@ namespace uvcxx {
      * @note Call `then`, `except`, `finally`, `get_future` before run or while callback.
      */
     template<typename... T>
-    class promise {
+    class promise_t {
     public:
-        using self = promise;
+        using self = promise_t;
         using type = std::tuple<T...>;
 
         using on_then_t = std::function<void(const T &...)>;
         using on_except_t = std::function<void(std::exception_ptr)>;
         using on_finally_t = std::function<void()>;
 
-        promise() : m_core(std::make_shared<promise_core>()) {}
+        promise_t() : m_core(std::make_shared<promise_core>()) {}
 
-        promise(std::nullptr_t) : m_core(nullptr) {}
+        promise_t(std::nullptr_t) : m_core(nullptr) {}
 
         explicit operator bool() const { return bool(m_core); }
 
@@ -288,7 +288,7 @@ namespace uvcxx {
     private:
         std::shared_ptr<promise_core> m_core;
 
-        explicit promise(decltype(m_core) core) : m_core(std::move(core)) {}
+        explicit promise_t(decltype(m_core) core) : m_core(std::move(core)) {}
 
     private:
         template<typename... K>
@@ -299,9 +299,6 @@ namespace uvcxx {
         friend
         class promise_proxy;
     };
-
-    template<typename...T>
-    using promise_t = promise<T...>;
 
     template<typename... T>
     class promise_proxy {
@@ -343,7 +340,7 @@ namespace uvcxx {
 
         promise_emitter(std::nullptr_t) : m_core(nullptr) {}
 
-        explicit promise_emitter(const promise<T...> &p)
+        explicit promise_emitter(const promise_t<T...> &p)
                 : m_core(p.m_core) {}
 
         explicit operator bool() const { return bool(m_core); }
@@ -368,7 +365,7 @@ namespace uvcxx {
         }
 
         [[nodiscard]]
-        promise<T...> promise() const { return promise_t<T...>{m_core}; }
+        promise_t<T...> promise() const { return promise_t<T...>{m_core}; }
 
     private:
         std::shared_ptr<promise_core> m_core;
@@ -378,7 +375,7 @@ namespace uvcxx {
     class promise_cast;
 
     template<typename... V, typename... T>
-    class promise_cast<promise<V...>, T...> : public promise_proxy<T...> {
+    class promise_cast<promise_t<V...>, T...> : public promise_proxy<T...> {
     public:
         using self = promise_cast;
         using supper = promise_proxy<T...>;
@@ -398,12 +395,12 @@ namespace uvcxx {
 
         promise_cast(std::nullptr_t) : m_emitter(nullptr) {}
 
-        promise_cast(const promise<V...> &p, wrapper_t wrapper)
+        promise_cast(const promise_t<V...> &p, wrapper_t wrapper)
                 : m_emitter(p), m_wrapper(std::move(wrapper)) {}
 
         template<typename FUNC, std::enable_if_t<
                 std::is_constructible_v<wrapper_t, FUNC>, int> = 0>
-        promise_cast(const promise<V...> &p, FUNC wrapper)
+        promise_cast(const promise_t<V...> &p, FUNC wrapper)
                 : self(p, wrapper_t(wrapper)) {}
 
         template<typename FUNC, std::enable_if_t<
@@ -411,7 +408,7 @@ namespace uvcxx {
                 sizeof...(V) == 1 && std::is_convertible_v<
                         decltype(std::declval<FUNC>()(std::declval<const T &>()...)),
                         typename first_element<value_t>::type>, int> = 0>
-        promise_cast(const promise<V...> &p, FUNC wrapper)
+        promise_cast(const promise_t<V...> &p, FUNC wrapper)
                 : self(p, wrapper_t([wrapper = std::move(wrapper)](const T &...value) -> value_t {
             return std::make_tuple(wrapper(value...));
         })) {}
@@ -421,14 +418,14 @@ namespace uvcxx {
                 sizeof...(V) == 0 && std::is_same_v<
                         decltype(std::declval<FUNC>()(std::declval<const T &>()...)),
                         void>, int> = 0>
-        promise_cast(const promise<V...> &p, FUNC wrapper)
+        promise_cast(const promise_t<V...> &p, FUNC wrapper)
                 : self(p, wrapper_t([wrapper = std::move(wrapper)](const T &...value) -> value_t {
             wrapper(value...);
             return std::make_tuple();
         })) {}
 
         template<typename FUNC, std::enable_if_t<
-                std::is_constructible_v<self, const promise<V...> &, FUNC>, int> = 0>
+                std::is_constructible_v<self, const promise_t<V...> &, FUNC>, int> = 0>
 
         explicit promise_cast(FUNC wrapper)
                 : self(promise_t<V...>(), wrapper_t(wrapper)) {}
@@ -460,12 +457,15 @@ namespace uvcxx {
         }
 
         [[nodiscard]]
-        promise<V...> promise() const { return m_emitter.promise(); }
+        promise_t<V...> promise() const { return m_emitter.promise(); }
 
     private:
         promise_emitter<V...> m_emitter;
         wrapper_t m_wrapper;
     };
+
+    template<typename...T>
+    using promise = promise_t<T...>;
 }
 
 #endif //LIBUVCXX_PROMISE_H

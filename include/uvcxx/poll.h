@@ -71,14 +71,11 @@ namespace uv {
 
         class data_t : supper::data_t {
         public:
-            using self = data_t;
-            using supper = supper::data_t;
-
             bool initialized{false};
             uvcxx::callback_emitter<int, int> start_cb;
 
             explicit data_t(poll_t &handle)
-                    : supper(handle) {
+                    : supper::data_t(handle) {
                 handle.watch(start_cb);
             }
 

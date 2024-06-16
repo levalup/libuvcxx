@@ -67,13 +67,10 @@ namespace uv {
 
         class data_t : supper::data_t {
         public:
-            using self = data_t;
-            using supper = supper::data_t;
-
             uvcxx::callback_emitter<> start_cb;
 
             explicit data_t(timer_t &handle)
-                    : supper(handle) {
+                    : supper::data_t(handle) {
                 handle.watch(start_cb);
             }
 

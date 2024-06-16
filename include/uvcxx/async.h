@@ -45,13 +45,10 @@ namespace uv {
 
         class data_t : supper::data_t {
         public:
-            using self = data_t;
-            using supper = supper::data_t;
-
             uvcxx::callback_emitter<> send_cb;
 
             explicit data_t(async_t &handle)
-                    : supper(handle) {
+                    : supper::data_t(handle) {
                 handle.watch(send_cb);
             }
 
