@@ -11,6 +11,8 @@
 
 #include <uv.h>
 
+#include "inner/base.h"
+
 namespace uv {
     namespace inner {
         /**
@@ -20,8 +22,6 @@ namespace uv {
         public:
             using self = buf_t;
             using supper = uv_buf_t;
-
-            using raw_t = uv_buf_t;
 
             using base_t = decltype(base);
             using len_t = decltype(len);
@@ -81,10 +81,6 @@ namespace uv {
                     this->capacity = len;
                 }
             }
-
-            operator raw_t *() { return this; }
-
-            operator raw_t *() const { return (raw_t *) this; }
         };
     }
 
@@ -92,61 +88,53 @@ namespace uv {
      * This type is a reference type, and all copied objects use the same buffer,
      *     which is not thread-safe.
      */
-    class buf_t {
+    class buf_t : public uvcxx::shared_raw_base_t<inner::buf_t> {
     public:
         using self = buf_t;
+        using supper = uvcxx::shared_raw_base_t<inner::buf_t>;
 
         using raw_t = uv_buf_t;
 
-        buf_t(std::nullptr_t) {}
+        buf_t(std::nullptr_t) : supper(nullptr) {}
 
-        buf_t() : m_raw(std::make_shared<inner::buf_t>()) {}
+        buf_t() : supper(std::make_shared<inner::buf_t>()) {}
 
         template<class Size, typename = typename std::enable_if_t<std::is_integral_v<Size>>>
         explicit buf_t(Size size)
-                : m_raw(std::make_shared<inner::buf_t>(size)) {}
+                : supper(std::make_shared<inner::buf_t>(size)) {}
 
-        explicit operator bool() const { return m_raw && m_raw->operator bool(); }
-
-        void free() { m_raw->free(); }
+        void free() { raw()->free(); }
 
         template<class Size, typename = typename std::enable_if_t<std::is_integral_v<Size>>>
-        void malloc(Size size) { m_raw->malloc(size); }
+        void malloc(Size size) { raw()->malloc(size); }
 
         template<class Size, typename = typename std::enable_if_t<std::is_integral_v<Size>>>
-        void realloc(Size size) { m_raw->realloc(size); }
+        void realloc(Size size) { raw()->realloc(size); }
 
         template<class Size, typename = typename std::enable_if_t<std::is_integral_v<Size>>>
-        void reserve(Size size) { m_raw->reserve(size); }
+        void reserve(Size size) { raw()->reserve(size); }
 
-        char *base() { return m_raw->base; }
-
-        [[nodiscard]]
-        const char *base() const { return m_raw->base; }
+        char *base() { return raw()->base; }
 
         [[nodiscard]]
-        size_t len() const { return size_t(m_raw->len); }
+        const char *base() const { return raw()->base; }
 
         [[nodiscard]]
-        size_t capacity() const { return size_t(m_raw->len); }
-
-        char *data() { return m_raw->base; }
+        size_t len() const { return size_t(raw()->len); }
 
         [[nodiscard]]
-        const char *data() const { return m_raw->base; }
+        size_t capacity() const { return size_t(raw()->capacity); }
+
+        char *data() { return raw()->base; }
 
         [[nodiscard]]
-        size_t size() const { return size_t(m_raw->len); }
+        const char *data() const { return raw()->base; }
+
+        [[nodiscard]]
+        size_t size() const { return size_t(raw()->len); }
 
         template<class Size, typename = typename std::enable_if_t<std::is_integral_v<Size>>>
-        void resize(Size size) { m_raw->realloc(size); }
-
-        operator raw_t *() { return m_raw.get(); }
-
-        operator raw_t *() const { return m_raw.get(); }
-
-    private:
-        std::shared_ptr<inner::buf_t> m_raw;
+        void resize(Size size) { raw()->realloc(size); }
     };
 }
 

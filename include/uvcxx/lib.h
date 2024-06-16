@@ -12,15 +12,15 @@
 #include <uv.h>
 
 #include "cxx/except.h"
+#include "inner/base.h"
 
 namespace uv {
     /**
      * This class is not thread-safe.
      */
-    class lib_t {
+    class lib_t : uvcxx::extend_raw_base_t<uv_lib_t> {
     public:
         using self = lib_t;
-        using raw_t = uv_lib_t;
 
         lib_t(const lib_t &) = delete;
 
@@ -87,12 +87,7 @@ namespace uv {
             return func;
         }
 
-        operator raw_t *() { return &m_lib; }
-
-        operator raw_t *() const { return (raw_t *) &m_lib; }
-
     private:
-        uv_lib_t m_lib{};
         bool m_opened{false};
     };
 }

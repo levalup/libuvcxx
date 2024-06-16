@@ -10,8 +10,15 @@
 #include <type_traits>
 
 namespace uvcxx {
+    /**
+     * The base class of all `libuvcxx` wrapper types.
+     * It can be used for type detection in certain scenarios.
+     */
+    class base_t {
+    };
+
     template<typename T>
-    class shared_raw_base_t {
+    class shared_raw_base_t : public base_t {
     public:
         using self = shared_raw_base_t;
         using raw_t = T;
@@ -24,6 +31,7 @@ namespace uvcxx {
 
         operator raw_t *() const { return m_raw.get(); }
 
+    protected:
         raw_t *raw() { return m_raw.get(); }
 
         raw_t *raw() const { return m_raw.get(); }
@@ -51,7 +59,7 @@ namespace uvcxx {
                 : m_raw(std::move(raw)) {}
 
         explicit shared_raw_base_t(borrow_t borrow)
-                : m_raw(std::shared_ptr<raw_t>(borrow.raw, [](T *) {})) {}
+                : m_raw(std::shared_ptr<raw_t>(borrow.raw, [](raw_t *) {})) {}
 
         template<typename K>
         static std::shared_ptr<raw_t> cast_raw(const std::shared_ptr<K> &p) {
@@ -75,7 +83,7 @@ namespace uvcxx {
     };
 
     template<typename T>
-    class inherit_raw_base_t : public T {
+    class inherit_raw_base_t : public base_t, public T {
     public:
         using self = inherit_raw_base_t;
         using raw_t = T;
@@ -84,6 +92,7 @@ namespace uvcxx {
 
         operator raw_t *() const { return const_cast<self *>(this); }
 
+    protected:
         raw_t *raw() { return (raw_t *) (*this); }
 
         raw_t *raw() const { return (raw_t *) (*this); }
@@ -96,7 +105,7 @@ namespace uvcxx {
     };
 
     template<typename T>
-    class extend_raw_base_t : public T {
+    class extend_raw_base_t : public base_t {
     public:
         using self = extend_raw_base_t;
         using raw_t = T;
@@ -105,6 +114,7 @@ namespace uvcxx {
 
         operator raw_t *() const { return const_cast<raw_t *>(&m_raw); }
 
+    protected:
         raw_t *raw() { return (raw_t *) (*this); }
 
         raw_t *raw() const { return (raw_t *) (*this); }
@@ -116,7 +126,7 @@ namespace uvcxx {
         K *raw() const { return (K *) (raw()); }
 
     private:
-        T m_raw{};
+        raw_t m_raw{};
     };
 }
 

@@ -10,6 +10,7 @@
     </libraryRoots>
     <excludeRoots>
       <file path="$PROJECT_DIR$/bin" />
+      <file path="$PROJECT_DIR$/build" />
     </excludeRoots>
   </component>
 </project>
