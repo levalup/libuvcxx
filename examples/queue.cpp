@@ -5,8 +5,8 @@
 
 #include <iostream>
 
-#include "uvcxx/cxx/queue.h"
-#include "uvcxx/cxx/callback.h"
+#include "uvcxx/utils/queue.h"
+#include "uvcxx/utils/callback.h"
 
 int main() {
     using namespace uvcxx;

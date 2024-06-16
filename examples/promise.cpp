@@ -5,7 +5,7 @@
 
 #include <cmath>
 
-#include "uvcxx/cxx/promise.h"
+#include "uvcxx/utils/promise.h"
 
 int main() {
     using namespace uvcxx;
