@@ -1,0 +1,55 @@
+# Libuvcxx is a header only library, so only the source code needs to be packaged.
+
+name: Create Release and Upload Asset
+
+on:
+  workflow_run:
+    workflows: ["CMake on multiple platforms"]
+    branches: [master]
+    types:
+      - completed
+
+jobs:
+  create-release:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && startsWith(github.ref, 'refs/tags/r') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Package project files
+        if: success()
+        run: |
+          zip -r archives.zip examples/ include/ tests/ CHANGELOG.md LICENSE README.md
+
+      - name: Get the tag name
+        if: success()
+        id: get_tag
+        run: echo ::set-output name=TAG::${GITHUB_REF#refs/tags/}
+
+      - name: Create Release
+        if: success()
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get_tag.outputs.TAG }}
+          release_name: Release ${{ steps.get_tag.outputs.TAG }}
+          body: |
+            See the CHANGELOG.md for details on this release.
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        if: success()
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./archives.zip
+          asset_name: libuvcxx-${{ steps.get_tag.outputs.TAG }}.zip
+          asset_content_type: application/zip
