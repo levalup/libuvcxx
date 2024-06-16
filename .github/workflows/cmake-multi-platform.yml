@@ -5,6 +5,8 @@ name: CMake on multiple platforms
 on:
   push:
     branches: [ "master" ]
+    tags:
+      - 'r*'
   pull_request:
     branches: [ "master" ]
 
