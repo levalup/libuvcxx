@@ -11,7 +11,6 @@
 static int count = 0;
 static int copy = 0;
 static int move = 0;
-static int unexpected = 0;
 
 struct V {
     int v = 0;
@@ -24,7 +23,6 @@ struct V {
 
     V &operator=(const V &that) {
         ++copy;
-        ++unexpected;
         this->v = that.v;
         return *this;
     }
@@ -130,12 +128,10 @@ int main() {
     }
 
     std::cout << "count = " << count << std::endl;
-    std::cout << "unexpected = " << unexpected << std::endl;
     std::cout << "copy = " << copy << std::endl;
     std::cout << "move = " << move << std::endl;
 
     uvcxx_assert(count == 0);
-    uvcxx_assert(unexpected == 0);
     uvcxx_assert(copy == 0);
 
     return 0;
