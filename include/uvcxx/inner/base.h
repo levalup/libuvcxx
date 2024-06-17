@@ -23,6 +23,14 @@ namespace uvcxx {
         using self = shared_raw_base_t;
         using raw_t = T;
 
+        shared_raw_base_t(const shared_raw_base_t &) = default;
+
+        shared_raw_base_t &operator=(const shared_raw_base_t &) = default;
+
+        shared_raw_base_t(shared_raw_base_t &&that) noexcept = default;
+
+        shared_raw_base_t &operator=(shared_raw_base_t &&that) noexcept = default;
+
         shared_raw_base_t(std::nullptr_t) {}
 
         operator bool() const { return m_raw; }

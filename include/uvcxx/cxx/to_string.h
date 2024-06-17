@@ -119,12 +119,14 @@ namespace uvcxx {
 
     inline std::string to_string(uv_stdio_flags t) {
         return mask_string(t, "ignore", {
-                {UV_CREATE_PIPE,    "create-pipe"},
-                {UV_INHERIT_FD,     "inherit-fd"},
+                {UV_CREATE_PIPE, "create-pipe"},
+                {UV_INHERIT_FD, "inherit-fd"},
                 {UV_INHERIT_STREAM, "inherit-stream"},
-                {UV_READABLE_PIPE,  "readable-pipe"},
-                {UV_WRITABLE_PIPE,  "writable-pipe"},
-                {UV_NONBLOCK_PIPE,  "nonblock-pipe"},
+                {UV_READABLE_PIPE, "readable-pipe"},
+                {UV_WRITABLE_PIPE, "writable-pipe"},
+#if UVCXX_SATISFY_VERSION(1, 41, 0)
+                {UV_NONBLOCK_PIPE, "nonblock-pipe"},
+#endif
         });
     }
 
@@ -151,13 +153,15 @@ namespace uvcxx {
 
     inline std::string to_string(uv_udp_flags t) {
         return mask_string(t, "notset", {
-                {UV_UDP_IPV6ONLY,      "ipv6only"},
-                {UV_UDP_PARTIAL,       "partial"},
-                {UV_UDP_REUSEADDR,     "reuseaddr"},
-                {UV_UDP_MMSG_CHUNK,    "mmsg-chunk"},
-                {UV_UDP_MMSG_FREE,     "mmsg-free"},
+                {UV_UDP_IPV6ONLY, "ipv6only"},
+                {UV_UDP_PARTIAL, "partial"},
+                {UV_UDP_REUSEADDR, "reuseaddr"},
+                {UV_UDP_MMSG_CHUNK, "mmsg-chunk"},
+                {UV_UDP_RECVMMSG, "recvmmsg"},
+#if UVCXX_SATISFY_VERSION(1, 45, 0)
+                {UV_UDP_MMSG_FREE, "mmsg-free"},
                 {UV_UDP_LINUX_RECVERR, "linux-recverr"},
-                {UV_UDP_RECVMMSG,      "recvmmsg"},
+#endif
         });
     }
 
@@ -240,6 +244,8 @@ namespace uvcxx {
         }
     }
 
+#if UVCXX_SATISFY_VERSION(1, 45, 0)
+
     inline const char *to_string(uv_clock_id t) {
         switch (t) {
             UVCXX_DEFAULT("unknown");
@@ -247,6 +253,8 @@ namespace uvcxx {
             UVCXX_CASE(UV_CLOCK_REALTIME, "realtime");
         }
     }
+
+#endif
 }
 
 #pragma pop_macro("UVCXX_CASE")
