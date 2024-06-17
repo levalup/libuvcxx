@@ -880,6 +880,8 @@ namespace uv {
             return futime(default_loop(), fs, file, atime, mtime);
         }
 
+#if UVCXX_SATISFY_VERSION(1, 36, 0)
+
         [[nodiscard]]
         inline uvcxx::promise<int> lutime(
                 const loop_t &loop, const fs_t &fs, const char *path, double atime, double mtime) {
@@ -902,6 +904,8 @@ namespace uv {
         inline uvcxx::promise<int> lutime(const fs_t &fs, const char *path, double atime, double mtime) {
             return lutime(default_loop(), fs, path, atime, mtime);
         }
+
+#endif
 
         [[nodiscard]]
         inline uvcxx::promise<int> link(

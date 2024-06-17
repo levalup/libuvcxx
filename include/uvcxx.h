@@ -20,6 +20,8 @@
 #include "uvcxx/key.h"
 #include "uvcxx/lib.h"
 #include "uvcxx/loop.h"
+#include "uvcxx/mutex.h"
+#include "uvcxx/once.h"
 #include "uvcxx/os.h"
 #include "uvcxx/pipe.h"
 #include "uvcxx/poll.h"

@@ -14,7 +14,7 @@ if (EXISTS "${PROJECT_SOURCE_DIR}/libuv/CMakeLists.txt")
 
     # using libuv
     include_directories(libuv/include)
-    link_libraries(libuv::libuv)
+    link_libraries(uv_a)
 
     message(STATUS "Using submodule libuv")
 else ()

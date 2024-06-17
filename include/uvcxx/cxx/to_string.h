@@ -35,6 +35,7 @@ namespace uvcxx {
                 sep = true;
             }
         }
+        if (!sep) return "unknown";
         return oss.str();
     }
 
@@ -156,8 +157,12 @@ namespace uvcxx {
                 {UV_UDP_IPV6ONLY, "ipv6only"},
                 {UV_UDP_PARTIAL, "partial"},
                 {UV_UDP_REUSEADDR, "reuseaddr"},
+#if UVCXX_SATISFY_VERSION(1, 35, 0)
                 {UV_UDP_MMSG_CHUNK, "mmsg-chunk"},
+#endif
+#if UVCXX_SATISFY_VERSION(1, 37, 0)
                 {UV_UDP_RECVMMSG, "recvmmsg"},
+#endif
 #if UVCXX_SATISFY_VERSION(1, 45, 0)
                 {UV_UDP_MMSG_FREE, "mmsg-free"},
                 {UV_UDP_LINUX_RECVERR, "linux-recverr"},
@@ -227,7 +232,9 @@ namespace uvcxx {
             UVCXX_CASE(UV_FS_READDIR, "readdir");
             UVCXX_CASE(UV_FS_CLOSEDIR, "closedir");
             UVCXX_CASE(UV_FS_MKSTEMP, "mkstemp");
+#if UVCXX_SATISFY_VERSION(1, 36, 0)
             UVCXX_CASE(UV_FS_LUTIME, "lutime");
+#endif
         }
     }
 
