@@ -1,18 +1,26 @@
 #!/usr/bin/env bash
 
+# Usage: $0 [start]
+# If give start version, test will start at and after `start`
+
+start_time=$(date +%s)
+
 # working path
 HOME=$(cd "$(dirname "$0")" || exit; pwd)
 PROJECT="$HOME/.."
 LIBUV="$PROJECT/libuv"
 
 # working config
-LAST="v1.0.0"
+LAST="v1.0.0" # test will stop after this version
 
 cd "$LIBUV" || exit
 # shellcheck disable=SC2207
-tags=($(git tag | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$'))
+tags=($(git tag | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$')) #< find release tags
 # shellcheck disable=SC2207
-tags=($(echo "${tags[@]}" | tr ' ' '\n' | sort -rV))
+tags=($(echo "${tags[@]}" | tr ' ' '\n' | sort -rV))  #< sorted versions
+
+# add test case for v1.x
+tags=("v1.x" "${tags[@]}")
 
 if [ $# -gt 0 ]; then
   # find start version, and skip older version
@@ -60,4 +68,13 @@ for tag in "${tags[@]}"; do
   fi
 done
 
+# get test take time
+end_time=$(date +%s)
+run_time=$((end_time - start_time))
+minutes=$((run_time / 60))
+seconds=$((run_time % 60))
+spent=$(if [ $minutes -gt 0 ]; then echo "${minutes}m${seconds}s"; else echo "${seconds}s"; fi)
+
+# echo conclusion
+echo "[INFO] Take $spent."
 echo "[INFO] Test succeeded in $succeed versions after $LAST."

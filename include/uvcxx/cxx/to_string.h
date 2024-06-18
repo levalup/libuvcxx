@@ -108,13 +108,15 @@ namespace uvcxx {
 
     inline std::string to_string(uv_process_flags t) {
         return mask_string(t, "notset", {
-                {UV_PROCESS_SETUID,                     "setuid"},
-                {UV_PROCESS_SETGID,                     "setgid"},
+                {UV_PROCESS_SETUID, "setuid"},
+                {UV_PROCESS_SETGID, "setgid"},
                 {UV_PROCESS_WINDOWS_VERBATIM_ARGUMENTS, "verbatim-arguments"},
-                {UV_PROCESS_DETACHED,                   "detached"},
-                {UV_PROCESS_WINDOWS_HIDE,               "hide"},
-                {UV_PROCESS_WINDOWS_HIDE_CONSOLE,       "hide-console"},
-                {UV_PROCESS_WINDOWS_HIDE_GUI,           "hide-gui"},
+                {UV_PROCESS_DETACHED, "detached"},
+                {UV_PROCESS_WINDOWS_HIDE, "hide"},
+#if UVCXX_SATISFY_VERSION(1, 24, 0)
+                {UV_PROCESS_WINDOWS_HIDE_CONSOLE, "hide-console"},
+                {UV_PROCESS_WINDOWS_HIDE_GUI, "hide-gui"},
+#endif
         });
     }
 
@@ -144,6 +146,8 @@ namespace uvcxx {
 
 #endif
 
+#if UVCXX_SATISFY_VERSION(1, 33, 0)
+
     inline const char *to_string(uv_tty_vtermstate_t t) {
         switch (t) {
             UVCXX_DEFAULT("unknown");
@@ -151,6 +155,8 @@ namespace uvcxx {
             UVCXX_CASE(UV_TTY_UNSUPPORTED, "unsupported");
         }
     }
+
+#endif
 
     inline std::string to_string(uv_udp_flags t) {
         return mask_string(t, "notset", {
@@ -228,10 +234,14 @@ namespace uvcxx {
             UVCXX_CASE(UV_FS_REALPATH, "realpath");
             UVCXX_CASE(UV_FS_COPYFILE, "copyfile");
             UVCXX_CASE(UV_FS_LCHOWN, "lchown");
+#if UVCXX_SATISFY_VERSION(1, 28, 0)
             UVCXX_CASE(UV_FS_OPENDIR, "opendir");
             UVCXX_CASE(UV_FS_READDIR, "readdir");
             UVCXX_CASE(UV_FS_CLOSEDIR, "closedir");
+#endif
+#if UVCXX_SATISFY_VERSION(1, 34, 0)
             UVCXX_CASE(UV_FS_MKSTEMP, "mkstemp");
+#endif
 #if UVCXX_SATISFY_VERSION(1, 36, 0)
             UVCXX_CASE(UV_FS_LUTIME, "lutime");
 #endif

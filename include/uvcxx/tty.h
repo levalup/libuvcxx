@@ -63,9 +63,13 @@ namespace uv {
             return err;
         }
 
+#if UVCXX_SATISFY_VERSION(1, 33, 0)
+
         inline void set_vterm_state(uv_tty_vtermstate_t state) {
             uv_tty_set_vterm_state(state);
         }
+
+#endif
 
 #if UVCXX_SATISFY_VERSION(1, 40, 0)
 

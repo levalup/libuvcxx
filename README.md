@@ -42,7 +42,15 @@ The `handle`‘s `data` will be recycled after `close`, so be sure to call `clos
 
 The `request`'s `data` will be recycled after the callback is completed, so most of the time there is no need to consider resource recycling issues.
 
-## 2. Schedule
+## 2. Compatibility
+
+`libuvcxx` can be compatible with libuv: `>= 1.0.0, <= 1.48.0`.
+
+More version compatibility will be specified here after testing.
+
+> Notice: As the development proceeds, compatibility may change with new features.
+
+## 3. Schedule
 
 ### Process [delay]
 
@@ -66,7 +74,7 @@ A: For fun!
 Most of the interfaces have been encapsulated or the reasons for not encapsulating have been explained.
 The next work of `libuvcxx` is mainly about the above content.
 
-## Exception
+## 4. Exception
 
 `libuvcxx` uses exception to handle exceptions.
 
@@ -83,7 +91,7 @@ You can use the macro definition `UVCXX_NO_EXCEPTION` before `#include <uvcxx.h>
 However, in the current version, exceptions are still used to handle some transactions.
 Future versions may consider finding suitable ways to completely eliminate the use of exceptions.
 
-## Adjusted API
+## 5. Adjusted API
 
 Most APIs have been changed from `uv_xxx` to `uv::xxx`, 
 and are placed in the necessary C++ classes according to their types.

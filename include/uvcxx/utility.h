@@ -8,6 +8,13 @@
 
 #include "cxx/version.h"
 
+#if !UVCXX_SATISFY_VERSION(1, 34, 0)
+
+#include <chrono>
+#include <thread>
+
+#endif
+
 namespace uv {
     /**
      * `libuv` provides miscellaneous utilities functions ,
@@ -20,6 +27,12 @@ namespace uv {
 #if UVCXX_SATISFY_VERSION(1, 34, 0)
 
     inline void sleep(unsigned int msec) { return uv_sleep(msec); }
+
+#else
+
+    inline void sleep(unsigned int msec) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(msec));
+    }
 
 #endif
 }

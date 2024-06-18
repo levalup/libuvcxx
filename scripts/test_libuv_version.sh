@@ -7,18 +7,23 @@ if [ $# -ne 1 ]; then
     exit 1
 fi
 
+# script parameters
+TAG="$1"
+
 # working path
 HOME=$(cd "$(dirname "$0")"; pwd)
 PROJECT="$HOME/.."
-BUILD="$PROJECT/build"
+BUILD="$PROJECT/build/libuv-$TAG"
 LIBUV="$PROJECT/libuv"
 
 # working config
-TYPE=Release
+TYPE=Release  #< build and test in Release
 
 # auto-setup config
-TAG="$1"
 THREADS=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
+
+# test start
+echo "[INFO] Testing $TAG ..."
 
 # make tmp build dir
 mkdir -p "$BUILD"
