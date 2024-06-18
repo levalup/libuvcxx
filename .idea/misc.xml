@@ -11,6 +11,8 @@
     <excludeRoots>
       <file path="$PROJECT_DIR$/bin" />
       <file path="$PROJECT_DIR$/build" />
+      <file path="$PROJECT_DIR$/libuv/build" />
+      <file path="$PROJECT_DIR$/libuv/watch_dir" />
       <file path="$PROJECT_DIR$/scripts/logs" />
     </excludeRoots>
   </component>

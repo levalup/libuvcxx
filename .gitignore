@@ -8,6 +8,9 @@
 /cmake-build-*/
 /build/
 
+/libuv/build/
+/libuv/watch_dir/
+
 *.a
 *.so
 
