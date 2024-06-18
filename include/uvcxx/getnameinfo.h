@@ -42,7 +42,7 @@ namespace uv {
             promise_cast_t promise;
 
             explicit callback_t(const getnameinfo_t &req)
-                    : supper(req), promise([](uv_getnameinfo_t *req, int, const char *hostname, const char *service) {
+                    : supper(req), promise([](uv_getnameinfo_t *, int, const char *hostname, const char *service) {
                 return std::make_tuple(hostname, service);
             }) {
             }

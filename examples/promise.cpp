@@ -16,7 +16,7 @@ int main() {
         throw std::logic_error("i");
     });
     promise<> v;
-    v.then([]() {}).except([](const std::exception &e) {}).finally([]() {});
+    v.then([]() {}).except([](const std::exception &) {}).finally([]() {});
 
     {
         promise_emitter pm(a);

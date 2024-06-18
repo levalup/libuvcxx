@@ -3,17 +3,27 @@ project(libuvcxx)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+option(WALL "If enable all compiler warning check" ON)
+option(WERROR "If treat all warning as error" OFF)
 
+set(EXECUTABLE_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/bin")
+
+# Load libuv from submodule or system
 if (EXISTS "${PROJECT_SOURCE_DIR}/libuv/CMakeLists.txt")
     # compile static libuv
     option(LIBUV_BUILD_SHARED "" OFF)
     option(LIBUV_BUILD_TESTS "" OFF)
     option(LIBUV_BUILD_BENCH "" OFF)
+
+    # for libuv <= 1.32.0
+    option(BUILD_TESTING "" OFF)
+    option(libuv_buildtests "" OFF)
+
+    # compile libuv
     add_subdirectory(libuv)
 
     # using libuv
-    include_directories(libuv/include)
+    include_directories("${PROJECT_SOURCE_DIR}/libuv/include")
     link_libraries(uv_a)
 
     message(STATUS "Using submodule libuv")
@@ -39,9 +49,16 @@ else ()
     message(STATUS "Using system libuv")
 endif ()
 
-include_directories(include)
+include_directories("${PROJECT_SOURCE_DIR}/include")
+file(GLOB_RECURSE HEADERS "${PROJECT_SOURCE_DIR}/include/*.h")
 
-file(GLOB_RECURSE HEADERS ${PROJECT_SOURCE_DIR}/include/*.h)
+if (WALL)
+    message(STATUS "Enabled -Wall")
+endif ()
+
+if (WERROR)
+    message(STATUS "Enabled -Werror")
+endif ()
 
 # build examples
 add_subdirectory(examples)

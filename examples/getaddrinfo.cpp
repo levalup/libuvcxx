@@ -7,7 +7,6 @@
 #include "uvcxx/getnameinfo.h"
 
 int main() {
-    uv_getaddrinfo_t req;
     addrinfo hints = {};
     hints.ai_family = PF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;

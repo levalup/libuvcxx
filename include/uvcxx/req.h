@@ -167,7 +167,7 @@ namespace uv {
 
         virtual void finalize(REQ *req, ARGS... args) noexcept = 0;
 
-        virtual int check(REQ *req, ARGS... args) noexcept { return 0; }
+        virtual int check(REQ *req, ARGS... args) noexcept = 0;
 
         static void raw_callback(REQ *req, ARGS... args) {
             auto data = (self *) (req->data);

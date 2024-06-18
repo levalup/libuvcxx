@@ -27,7 +27,7 @@ namespace uv {
         }
 
         [[nodiscard]]
-        uvcxx::callback<int> start(uint64_t timeout, int signum) {
+        uvcxx::callback<int> start(int signum) {
             auto err = uv_signal_start(*this, raw_callback, signum);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
             auto data = get_data<data_t>();
@@ -37,7 +37,7 @@ namespace uv {
 #if UVCXX_SATISFY_VERSION(1, 12, 0)
 
         [[nodiscard]]
-        uvcxx::callback<int> start_oneshot(uint64_t timeout, int signum) {
+        uvcxx::callback<int> start_oneshot(int signum) {
             auto err = uv_signal_start_oneshot(*this, raw_callback, signum);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
             auto data = get_data<data_t>();

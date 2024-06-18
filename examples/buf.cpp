@@ -20,6 +20,7 @@ int main() {
 
     // convert to uv's C-structure
     uv_buf_t *uv_buf = buf;
+    (void) uv_buf;
 
     return 0;
 }
