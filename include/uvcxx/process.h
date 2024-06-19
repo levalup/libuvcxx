@@ -240,7 +240,6 @@ namespace uv {
         };
     }
 
-    // TODO: verify can this object close before sub-process exit
     class process_t : public inherit_handle_t<uv_process_t, handle_t> {
     public:
         using self = process_t;
@@ -250,6 +249,7 @@ namespace uv {
             set_data(new data_t(*this));
         }
 
+        [[nodiscard]]
         int pid() const {
             return raw<raw_t>()->pid;
         }
@@ -275,6 +275,7 @@ namespace uv {
             return status;
         }
 
+        [[nodiscard]]
         uv_pid_t get_pid() const {
             return (uv_pid_t) raw<raw_t>()->pid;
         }
