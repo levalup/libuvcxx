@@ -32,11 +32,13 @@ namespace uvcxx {
         explicit errcode(int errcode, const Args &...args)
                 : supper(Message(errcode, args...)), m_errcode(errcode) {}
 
-        template<typename I, typename=typename std::enable_if_t<std::is_convertible_v<int, I>>>
+        template<typename I, typename=typename std::enable_if_t<
+                !std::is_same_v<int, I> && std::is_convertible_v<int, I>>>
         explicit errcode(I errcode)
                 : self(int(errcode)) {}
 
-        template<typename I, typename ...Args, typename=typename std::enable_if_t<std::is_convertible_v<int, I>>>
+        template<typename I, typename ...Args, typename=typename std::enable_if_t<
+                !std::is_same_v<int, I> && std::is_convertible_v<int, I>>>
         explicit errcode(I errcode, const Args &...args)
                 : self(int(errcode), args...) {}
 

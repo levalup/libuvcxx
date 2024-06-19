@@ -123,7 +123,7 @@ namespace uv {
             });
         }
 
-        [[nodiscard("use close_reset(nullptr) instead")]]
+        [[nodiscard]]
         uvcxx::promise<> close_reset() {
             return close_for_promise([&](void (*cb)(uv_handle_t *)) {
                 uv_tcp_close_reset(*this, cb);
