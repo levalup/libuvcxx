@@ -96,6 +96,33 @@ namespace uvcxx {
     };
 
     template<typename T>
+    class defer_delete<T[]> {
+    public:
+        using self = defer_delete;
+
+        explicit defer_delete(T *p)
+                : m_defer(std::default_delete<T[]>(), p) {}
+
+        defer_delete(const defer_delete &) = delete;
+
+        defer_delete &operator=(const defer_delete &) = delete;
+
+        defer_delete(defer_delete &&that) noexcept { std::swap(m_defer, that.m_defer); }
+
+        defer_delete &operator=(defer_delete &&that) noexcept {
+            std::swap(m_defer, that.m_defer);
+            return *this;
+        }
+
+        void release() { m_defer.release(); }
+
+        void emit() { m_defer.emit(); }
+
+    private:
+        defer m_defer;
+    };
+
+    template<typename T>
     defer_delete(T *p) -> defer_delete<std::decay_t<decltype(*p)>>;
 }
 

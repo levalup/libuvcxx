@@ -25,7 +25,6 @@ namespace uv {
             using entry_t = std::function<void(void)>;
 
             raw_t tid{};
-            std::atomic<bool> m_joined{false};
 
             thread_t(const thread_t &) = delete;
 
@@ -59,6 +58,7 @@ namespace uv {
 
         private:
             entry_t m_entry;
+            std::atomic<bool> m_joined{false};
 
             static void raw_entry(void *arg) {
                 try {

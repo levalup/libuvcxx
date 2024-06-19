@@ -146,12 +146,9 @@ namespace uv {
                 throw uvcxx::errcode(UV_EPERM, "close non-libuvcxx handle is not permitted");
             }
 
-            // Ensure that the handle will only be closed once, avoiding multiple invocations of close
-            //     due to the use of asynchronous queues in the callback's `queue` working mode.
-            bool closed = false;
-            if (!data->closed.compare_exchange_strong(closed, true)) return;
-
-            close(raw_close_callback);
+            data->close_for([&](void (*cb)(raw_t *)) {
+                close(cb);
+            });
         }
 
         uvcxx::promise<> close_for_promise(const std::function<void(void (*)(raw_t *))> &close) const {
@@ -160,15 +157,34 @@ namespace uv {
                 throw uvcxx::errcode(UV_EPERM, "close non-libuvcxx handle is not permitted");
             }
 
-            // Ensure that the handle will only be closed once, avoiding multiple invocations of close
-            //     due to the use of asynchronous queues in the callback's `queue` working mode.
-            bool closed = false;
-            if (!data->closed.compare_exchange_strong(closed, true)) return {};
+            auto closing = data->close_for([&](void (*cb)(raw_t *)) {
+                data->close_cb = decltype(data->close_cb)();
+                close(cb);
+            });
 
-            data->close_cb = decltype(data->close_cb)();
-            close(raw_close_callback);
+            if (closing) return data->close_cb.promise();
+            else return nullptr;    // close double time will return nullptr
+        }
 
-            return data->close_cb.promise();
+        std::function<void(void)> attach_data() {
+            return [raw = shared_raw()]() {
+                auto data = (data_t *) raw->data;
+                if (!data_t::is_it(data)) return;
+
+                delete data;
+            };
+        }
+
+        std::function<void(void)> attach_close() {
+            return [raw = shared_raw()]() {
+                auto handle = raw.get();
+                auto data = (data_t *) handle->data;
+                if (!data_t::is_it(data)) return;
+
+                data->close_for([&](void (*cb)(raw_t *)) {
+                    uv_close(handle, cb);
+                });
+            };
         }
 
     public:
@@ -180,7 +196,6 @@ namespace uv {
             static constexpr uint64_t MAGIC = 0x1155665044332210;
             uint64_t magic = MAGIC;
 
-            std::atomic<bool> closed{false};
             uvcxx::promise_emitter<> close_cb = nullptr;
 
             static bool is_it(void *data) {
@@ -212,9 +227,26 @@ namespace uv {
             [[nodiscard]]
             const T *handle() const { return (const T *) m_handle.get(); }
 
+            /**
+             * Ensure that the handle will only be closed once, avoiding multiple invocations of close
+             *     due to the use of asynchronous queues in the callback's `queue` working mode.
+             * @param close close cb, could be `uv_close` or `uv_tcp_close_reset`.
+             * @return
+             */
+            bool close_for(const std::function<void(void (*)(raw_t *))> &close) {
+                bool closed = false;
+                if (!m_closed.compare_exchange_strong(closed, true)) return false;
+
+                close(raw_close_callback);
+
+                return true;
+            }
+
         private:
             // store the instance of `handle` to avoid resource release caused by no external reference
             std::shared_ptr<raw_t> m_handle;
+
+            std::atomic<bool> m_closed{false};
         };
 
     protected:

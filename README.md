@@ -52,11 +52,7 @@ More version compatibility will be specified here after testing.
 
 ## 3. Schedule
 
-### Process [delay]
-
-> This section mainly focuses on encapsulating options to facilitate the manipulation of starting processes.
-
-### Thread [ing]
+### Thread [OK]
 
 > Convert most operations to C++ interface style.
 
@@ -64,10 +60,16 @@ Q: Do we still need to C style `thread` and `mutex` since we have already used C
 
 A: For fun!
 
-### File system operations [OK: 90%]
+### File system operations [OK: 91%]
 
-> Note: `readdir`, `scandir` require additional encapsulation to achieve C++style.
->     So the interfaces are not currently supported and will be introduced in the future.
+> Since `libuv` supports synchronous calls about file operations.
+> This feature that has not been supported yet, the feature will be added in the near future.
+> Of course, if synchronous interfaces are used, it may unnecessary to use our C++ wrapper, ahh...
+
+### Miscellaneous utilities [ing]
+
+> This section contains miscellaneous functions that don’t really belong in any other section.
+> 
 
 ### Others
 
