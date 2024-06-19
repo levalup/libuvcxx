@@ -107,7 +107,7 @@ namespace uv {
             });
         }
 
-        [[nodiscard("use close(nullptr) instead")]]
+        [[nodiscard]]
         uvcxx::promise<> close() {
             return close_for_promise([&](void (*cb)(raw_t *)) {
                 uv_close(*this, cb);
