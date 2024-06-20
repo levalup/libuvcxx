@@ -78,19 +78,6 @@ namespace uv {
             uv_stream_t *handle, const uv_buf_t bufs[], unsigned int nbufs, uv_stream_t *send_handle) {
         return write2({}, handle, bufs, nbufs, send_handle);
     }
-
-    [[nodiscard]]
-    inline uvcxx::promise<> write(
-            const write_t &req,
-            uv_stream_t *handle, const uv_buf_t bufs[], unsigned int nbufs, uv_stream_t *send_handle) {
-        return write2(req, handle, bufs, nbufs, send_handle);
-    }
-
-    [[nodiscard]]
-    inline uvcxx::promise<> write(
-            uv_stream_t *handle, const uv_buf_t bufs[], unsigned int nbufs, uv_stream_t *send_handle) {
-        return write2({}, handle, bufs, nbufs, send_handle);
-    }
 }
 
 #endif //LIBUVCXX_WRITE_H

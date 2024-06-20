@@ -42,6 +42,7 @@
 #include "uvcxx/udp.h"
 #include "uvcxx/udp_send.h"
 #include "uvcxx/utility.h"
+#include "uvcxx/version.h"
 #include "uvcxx/work.h"
 #include "uvcxx/write.h"
 

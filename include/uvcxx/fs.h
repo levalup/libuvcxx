@@ -49,6 +49,10 @@ namespace uv {
             return raw<raw_t>()->ptr;
         }
 
+        void cleanup() {
+            uv_fs_req_cleanup(*this);
+        }
+
         [[nodiscard]]
         uv_fs_type get_fs_type() const {
             return raw<raw_t>()->fs_type;
@@ -176,6 +180,12 @@ namespace uv {
             };
         }
 
+        inline int open(std::nullptr_t, fs_t &req,
+                        const char *path, int flags, int mode,
+                        std::nullptr_t) {
+            return uv_fs_open(nullptr, req, path, flags, mode, nullptr);
+        }
+
         [[nodiscard]]
         inline uvcxx::promise<uv_file> open(
                 const loop_t &loop, const fs_t &req, const char *path, int flags, int mode = 0644) {
@@ -199,6 +209,12 @@ namespace uv {
             return open(default_loop(), req, path, flags, mode);
         }
 
+        inline int close(std::nullptr_t, fs_t &req,
+                         uv_file file,
+                         std::nullptr_t) {
+            return uv_fs_close(nullptr, req, file, nullptr);
+        }
+
         [[nodiscard]]
         inline uvcxx::promise<int> close(const loop_t &loop, const fs_t &req, uv_file file) {
             return inner::invoker<int>()(
@@ -219,6 +235,12 @@ namespace uv {
         [[nodiscard]]
         inline uvcxx::promise<int> close(const fs_t &req, uv_file file) {
             return close(default_loop(), req, file);
+        }
+
+        inline int read(std::nullptr_t, fs_t &req,
+                        uv_file file, const uv_buf_t bufs[], unsigned int nbufs, int64_t offset,
+                        std::nullptr_t) {
+            return uv_fs_read(nullptr, req, file, bufs, nbufs, offset, nullptr);
         }
 
         [[nodiscard]]
@@ -309,6 +331,12 @@ namespace uv {
             return read(default_loop(), req, file, bufs, offset);
         }
 
+        inline int write(std::nullptr_t, fs_t &req,
+                         uv_file file, const uv_buf_t bufs[], unsigned int nbufs, int64_t offset,
+                         std::nullptr_t) {
+            return uv_fs_write(nullptr, req, file, bufs, nbufs, offset, nullptr);
+        }
+
         [[nodiscard]]
         inline uvcxx::promise<ssize_t> write(
                 const loop_t &loop, const fs_t &req,
@@ -397,6 +425,12 @@ namespace uv {
             return write(default_loop(), req, file, bufs, offset);
         }
 
+        inline int unlink(std::nullptr_t, fs_t &req,
+                          const char *path,
+                          std::nullptr_t) {
+            return uv_fs_unlink(nullptr, req, path, nullptr);
+        }
+
         [[nodiscard]]
         inline uvcxx::promise<int> unlink(const loop_t &loop, const fs_t &req, const char *path) {
             return inner::invoker<int>()(
@@ -419,6 +453,12 @@ namespace uv {
             return unlink(default_loop(), req, path);
         }
 
+        inline int mkdir(std::nullptr_t, fs_t &req,
+                         const char *path, int mode,
+                         std::nullptr_t) {
+            return uv_fs_mkdir(nullptr, req, path, mode, nullptr);
+        }
+
         [[nodiscard]]
         inline uvcxx::promise<int> mkdir(const loop_t &loop, const fs_t &req, const char *path, int mode = 0755) {
             return inner::invoker<int>()(
@@ -439,6 +479,12 @@ namespace uv {
         [[nodiscard]]
         inline uvcxx::promise<int> mkdir(const fs_t &req, const char *path, int mode = 0755) {
             return mkdir(default_loop(), req, path, mode);
+        }
+
+        inline int mkdtemp(std::nullptr_t, fs_t &req,
+                           const char *tpl,
+                           std::nullptr_t) {
+            return uv_fs_mkdtemp(nullptr, req, tpl, nullptr);
         }
 
         [[nodiscard]]
@@ -465,6 +511,12 @@ namespace uv {
 
 #if UVCXX_SATISFY_VERSION(1, 34, 0)
 
+        inline int mkstemp(std::nullptr_t, fs_t &req,
+                           const char *tpl,
+                           std::nullptr_t) {
+            return uv_fs_mkstemp(nullptr, req, tpl, nullptr);
+        }
+
         [[nodiscard]]
         inline uvcxx::promise<int, const char *> mkstemp(const loop_t &loop, const fs_t &req, const char *tpl) {
             return inner::invoker<int, const char *>()(
@@ -488,6 +540,12 @@ namespace uv {
         }
 
 #endif
+
+        inline int rmdir(std::nullptr_t, fs_t &req,
+                         const char *path,
+                         std::nullptr_t) {
+            return uv_fs_rmdir(nullptr, req, path, nullptr);
+        }
 
         [[nodiscard]]
         inline uvcxx::promise<int> rmdir(const loop_t &loop, const fs_t &req, const char *path) {
@@ -513,6 +571,12 @@ namespace uv {
 
 #if UVCXX_SATISFY_VERSION(1, 28, 0)
 
+        inline int opendir(std::nullptr_t, fs_t &req,
+                           const char *path,
+                           std::nullptr_t) {
+            return uv_fs_opendir(nullptr, req, path, nullptr);
+        }
+
         [[nodiscard]]
         inline uvcxx::promise<uv_dir_t *> opendir(const loop_t &loop, const fs_t &req, const char *path) {
             return inner::invoker<uv_dir_t *>()(
@@ -535,6 +599,12 @@ namespace uv {
             return opendir(default_loop(), req, path);
         }
 
+        inline int closedir(std::nullptr_t, fs_t &req,
+                            uv_dir_t *dir,
+                            std::nullptr_t) {
+            return uv_fs_closedir(nullptr, req, dir, nullptr);
+        }
+
         [[nodiscard]]
         inline uvcxx::promise<int> closedir(const loop_t &loop, const fs_t &req, uv_dir_t *dir) {
             return inner::invoker<int>()(
@@ -555,6 +625,12 @@ namespace uv {
         [[nodiscard]]
         inline uvcxx::promise<int> closedir(const fs_t &req, uv_dir_t *dir) {
             return closedir(default_loop(), req, dir);
+        }
+
+        inline int readdir(std::nullptr_t, fs_t &req,
+                           uv_dir_t *dir,
+                           std::nullptr_t) {
+            return uv_fs_readdir(nullptr, req, dir, nullptr);
         }
 
         [[nodiscard]]
@@ -586,6 +662,12 @@ namespace uv {
         }
 
 #endif
+
+        inline int scandir(std::nullptr_t, fs_t &req,
+                           const char *path, int flags,
+                           std::nullptr_t) {
+            return uv_fs_scandir(nullptr, req, path, flags, nullptr);
+        }
 
         using scan_next = std::function<int(uv_dirent_t *ent)>;
 
@@ -622,6 +704,12 @@ namespace uv {
             return uv_fs_scandir_next(req, ent);
         }
 
+        inline int stat(std::nullptr_t, fs_t &req,
+                        const char *path,
+                        std::nullptr_t) {
+            return uv_fs_stat(nullptr, req, path, nullptr);
+        }
+
         [[nodiscard]]
         inline uvcxx::promise<uv_stat_t *> stat(const loop_t &loop, const fs_t &req, const char *path) {
             return inner::invoker<uv_stat_t *>()(
@@ -644,6 +732,12 @@ namespace uv {
             return stat(default_loop(), req, path);
         }
 
+        inline int fstat(std::nullptr_t, fs_t &req,
+                         uv_file file,
+                         std::nullptr_t) {
+            return uv_fs_fstat(nullptr, req, file, nullptr);
+        }
+
         [[nodiscard]]
         inline uvcxx::promise<uv_stat_t *> fstat(const loop_t &loop, const fs_t &req, uv_file file) {
             return inner::invoker<uv_stat_t *>()(
@@ -664,6 +758,12 @@ namespace uv {
         [[nodiscard]]
         inline uvcxx::promise<uv_stat_t *> fstat(const fs_t &req, uv_file file) {
             return fstat(default_loop(), req, file);
+        }
+
+        inline int lstat(std::nullptr_t, fs_t &req,
+                         const char *path,
+                         std::nullptr_t) {
+            return uv_fs_lstat(nullptr, req, path, nullptr);
         }
 
         [[nodiscard]]
@@ -690,6 +790,12 @@ namespace uv {
 
 #if UVCXX_SATISFY_VERSION(1, 31, 0)
 
+        inline int statfs(std::nullptr_t, fs_t &req,
+                          const char *path,
+                          std::nullptr_t) {
+            return uv_fs_statfs(nullptr, req, path, nullptr);
+        }
+
         [[nodiscard]]
         inline uvcxx::promise<uv_statfs_t *> statfs(const loop_t &loop, const fs_t &req, const char *path) {
             return inner::invoker<uv_statfs_t *>()(
@@ -714,6 +820,12 @@ namespace uv {
 
 #endif
 
+        inline int rename(std::nullptr_t, fs_t &req,
+                          const char *path, const char *new_path,
+                          std::nullptr_t) {
+            return uv_fs_rename(nullptr, req, path, new_path, nullptr);
+        }
+
         [[nodiscard]]
         inline uvcxx::promise<int> rename(
                 const loop_t &loop, const fs_t &req, const char *path, const char *new_path) {
@@ -735,6 +847,12 @@ namespace uv {
         [[nodiscard]]
         inline uvcxx::promise<int> rename(const fs_t &req, const char *path, const char *new_path) {
             return rename(default_loop(), req, path, new_path);
+        }
+
+        inline int fsync(std::nullptr_t, fs_t &req,
+                         uv_file file,
+                         std::nullptr_t) {
+            return uv_fs_fsync(nullptr, req, file, nullptr);
         }
 
         [[nodiscard]]
@@ -759,6 +877,12 @@ namespace uv {
             return fsync(default_loop(), req, file);
         }
 
+        inline int fdatasync(std::nullptr_t, fs_t &req,
+                             uv_file file,
+                             std::nullptr_t) {
+            return uv_fs_fdatasync(nullptr, req, file, nullptr);
+        }
+
         [[nodiscard]]
         inline uvcxx::promise<int> fdatasync(const loop_t &loop, const fs_t &req, uv_file file) {
             return inner::invoker<int>()(
@@ -779,6 +903,12 @@ namespace uv {
         [[nodiscard]]
         inline uvcxx::promise<int> fdatasync(const fs_t &req, uv_file file) {
             return fdatasync(default_loop(), req, file);
+        }
+
+        inline int ftruncate(std::nullptr_t, fs_t &req,
+                             uv_file file, int64_t offset,
+                             std::nullptr_t) {
+            return uv_fs_ftruncate(nullptr, req, file, offset, nullptr);
         }
 
         [[nodiscard]]
@@ -806,6 +936,12 @@ namespace uv {
 
 #if UVCXX_SATISFY_VERSION(1, 14, 0)
 
+        inline int copyfile(std::nullptr_t, fs_t &req,
+                            const char *path, const char *new_path, int flags,
+                            std::nullptr_t) {
+            return uv_fs_copyfile(nullptr, req, path, new_path, flags, nullptr);
+        }
+
         [[nodiscard]]
         inline uvcxx::promise<int> copyfile(
                 const loop_t &loop, const fs_t &req, const char *path, const char *new_path, int flags) {
@@ -830,6 +966,12 @@ namespace uv {
         }
 
 #endif
+
+        inline int sendfile(std::nullptr_t, fs_t &req,
+                            uv_file out_fd, uv_file in_fd, int64_t in_offset, size_t length,
+                            std::nullptr_t) {
+            return uv_fs_sendfile(nullptr, req, out_fd, in_fd, in_offset, length, nullptr);
+        }
 
         [[nodiscard]]
         inline uvcxx::promise<ssize_t> sendfile(
@@ -858,6 +1000,12 @@ namespace uv {
             return sendfile(default_loop(), req, out_fd, in_fd, in_offset, length);
         }
 
+        inline int access(std::nullptr_t, fs_t &req,
+                          const char *path, int mode,
+                          std::nullptr_t) {
+            return uv_fs_access(nullptr, req, path, mode, nullptr);
+        }
+
         [[nodiscard]]
         inline uvcxx::promise<int> access(const loop_t &loop, const fs_t &req, const char *path, int mode) {
             return inner::invoker<int>()(
@@ -878,6 +1026,12 @@ namespace uv {
         [[nodiscard]]
         inline uvcxx::promise<int> access(const fs_t &req, const char *path, int mode) {
             return access(default_loop(), req, path, mode);
+        }
+
+        inline int chmod(std::nullptr_t, fs_t &req,
+                         const char *path, int mode,
+                         std::nullptr_t) {
+            return uv_fs_chmod(nullptr, req, path, mode, nullptr);
         }
 
         [[nodiscard]]
@@ -902,6 +1056,12 @@ namespace uv {
             return chmod(default_loop(), req, path, mode);
         }
 
+        inline int fchmod(std::nullptr_t, fs_t &req,
+                          uv_file file, int mode,
+                          std::nullptr_t) {
+            return uv_fs_fchmod(nullptr, req, file, mode, nullptr);
+        }
+
         [[nodiscard]]
         inline uvcxx::promise<int> fchmod(const loop_t &loop, const fs_t &req, uv_file file, int mode) {
             return inner::invoker<int>()(
@@ -924,9 +1084,15 @@ namespace uv {
             return fchmod(default_loop(), req, file, mode);
         }
 
+        inline int utime(std::nullptr_t, fs_t &req,
+                         const char *path, double atime, double mtime,
+                         std::nullptr_t) {
+            return uv_fs_utime(nullptr, req, path, atime, mtime, nullptr);
+        }
+
         [[nodiscard]]
-        inline uvcxx::promise<int>
-        utime(const loop_t &loop, const fs_t &req, const char *path, double atime, double mtime) {
+        inline uvcxx::promise<int> utime(
+                const loop_t &loop, const fs_t &req, const char *path, double atime, double mtime) {
             return inner::invoker<int>()(
                     [](inner::raw_req_t *req) { return (int) req->result; },
                     uv_fs_utime, loop, req, path, atime, mtime);
@@ -945,6 +1111,12 @@ namespace uv {
         [[nodiscard]]
         inline uvcxx::promise<int> utime(const fs_t &req, const char *path, double atime, double mtime) {
             return utime(default_loop(), req, path, atime, mtime);
+        }
+
+        inline int futime(std::nullptr_t, fs_t &req,
+                          uv_file file, double atime, double mtime,
+                          std::nullptr_t) {
+            return uv_fs_futime(nullptr, req, file, atime, mtime, nullptr);
         }
 
         [[nodiscard]]
@@ -972,6 +1144,12 @@ namespace uv {
 
 #if UVCXX_SATISFY_VERSION(1, 36, 0)
 
+        inline int lutime(std::nullptr_t, fs_t &req,
+                          const char *path, double atime, double mtime,
+                          std::nullptr_t) {
+            return uv_fs_lutime(nullptr, req, path, atime, mtime, nullptr);
+        }
+
         [[nodiscard]]
         inline uvcxx::promise<int> lutime(
                 const loop_t &loop, const fs_t &req, const char *path, double atime, double mtime) {
@@ -997,6 +1175,12 @@ namespace uv {
 
 #endif
 
+        inline int link(std::nullptr_t, fs_t &req,
+                        const char *path, const char *new_path,
+                        std::nullptr_t) {
+            return uv_fs_link(nullptr, req, path, new_path, nullptr);
+        }
+
         [[nodiscard]]
         inline uvcxx::promise<int> link(
                 const loop_t &loop, const fs_t &req, const char *path, const char *new_path) {
@@ -1020,6 +1204,12 @@ namespace uv {
             return link(default_loop(), req, path, new_path);
         }
 
+        inline int symlink(std::nullptr_t, fs_t &req,
+                           const char *path, const char *new_path, int flags,
+                           std::nullptr_t) {
+            return uv_fs_symlink(nullptr, req, path, new_path, flags, nullptr);
+        }
+
         [[nodiscard]]
         inline uvcxx::promise<int> symlink(
                 const loop_t &loop, const fs_t &req, const char *path, const char *new_path, int flags) {
@@ -1041,6 +1231,12 @@ namespace uv {
         [[nodiscard]]
         inline uvcxx::promise<int> symlink(const fs_t &req, const char *path, const char *new_path, int flags) {
             return symlink(default_loop(), req, path, new_path, flags);
+        }
+
+        inline int readlink(std::nullptr_t, fs_t &req,
+                            const char *path,
+                            std::nullptr_t) {
+            return uv_fs_readlink(nullptr, req, path, nullptr);
         }
 
         [[nodiscard]]
@@ -1067,6 +1263,12 @@ namespace uv {
 
 #if UVCXX_SATISFY_VERSION(1, 8, 0)
 
+        inline int realpath(std::nullptr_t, fs_t &req,
+                            const char *path,
+                            std::nullptr_t) {
+            return uv_fs_realpath(nullptr, req, path, nullptr);
+        }
+
         [[nodiscard]]
         inline uvcxx::promise<const char *> realpath(const loop_t &loop, const fs_t &req, const char *path) {
             return inner::invoker<const char *>()(
@@ -1091,6 +1293,12 @@ namespace uv {
 
 #endif
 
+        inline int chown(std::nullptr_t, fs_t &req,
+                         const char *path, uv_uid_t uid, uv_gid_t gid,
+                         std::nullptr_t) {
+            return uv_fs_chown(nullptr, req, path, uid, gid, nullptr);
+        }
+
         [[nodiscard]]
         inline uvcxx::promise<int> chown(
                 const loop_t &loop, const fs_t &req, const char *path, uv_uid_t uid, uv_gid_t gid) {
@@ -1114,6 +1322,12 @@ namespace uv {
             return chown(default_loop(), req, path, uid, gid);
         }
 
+        inline int fchown(std::nullptr_t, fs_t &req,
+                          uv_file file, uv_uid_t uid, uv_gid_t gid,
+                          std::nullptr_t) {
+            return uv_fs_fchown(nullptr, req, file, uid, gid, nullptr);
+        }
+
         [[nodiscard]]
         inline uvcxx::promise<int> fchown(
                 const loop_t &loop, const fs_t &req, uv_file file, uv_uid_t uid, uv_gid_t gid) {
@@ -1135,6 +1349,12 @@ namespace uv {
         [[nodiscard]]
         inline uvcxx::promise<int> fchown(const fs_t &req, uv_file file, uv_uid_t uid, uv_gid_t gid) {
             return fchown(default_loop(), req, file, uid, gid);
+        }
+
+        inline int lchown(std::nullptr_t, fs_t &req,
+                          const char *path, uv_uid_t uid, uv_gid_t gid,
+                          std::nullptr_t) {
+            return uv_fs_lchown(nullptr, req, path, uid, gid, nullptr);
         }
 
         [[nodiscard]]

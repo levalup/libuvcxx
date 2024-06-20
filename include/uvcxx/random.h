@@ -9,6 +9,12 @@
 #include "loop.h"
 #include "req.h"
 
+#if !UVCXX_SATISFY_VERSION(1, 33, 0)
+
+#include <random>
+
+#endif
+
 namespace uv {
 #if UVCXX_SATISFY_VERSION(1, 33, 0)
 
@@ -28,8 +34,7 @@ namespace uv {
             explicit data_t(const random_t &req)
                     : supper(req), promise([](raw_t *, int, void *buf, size_t len) {
                 return std::make_tuple(buf, len);
-            }) {
-            }
+            }) {}
 
             uvcxx::promise_proxy<raw_t *, int, void *, size_t> &proxy() noexcept override { return promise; }
 
@@ -39,10 +44,16 @@ namespace uv {
         };
     };
 
+    inline int random(std::nullptr_t, std::nullptr_t,
+                      void *buf, size_t buflen, unsigned int flags,
+                      std::nullptr_t) {
+        return uv_random(nullptr, nullptr, buf, buflen, flags, nullptr);
+    }
+
     [[nodiscard]]
     inline uvcxx::promise<void *, size_t> random(
             const loop_t &loop, const random_t &req,
-            void *buf, size_t buflen, unsigned int flags) {
+            void *buf, size_t buflen, unsigned int flags = 0) {
         auto *data = new random_t::data_t(req);
         uvcxx::defer_delete delete_data(data);
 
@@ -55,22 +66,50 @@ namespace uv {
 
     [[nodiscard]]
     inline uvcxx::promise<void *, size_t> random(
-            void *buf, size_t buflen, unsigned int flags) {
+            void *buf, size_t buflen, unsigned int flags = 0) {
         return random(default_loop(), {}, buf, buflen, flags);
     }
 
     [[nodiscard]]
     inline uvcxx::promise<void *, size_t> random(
             const loop_t &loop,
-            void *buf, size_t buflen, unsigned int flags) {
+            void *buf, size_t buflen, unsigned int flags = 0) {
         return random(loop, {}, buf, buflen, flags);
     }
 
     [[nodiscard]]
     inline uvcxx::promise<void *, size_t> random(
             const random_t &req,
-            void *buf, size_t buflen, unsigned int flags) {
+            void *buf, size_t buflen, unsigned int flags = 0) {
         return random(default_loop(), req, buf, buflen, flags);
+    }
+
+#else
+
+    inline int random(std::nullptr_t, std::nullptr_t,
+                      void *buf, size_t buflen, unsigned int,
+                      std::nullptr_t) {
+        if (!buf || !buflen) return 0;
+        std::mt19937 rng(std::random_device{}());
+        std::uniform_int_distribution<uint64_t> dist;
+
+        auto body_size = buflen / 8;
+        auto tail_size = buflen - body_size * 8;
+
+        auto body_data = static_cast<uint64_t *>(buf);
+        for (size_t i = 0; i < body_size; ++i) {
+            *body_data++ = dist(rng);
+        }
+        if (tail_size) {
+            auto tail = dist(rng);
+            auto tail_data = reinterpret_cast<uint8_t *>(body_data);
+            auto rand_data = reinterpret_cast<uint8_t *>(&tail);
+            for (size_t i = 0; i < tail_size; ++i) {
+                tail_data[i] = rand_data[i];
+            }
+        }
+
+        return 0;
     }
 
 #endif

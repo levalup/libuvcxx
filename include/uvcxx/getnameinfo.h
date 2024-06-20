@@ -60,6 +60,16 @@ namespace uv {
         };
     };
 
+#if UVCXX_SATISFY_VERSION(1, 3, 0)
+
+    inline int getnameinfo(std::nullptr_t, getnameinfo_t &req,
+                           const sockaddr *addr, int flags,
+                           std::nullptr_t) {
+        return uv_getnameinfo(nullptr, req, nullptr, addr, flags);
+    }
+
+#endif
+
     [[nodiscard]]
     inline uvcxx::promise<const char *, const char *> getnameinfo(
             const loop_t &loop, const getnameinfo_t &req,

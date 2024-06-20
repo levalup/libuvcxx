@@ -56,6 +56,18 @@ namespace uv {
         };
     };
 
+    inline void freeaddrinfo(addrinfo *ai) { uv_freeaddrinfo(ai); }
+
+#if UVCXX_SATISFY_VERSION(1, 3, 0)
+
+    inline int getaddrinfo(std::nullptr_t, getaddrinfo_t &req,
+                           const char *node, const char *service, const addrinfo *hints,
+                           std::nullptr_t) {
+        return uv_getaddrinfo(nullptr, req, nullptr, node, service, hints);
+    }
+
+#endif
+
     [[nodiscard]]
     inline uvcxx::promise<addrinfo *> getaddrinfo(
             const loop_t &loop, const getaddrinfo_t &req,
