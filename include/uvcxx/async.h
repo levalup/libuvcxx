@@ -16,6 +16,7 @@ namespace uv {
 
         async_t() {
             set_data(new data_t(*this));    //< data will be deleted in close action
+            _attach_data_();
         }
 
         [[nodiscard]]
@@ -28,6 +29,7 @@ namespace uv {
             auto data = get_data<data_t>();
             auto err = uv_async_init(loop, *this, raw_callback);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);;
+            _detach_();  // it's running after init
             return data->send_cb.callback();
         }
 
@@ -52,7 +54,7 @@ namespace uv {
                 handle.watch(send_cb);
             }
 
-            void close() noexcept final {
+            ~data_t() override {
                 send_cb.finalize();
             }
         };

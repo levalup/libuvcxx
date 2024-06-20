@@ -22,6 +22,7 @@ namespace uv {
         explicit pipe_t(const loop_t &loop, bool ipc) {
             set_data(new data_t(*this));    //< data will be deleted in close action
             (void) uv_pipe_init(loop, *this, int(ipc));
+            _attach_close_();
         }
 
         [[nodiscard]]

@@ -36,10 +36,16 @@ namespace uv {
 
         [[nodiscard]]
         uvcxx::callback<int> listen(int backlog) {
+            auto data = get_data<data_t>();
+            if (data->work_mode == WorkMode::Read) {
+                UVCXX_THROW_OR_RETURN(UV_EPERM, nullptr, "can not listen reading stream");
+            }
+            data->work_mode = WorkMode::Listen;
+
             auto err = uv_listen(*this, backlog, raw_listen_callback);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
 
-            auto data = this->data<data_t>();
+            _detach_();
             return data->listen_cb.callback();
         }
 
@@ -51,21 +57,39 @@ namespace uv {
 
         [[nodiscard]]
         uvcxx::callback<size_t, uv_buf_t *> alloc() {
-            auto data = get_data<data_t>();
+            // this alloc is not under Running state, so no `_detach_` applied.
             // memory alloc can not register multi-times callback
-            return data->alloc_cb.callback().call(nullptr);
+            return get_data<data_t>()->alloc_cb.callback().call(nullptr);
         }
 
         [[nodiscard]]
         uvcxx::callback<ssize_t, const uv_buf_t *> read_start() {
+            auto data = get_data<data_t>();
+            if (data->work_mode == WorkMode::Listen) {
+                UVCXX_THROW_OR_RETURN(UV_EPERM, nullptr, "can not read listening stream");
+            }
+            data->work_mode = WorkMode::Read;
+
             auto err = uv_read_start(*this, raw_alloc_callback, raw_read_callback);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
-            auto data = get_data<data_t>();
+
+            _detach_();
             return data->read_cb.callback();
         }
 
-        void read_stop() {
-            uv_read_stop(*this);
+        int read_stop() {
+            auto data = get_data<data_t>();
+            if (data->work_mode == WorkMode::Listen) {
+                UVCXX_THROW_OR_RETURN(UV_EPERM, nullptr, "can not stop listening stream");
+            }
+
+            auto status = uv_read_stop(*this);
+            if (status < 0) UVCXX_THROW_OR_RETURN(status, status);
+
+            data->work_mode = WorkMode::Notset;
+
+            _attach_close_();
+            return status;
         }
 
         [[nodiscard]]
@@ -161,11 +185,19 @@ namespace uv {
         }
 
     protected:
+        enum class WorkMode {
+            Notset = 0,
+            Listen = 1,
+            Read = 2,
+        };
+
         class data_t : supper::data_t {
         public:
             uvcxx::callback_emitter<int> listen_cb;
             uvcxx::callback_emitter<ssize_t, const uv_buf_t *> read_cb;
             uvcxx::callback_emitter<size_t, uv_buf_t *> alloc_cb;
+
+            WorkMode work_mode{WorkMode::Notset};
 
             explicit data_t(stream_t &handle)
                     : supper::data_t(handle) {
@@ -174,11 +206,10 @@ namespace uv {
                 handle.watch(alloc_cb);
             }
 
-            void close() noexcept override {
+            ~data_t() override {
                 alloc_cb.finalize();
                 read_cb.finalize();
                 listen_cb.finalize();
-                supper::data_t::close();
             }
         };
     };
@@ -216,9 +247,8 @@ namespace uv {
                 handle.watch(accept_cb);
             }
 
-            void close() noexcept override {
+            ~data_t() override {
                 accept_cb.finalize();
-                supper::data_t::close();
             }
         };
     };

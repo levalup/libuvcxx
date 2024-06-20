@@ -23,18 +23,20 @@ namespace uv {
 #endif
             set_data(new data_t(*this));    //< data will be deleted in close action
             (void) uv_fs_event_init(loop, *this);
+            _attach_close_();
         }
 
         [[nodiscard]]
         uvcxx::callback<const char *, uv_fs_event, int> start(const char *path, int flags) {
             auto err = uv_fs_event_start(*this, raw_callback, path, flags);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
-            auto data = get_data<data_t>();
-            return data->start_cb.callback();
+            _detach_();
+            return get_data<data_t>()->start_cb.callback();
         }
 
         void stop() {
             (void) uv_fs_event_stop(*this);
+            _attach_close_();
         }
 
         int getpath(char *buffer, size_t *size) {
@@ -56,7 +58,7 @@ namespace uv {
                 handle.watch(start_cb);
             }
 
-            void close() noexcept final {
+            ~data_t() override {
                 start_cb.finalize();
             }
         };

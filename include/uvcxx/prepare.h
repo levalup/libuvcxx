@@ -19,18 +19,20 @@ namespace uv {
         explicit prepare_t(const loop_t &loop) {
             set_data(new data_t(*this));    //< data will be deleted in close action
             (void) uv_prepare_init(loop, *this);
+            _attach_close_();
         }
 
         [[nodiscard]]
         uvcxx::callback<> start() {
             auto err = uv_prepare_start(*this, raw_callback);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
-            auto data = get_data<data_t>();
-            return data->start_cb.callback();
+            _detach_();
+            return get_data<data_t>()->start_cb.callback();
         }
 
         void stop() {
             (void) uv_prepare_stop(*this);
+            _attach_close_();
         }
 
     private:
@@ -48,7 +50,7 @@ namespace uv {
                 handle.watch(start_cb);
             }
 
-            void close() noexcept final {
+            ~data_t() override {
                 start_cb.finalize();
             }
         };

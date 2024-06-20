@@ -20,6 +20,7 @@ namespace uv {
         explicit tcp_t(const loop_t &loop) {
             set_data(new data_t(*this));    //< data will be deleted in close action
             (void) uv_tcp_init(loop, *this);
+            _attach_close_();
         }
 
 #if UVCXX_SATISFY_VERSION(1, 7, 0)
@@ -27,9 +28,9 @@ namespace uv {
         explicit tcp_t(int flags) : self(default_loop(), flags) {}
 
         explicit tcp_t(const loop_t &loop, int flags) {
+            set_data(new data_t(*this));    //< data will be deleted in close action
             (void) uv_tcp_init_ex(loop, *this, flags);
-            // data will be deleted in close action
-            set_data(new data_t(*this));
+            _attach_close_();
         }
 
 #endif
@@ -118,15 +119,15 @@ namespace uv {
 #if UVCXX_SATISFY_VERSION(1, 32, 0)
 
         void close_reset(std::nullptr_t) {
-            close_for([&](void (*cb)(uv_handle_t *)) {
-                uv_tcp_close_reset(*this, cb);
+            (void) close_for([&](void (*cb)(uv_handle_t *)) {
+                (void) uv_tcp_close_reset(*this, cb);
             });
         }
 
         [[nodiscard]]
         uvcxx::promise<> close_reset() {
-            return close_for_promise([&](void (*cb)(uv_handle_t *)) {
-                uv_tcp_close_reset(*this, cb);
+            return close_for([&](void (*cb)(uv_handle_t *)) {
+                (void) uv_tcp_close_reset(*this, cb);
             });
         }
 

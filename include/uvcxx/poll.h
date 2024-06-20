@@ -16,6 +16,7 @@ namespace uv {
 
         poll_t() {
             set_data(new data_t(*this));    //< data will be deleted in close action
+            _attach_data_();
         }
 
         self &init(const loop_t &loop, int fd) {
@@ -24,6 +25,8 @@ namespace uv {
             // To directly start after init, there is no path to return the error code instead.
             // So an exception is directly thrown. This feature may be modified in the future.
             if (err < 0) throw uvcxx::errcode(err);
+
+            _attach_close_();
             data->initialized = true;
             return *this;
         }
@@ -34,6 +37,8 @@ namespace uv {
             // To directly start after init, there is no path to return the error code instead.
             // So an exception is directly thrown. This feature may be modified in the future.
             if (err < 0) throw uvcxx::errcode(err);
+
+            _attach_close_();
             data->initialized = true;
             return *this;
         }
@@ -56,11 +61,14 @@ namespace uv {
 
             auto err = uv_poll_start(*this, events, raw_callback);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
+
+            _detach_();
             return data->start_cb.callback();
         }
 
         void stop() {
             (void) uv_poll_stop(*this);
+            _attach_close_();
         }
 
     private:
@@ -79,7 +87,7 @@ namespace uv {
                 handle.watch(start_cb);
             }
 
-            void close() noexcept final {
+            ~data_t() override {
                 start_cb.finalize();
             }
         };

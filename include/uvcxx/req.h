@@ -38,9 +38,9 @@ namespace uv {
         }
 
         int cancel() {
-            auto err = uv_cancel(*this);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            auto status = uv_cancel(*this);
+            if (status < 0) UVCXX_THROW_OR_RETURN(status, status);
+            return status;
         }
 
         [[nodiscard]]
@@ -102,7 +102,7 @@ namespace uv {
 
             explicit data_t(const req_t &req)
                     : m_req(req.shared_raw()) {
-                if (m_req->data) throw uvcxx::errcode(UV_EPERM, "duplicated initialization of data");
+                if (m_req->data) throw uvcxx::errcode(UV_EPERM, "duplicated data initialization");
                 m_req->data = this;
             }
 
@@ -183,11 +183,11 @@ namespace uv {
             uvcxx::defer promise_finally([&]() { proxy.finalize(); });
 
             try {
-                auto err = data->check(req, args...);
+                auto status = data->check(req, args...);
                 // cancel request will not do anything
-                if (err == UV_ECANCELED) return;
-                if (err < 0) {
-                    proxy.template reject<uvcxx::errcode>(err);
+                if (status == UV_ECANCELED) return;
+                if (status < 0) {
+                    proxy.template reject<uvcxx::errcode>(status);
                 } else {
                     proxy.resolve(req, args...);
                 }

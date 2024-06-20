@@ -26,7 +26,7 @@ namespace uv {
 
         using supper::supper;
 
-        loop_t() : self(make_shared()) {}
+        loop_t() : self(std::make_shared<loop_with_data_t>()) {}
 
         [[nodiscard]]
         void *data() const {
@@ -47,13 +47,13 @@ namespace uv {
         int close() {
             auto data = (data_t *) raw()->data;
             if (data_t::is_it(data)) {
-                auto err = close_loop(*this, data);
-                if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-                return err;
+                auto status = raw<loop_with_data_t>()->close();
+                if (status < 0) UVCXX_THROW_OR_RETURN(status, status);
+                return status;
             } else {
-                auto err = uv_loop_close(raw());
-                if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-                return err;
+                auto status = uv_loop_close(raw());
+                if (status < 0) UVCXX_THROW_OR_RETURN(status, status);
+                return status;
             }
         }
 
@@ -93,7 +93,7 @@ namespace uv {
             uv_update_time(*this);
         }
 
-        void walk(uv_walk_cb walk_cb, void *arg) {
+        void walk(uv_walk_cb walk_cb, void *arg = nullptr) {
             uv_walk(*this, walk_cb, arg);
         }
 
@@ -159,63 +159,61 @@ namespace uv {
             return self{borrow_t(raw)};
         }
 
-    public:
+    private:
         class data_t {
         public:
             static constexpr uint64_t MAGIC = 0x1155665044332210;
             uint64_t magic = MAGIC;
 
-            // use to make sure this loop close.
-            std::mutex closing;
-            std::atomic<bool> closed{false};
-
             static bool is_it(void *data) {
                 return data && ((data_t *) data)->magic == MAGIC;
             }
 
-        public:
             virtual ~data_t() = default;
+
+        public:
+            bool close_for(const std::function<void()> &close) {
+                bool closed = false;
+                if (!m_closed.compare_exchange_strong(closed, true)) return false;
+
+                close();
+
+                return true;
+            }
+
+        private:
+            std::atomic<bool> m_closed{false};
         };
 
-    private:
-        static int close_loop(raw_t *raw, data_t *data) {
-            if (!data) return 0;
+        class loop_with_data_t : public uv_loop_t {
+        public:
+            loop_with_data_t() : uv_loop_t() {
+                auto status = uv_loop_init(this);
+                if (status < 0) throw uvcxx::errcode(status, "can not init loop");
+                this->data = &m_data;
+            }
 
-            std::unique_lock _lock(data->closing);
-            if (data->closed) return 0;
+            loop_with_data_t(const loop_with_data_t &) = delete;
 
-            auto err = uv_loop_close(raw);
-            if (err < 0) return err;
+            loop_with_data_t &operator=(const loop_with_data_t &) = delete;
 
-            data->closed.store(true);
-            return 0;
-        }
+            ~loop_with_data_t() {
+                (void) m_data.close_for([this]() {
+                    (void) uv_loop_close(this);
+                });
+            }
 
-        static std::shared_ptr<raw_t> make_shared() {
-            using namespace uvcxx;
+            int close() {
+                int status = 0;
+                (void) m_data.close_for([&]() {
+                    status = uv_loop_close(this);
+                });
+                return status;
+            }
 
-            auto data = new data_t;
-            defer delete_data(std::default_delete<data_t>(), data);
-
-            auto raw = new raw_t;
-            defer delete_raw(std::default_delete<raw_t>(), raw);
-            raw->data = data;
-
-            auto err = uv_loop_init(raw);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
-
-            auto result = std::shared_ptr<raw_t>(raw, [data](raw_t *raw) {
-                defer delete_raw(std::default_delete<raw_t>(), raw);
-                defer delete_data(std::default_delete<data_t>(), data);
-
-                auto err = close_loop(raw, data);
-                if (err < 0) UVCXX_THROW(err);
-            });
-
-            delete_data.release();
-            delete_raw.release();
-            return result;
-        }
+        private:
+            data_t m_data;
+        };
     };
 
     inline loop_t default_loop() {

@@ -240,6 +240,10 @@ namespace uv {
         };
     }
 
+    /**
+     * After the process is successfully `spawn`, `close` will be automatically called when the process exits,
+     *     so there is no need to explicitly call `close` externally.
+     */
     class process_t : public inherit_handle_t<uv_process_t, handle_t> {
     public:
         using self = process_t;
@@ -247,6 +251,7 @@ namespace uv {
 
         process_t() {
             set_data(new data_t(*this));
+            _attach_data_();
         }
 
         [[nodiscard]]
@@ -261,8 +266,8 @@ namespace uv {
             auto status = uv_spawn(loop, *this, &fix_options);
             if (status < 0) UVCXX_THROW_OR_RETURN(status, nullptr);
 
-            auto data = get_data<data_t>();
-            return data->exit_cb.promise();
+            _detach_();
+            return get_data<data_t>()->exit_cb.promise();
         }
 
         uvcxx::promise<int64_t, int> spawn(const uv_process_options_t *options) {

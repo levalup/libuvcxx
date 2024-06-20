@@ -19,6 +19,7 @@ namespace uv {
         explicit signal_t(const loop_t &loop) {
             set_data(new data_t(*this));    //< data will be deleted in close action
             (void) uv_signal_init(loop, *this);
+            _attach_close_();
         }
 
         [[nodiscard]]
@@ -30,8 +31,8 @@ namespace uv {
         uvcxx::callback<int> start(int signum) {
             auto err = uv_signal_start(*this, raw_callback, signum);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
-            auto data = get_data<data_t>();
-            return data->start_cb.callback();
+            _detach_();
+            return get_data<data_t>()->start_cb.callback();
         }
 
 #if UVCXX_SATISFY_VERSION(1, 12, 0)
@@ -40,8 +41,13 @@ namespace uv {
         uvcxx::callback<int> start_oneshot(int signum) {
             auto err = uv_signal_start_oneshot(*this, raw_callback, signum);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
-            auto data = get_data<data_t>();
-            return data->start_cb.callback();
+
+            _detach_();
+
+            return get_data<data_t>()->start_cb.callback().finally(nullptr)
+                    .finally([attachment = *this]() mutable {
+                        finally_recycle_oneshot(attachment);
+                    });
         }
 
 #endif
@@ -49,8 +55,29 @@ namespace uv {
         int stop() {
             auto err = uv_signal_stop(*this);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
+            _attach_close_();
             return err;
         }
+
+#if UVCXX_SATISFY_VERSION(1, 12, 0)
+
+    private:
+        /**
+         * recycle grab signal_t.
+         * if use_count == 1, close signal, because the `callback` and `signal` can not be reached ever again.
+         * if use_count > 1, attach_close and unref_attach, telling other refs that its attached again. and i'm done.
+         * @param grab
+         */
+        static void finally_recycle_oneshot(signal_t &grab) {
+            if (grab._attach_count_() == 1) {
+                grab.close(nullptr);
+            } else {
+                grab._attach_close_();
+                grab._unref_attach_();
+            }
+        }
+
+#endif
 
     private:
         static void raw_callback(raw_t *handle, int signum) {
@@ -67,7 +94,7 @@ namespace uv {
                 handle.watch(start_cb);
             }
 
-            void close() noexcept final {
+            ~data_t() override {
                 start_cb.finalize();
             }
         };

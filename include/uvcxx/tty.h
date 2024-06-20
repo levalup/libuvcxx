@@ -17,9 +17,9 @@ namespace uv {
         tty_t(uv_file fd, int unused) : self(default_loop(), fd, unused) {}
 
         explicit tty_t(const loop_t &loop, uv_file fd, int unused) {
+            set_data(new data_t(*this));    //< data will be deleted in close action
             (void) uv_tty_init(loop, *this, fd, unused);
-            // data will be deleted in close action
-            set_data(new data_t(*this));
+            _attach_close_();
         }
 
         int fileno(uv_os_fd_t *fd) const {

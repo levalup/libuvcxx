@@ -19,19 +19,21 @@ namespace uv {
         explicit timer_t(const loop_t &loop) {
             set_data(new data_t(*this));    //< data will be deleted in close action
             (void) uv_timer_init(loop, *this);
+            _attach_close_();
         }
 
         [[nodiscard]]
         uvcxx::callback<> start(uint64_t timeout, uint64_t repeat) {
             auto err = uv_timer_start(*this, raw_callback, timeout, repeat);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
-            auto data = get_data<data_t>();
-            return data->start_cb.callback();
+            _detach_();
+            return get_data<data_t>()->start_cb.callback();
         }
 
         int stop() {
             auto err = uv_timer_stop(*this);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
+            _attach_close_();
             return err;
         }
 
@@ -74,7 +76,7 @@ namespace uv {
                 handle.watch(start_cb);
             }
 
-            void close() noexcept final {
+            ~data_t() override {
                 start_cb.finalize();
             }
         };

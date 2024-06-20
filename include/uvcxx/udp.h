@@ -22,6 +22,7 @@ namespace uv {
         explicit udp_t(const loop_t &loop) {
             set_data(new data_t(*this));    //< data will be deleted in close action
             (void) uv_udp_init(loop, *this);
+            _attach_close_();
         }
 
 #if UVCXX_SATISFY_VERSION(1, 7, 0)
@@ -29,9 +30,9 @@ namespace uv {
         explicit udp_t(int flags) : self(default_loop(), flags) {}
 
         explicit udp_t(const loop_t &loop, int flags) {
+            set_data(new data_t(*this));    //< data will be deleted in close action
             (void) uv_udp_init_ex(loop, *this, flags);
-            // data will be deleted in close action
-            set_data(new data_t(*this));
+            _attach_close_();
         }
 
 #endif
@@ -166,9 +167,9 @@ namespace uv {
 
         [[nodiscard]]
         uvcxx::callback<size_t, uv_buf_t *> alloc() {
-            auto data = get_data<data_t>();
+            // this alloc is not under Running state, so no `_detach_` applied.
             // memory alloc can not register multi-times callback
-            return data->alloc_cb.callback().call(nullptr);
+            return get_data<data_t>()->alloc_cb.callback().call(nullptr);
         }
 
         [[nodiscard]]
@@ -176,8 +177,9 @@ namespace uv {
         recv_start() {
             auto err = uv_udp_recv_start(*this, raw_alloc_callback, raw_recv_callback);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
-            auto data = get_data<data_t>();
-            return data->recv_cb.callback();
+
+            _detach_();
+            return get_data<data_t>()->recv_cb.callback();
         }
 
 #if UVCXX_SATISFY_VERSION(1, 39, 0)
@@ -192,6 +194,7 @@ namespace uv {
         int recv_stop() {
             auto err = uv_udp_recv_stop(*this);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
+            _attach_close_();
             return err;
         }
 
@@ -237,10 +240,9 @@ namespace uv {
                 handle.watch(alloc_cb);
             }
 
-            void close() noexcept override {
+            ~data_t() override {
                 alloc_cb.finalize();
                 recv_cb.finalize();
-                supper::data_t::close();
             }
         };
     };

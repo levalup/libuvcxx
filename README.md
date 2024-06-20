@@ -42,6 +42,8 @@ The `handle`‘s `data` will be recycled after `close`, so be sure to call `clos
 
 The `request`'s `data` will be recycled after the callback is completed, so most of the time there is no need to consider resource recycling issues.
 
+See [lifecycle.md](docs/lifecycle.md) for more details.
+
 ## 2. Compatibility
 
 `libuvcxx` can be compatible with libuv: `>= 1.0.0, <= 1.48.0`.

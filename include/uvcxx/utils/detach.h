@@ -55,12 +55,25 @@ namespace uvcxx {
                 : m_core(std::make_shared<core_t>(std::move(attachment))) {}
 
     protected:
-        void detach_() {
+        void _detach_() {
             m_core->detach();
         }
 
-        void attach_(attachment_t attachment) {
+        void _attach_(attachment_t attachment) {
             m_core->attach(std::move(attachment));
+        }
+
+        auto _attach_count_() {
+            return m_core.use_count();
+        }
+
+        /**
+         * make this object not use.
+         * use to free capture values of lambda function
+         * @return
+         */
+        void _unref_attach_() {
+            m_core.reset();
         }
 
     private:

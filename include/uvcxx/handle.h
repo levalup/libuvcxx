@@ -11,6 +11,7 @@
 #include "inner/base.h"
 #include "utils/callback.h"
 #include "utils/promise.h"
+#include "utils/detach.h"
 
 #include "loop.h"
 
@@ -33,7 +34,7 @@ namespace uv {
      * Q: Why not `close` in destructor?
      * A: Because the destructor only be called after it is closed.
      */
-    class handle_t : public uvcxx::shared_raw_base_t<uv_handle_t> {
+    class handle_t : public uvcxx::attach_t, public uvcxx::shared_raw_base_t<uv_handle_t> {
     public:
         using self = handle_t;
         using supper = uvcxx::shared_raw_base_t<uv_handle_t>;
@@ -100,16 +101,15 @@ namespace uv {
         }
 
 #endif
-
         void close(std::nullptr_t) {
-            close_for([&](void (*cb)(raw_t *)) {
+            (void) close_for([&](void (*cb)(raw_t *)) {
                 uv_close(*this, cb);
             });
         }
 
         [[nodiscard]]
         uvcxx::promise<> close() {
-            return close_for_promise([&](void (*cb)(raw_t *)) {
+            return close_for([&](void (*cb)(raw_t *)) {
                 uv_close(*this, cb);
             });
         }
@@ -140,38 +140,37 @@ namespace uv {
         }
 
     protected:
-        void close_for(const std::function<void(void (*)(raw_t *))> &close) const {
+        uvcxx::promise<> close_for(const std::function<void(void (*)(raw_t *))> &close) {
             auto data = get_data<data_t>();
             if (!data_t::is_it(data)) {
-                throw uvcxx::errcode(UV_EPERM, "close non-libuvcxx handle is not permitted");
+                throw uvcxx::errcode(UV_EPERM, "close invalid libuvcxx handle");
             }
 
-            data->close_for([&](void (*cb)(raw_t *)) {
-                close(cb);
-            });
+            (void) data->close_for(close);
+            _detach_();
+
+            return data->close_cb.promise();
         }
 
-        uvcxx::promise<> close_for_promise(const std::function<void(void (*)(raw_t *))> &close) const {
-            auto data = get_data<data_t>();
-            if (!data_t::is_it(data)) {
-                throw uvcxx::errcode(UV_EPERM, "close non-libuvcxx handle is not permitted");
-            }
-
-            auto closing = data->close_for([&](void (*cb)(raw_t *)) {
-                data->close_cb = decltype(data->close_cb)();
-                close(cb);
-            });
-
-            if (closing) return data->close_cb.promise();
-            else return nullptr;    // close double time will return nullptr
+        void _attach_data_() {
+            _attach_(this->attach_data());
         }
 
+        void _attach_close_() {
+            _attach_(this->attach_close());
+        }
+
+    private:
         std::function<void(void)> attach_data() {
             return [raw = shared_raw()]() {
                 auto data = (data_t *) raw->data;
                 if (!data_t::is_it(data)) return;
 
-                delete data;
+                auto handle = raw.get();
+                data->close_for([&](void (*cb)(raw_t *)) {
+                    // directly delete data and emit close promise
+                    cb(handle);
+                });
             };
         }
 
@@ -196,7 +195,7 @@ namespace uv {
             static constexpr uint64_t MAGIC = 0x1155665044332210;
             uint64_t magic = MAGIC;
 
-            uvcxx::promise_emitter<> close_cb = nullptr;
+            uvcxx::promise_emitter<> close_cb;
 
             static bool is_it(void *data) {
                 return data && ((data_t *) data)->magic == MAGIC;
@@ -205,15 +204,13 @@ namespace uv {
         public:
             explicit data_t(const handle_t &handle)
                     : m_handle(handle.shared_raw()) {
-                if (m_handle->data) throw uvcxx::errcode(UV_EPERM, "duplicated initialization of data");
+                if (m_handle->data) throw uvcxx::errcode(UV_EPERM, "duplicated data initialization");
                 m_handle->data = this;
             }
 
             virtual ~data_t() {
                 m_handle->data = nullptr;
             };
-
-            virtual void close() noexcept {};
 
             raw_t *handle() { return m_handle.get(); }
 
@@ -227,6 +224,7 @@ namespace uv {
             [[nodiscard]]
             const T *handle() const { return (const T *) m_handle.get(); }
 
+        public:
             /**
              * Ensure that the handle will only be closed once, avoiding multiple invocations of close
              *     due to the use of asynchronous queues in the callback's `queue` working mode.
@@ -258,33 +256,44 @@ namespace uv {
         static void raw_close_callback(raw_t *raw) {
             auto data = (data_t *) raw->data;
             if (!data) return;
+            // implicitly reset data to nullptr, avoid accidentally using this field.
+            // raw->data = nullptr in finalizer of data_t
             uvcxx::defer delete_data(std::default_delete<data_t>(), data);
-            // reset data to nullptr, avoid accidentally using this field.
-            uvcxx::defer reset_data([&]() { raw->data = nullptr; });
-            uvcxx::defer close_data([&]() { data->close(); });
 
-            if (data->close_cb) data->close_cb.resolve();
+            data->close_cb.resolve();
         }
 
     protected:
         template<typename...ARGS>
         void watch(uvcxx::callback<ARGS...> &callback) {
-            callback.template except<uvcxx::close_handle>([*this]() mutable {
-                close(nullptr);
+            callback.template except<uvcxx::close_handle>([raw = shared_raw()]() mutable {
+                auto handle = raw.get();
+                auto data = (data_t *) raw->data;
+                data->close_for([handle, data](void (*cb)(raw_t *)) {
+                    uv_close(handle, cb);
+                });
             });
         }
 
         template<typename...ARGS>
         void watch(const uvcxx::callback_emitter<ARGS...> &callback) {
-            callback.callback().template except<uvcxx::close_handle>([*this]() mutable {
-                close(nullptr);
+            callback.callback().template except<uvcxx::close_handle>([raw = shared_raw()]() mutable {
+                auto handle = raw.get();
+                auto data = (data_t *) raw->data;
+                data->close_for([handle, data](void (*cb)(raw_t *)) {
+                    uv_close(handle, cb);
+                });
             });
         }
 
         template<typename C, typename...ARGS>
         void watch(const uvcxx::callback_cast<C, ARGS...> &callback) {
-            callback.callback().template except<uvcxx::close_handle>([*this]() mutable {
-                close(nullptr);
+            callback.callback().template except<uvcxx::close_handle>([raw = shared_raw()]() mutable {
+                auto handle = raw.get();
+                auto data = (data_t *) raw->data;
+                data->close_for([handle, data](void (*cb)(raw_t *)) {
+                    uv_close(handle, cb);
+                });
             });
         }
     };
@@ -312,140 +321,6 @@ namespace uv {
             return std::reinterpret_pointer_cast<uv_handle_t>(std::make_shared<T>());
         }
     };
-}
-
-namespace uvcxx {
-    /**
-     * Keep the reference of the `handle` and close it when there are no references to it.
-     * No relationship to `uv_ref` and `uv_unref`.
-     * Usage:
-     * ```
-     * {
-     *     uvcxx::ref idle = uv::idle_t();
-     *     // After going out of scope, `idle` will automatically call close.
-     * }
-     * ```
-     * The `ref` can be copied, and when it is no longer referenced, `close` will be called.
-     * @tparam Handle
-     */
-    template<typename Handle, typename Enable = void>
-    class ref;
-
-    template<typename Handle>
-    class ref<Handle, typename std::enable_if_t<
-            std::is_copy_constructible_v<Handle> &&
-            std::is_base_of_v<uv::handle_t, Handle>>> {
-    public:
-        using self = ref;
-
-        /**
-         * Create an object without an actual referenced instance.
-         * You can use bool(ref) to determine if the reference is actually held.
-         */
-        ref(std::nullptr_t) {}
-
-        /**
-         * Create an object with a referenced instance handle.
-         * @param handle
-         */
-        ref(Handle handle) : m_handle(make_shared(std::move(handle))) {}
-
-        /**
-         * Create an object with a referenced instance handle.
-         * @param handle
-         */
-        ref(const std::shared_ptr<Handle> &handle) : m_handle(make_shared(*handle)) {}
-
-        /**
-         * Remove the data associated with the current reference.
-         * If the reference is cleared, close will be automatically called.
-         * After this function is called, the object can no longer be operated on.
-         * Generally, there is no need to explicitly perform this operation.
-         * You can use bool(ref) to determine if the reference is actually held.
-         */
-        void unref() {
-            m_handle.reset();
-        }
-
-        explicit operator bool() const { return m_handle; }
-
-        Handle &operator*() { return *m_handle; }
-
-        const Handle &operator*() const { return *m_handle; }
-
-        Handle *operator->() { return m_handle.get(); }
-
-        const Handle *operator->() const { return m_handle.get(); }
-
-    private:
-        std::shared_ptr<Handle> m_handle;
-
-        static std::shared_ptr<Handle> make_shared(Handle handle) {
-            return std::shared_ptr<Handle>(new Handle(std::move(handle)), [](Handle *handle) {
-                handle->close(nullptr);
-                delete handle;
-            });
-        }
-    };
-
-    template<typename Handle>
-    class ref<Handle, typename std::enable_if_t<
-            !std::is_copy_constructible_v<Handle> &&
-            std::is_base_of_v<uv::handle_t, Handle>>> {
-    public:
-        using self = ref;
-
-        using PHandle = std::shared_ptr<Handle>;
-
-        /**
-         * Create an object without an actual referenced instance.
-         * You can use bool(ref) to determine if the reference is actually held.
-         */
-        ref(std::nullptr_t) {}
-
-        /**
-         * Create an object with a referenced instance handle.
-         * @param handle
-         */
-        ref(const std::shared_ptr<Handle> &handle) : m_handle(make_shared(handle)) {}
-
-        /**
-         * Remove the data associated with the current reference.
-         * If the reference is cleared, close will be automatically called.
-         * After this function is called, the object can no longer be operated on.
-         * Generally, there is no need to explicitly perform this operation.
-         * You can use bool(ref) to determine if the reference is actually held.
-         */
-        void unref() {
-            m_handle.reset();
-        }
-
-        explicit operator bool() const { return m_handle; }
-
-        Handle &operator*() { return **m_handle; }
-
-        const Handle &operator*() const { return **m_handle; }
-
-        Handle *operator->() { return (*m_handle).get(); }
-
-        const Handle *operator->() const { return (*m_handle).get(); }
-
-    private:
-        std::shared_ptr<PHandle> m_handle;
-
-        static std::shared_ptr<PHandle> make_shared(PHandle handle) {
-            return std::shared_ptr<PHandle>(new PHandle(std::move(handle)), [](PHandle *handle) {
-                (*handle)->close(nullptr);
-                delete handle;
-            });
-        }
-    };
-
-    template<typename Handle>
-    ref(Handle handle) -> ref<Handle>;
-
-    template<typename Handle>
-    ref(const std::shared_ptr<Handle> &handle) -> ref<Handle>;
 }
 
 #endif //LIBUVCXX_HANDLE_H
