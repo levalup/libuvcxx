@@ -122,8 +122,8 @@ jobs:
 
       - name: Install GCC ${{ matrix.gcc_version }}
         run: |
-          sudo apt update
-          sudo apt install -y gcc-${{ matrix.gcc_version }} g++-${{ matrix.gcc_version }}
+          sudo apt-get update
+          sudo apt-get install -y gcc-${{ matrix.gcc_version }} g++-${{ matrix.gcc_version }}
 
       - name: Configure CMake
         run: >
