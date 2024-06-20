@@ -122,10 +122,8 @@ jobs:
 
       - name: Install GCC ${{ matrix.gcc_version }}
         run: |
-          sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-          sudo apt update
-          sudo apt install gcc-${{ matrix.gcc_version }} g++-${{ matrix.gcc_version }}
-          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${{ matrix.gcc_version }} 60 --slave /usr/bin/g++ g++ /usr/bin/g++-${{ matrix.gcc_version }}
+          sudo apt-get update
+          sudo apt-get install -y gcc-${{ matrix.gcc_version }} g++-${{ matrix.gcc_version }}
 
       - name: Configure CMake
         run: >
