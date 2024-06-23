@@ -203,12 +203,9 @@ namespace uv {
             explicit data_t(const handle_t &handle)
                     : m_handle(handle.shared_raw()) {
                 if (m_handle->data) throw uvcxx::errcode(UV_EPERM, "duplicated data initialization");
-                m_handle->data = this;
             }
 
-            virtual ~data_t() {
-                m_handle->data = nullptr;
-            };
+            virtual ~data_t() = default;
 
             raw_t *handle() { return m_handle.get(); }
 
@@ -254,9 +251,9 @@ namespace uv {
         static void raw_close_callback(raw_t *raw) {
             auto data = (data_t *) raw->data;
             if (!data) return;
-            // implicitly reset data to nullptr, avoid accidentally using this field.
-            // raw->data = nullptr in finalizer of data_t
+
             uvcxx::defer delete_data(std::default_delete<data_t>(), data);
+            uvcxx::defer reset_data([&]() { raw->data = nullptr; });
 
             data->close_cb.resolve();
         }

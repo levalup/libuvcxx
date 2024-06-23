@@ -104,15 +104,13 @@ namespace uv {
                 return data && ((data_t *) data)->magic == MAGIC;
             }
 
+        public:
             explicit data_t(const req_t &req)
                     : m_req(req.shared_raw()) {
                 if (m_req->data) throw uvcxx::errcode(UV_EPERM, "duplicated data initialization");
-                m_req->data = this;
             }
 
-            virtual ~data_t() {
-                m_req->data = nullptr;
-            };
+            virtual ~data_t() = default;
 
             raw_t *req() { return m_req.get(); }
 
