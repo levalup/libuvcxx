@@ -55,11 +55,13 @@ namespace uv {
 
         [[nodiscard]]
         uv_fs_type get_fs_type() const {
+            // cover uv_fs_get_type
             return raw<raw_t>()->fs_type;
         }
 
         [[nodiscard]]
         ssize_t get_result() const {
+            // cover uv_fs_get_result
             return raw<raw_t>()->result;
         }
 
@@ -74,15 +76,18 @@ namespace uv {
 
         [[nodiscard]]
         void *get_ptr() const {
+            // cover uv_fs_get_ptr
             return raw<raw_t>()->ptr;
         }
 
         [[nodiscard]]
         const char *get_path() const {
+            // cover uv_fs_get_path
             return raw<raw_t>()->path;
         }
 
         uv_stat_t *get_statbuf() {
+            // cover uv_fs_get_statbuf
             return &raw<raw_t>()->statbuf;
         }
 

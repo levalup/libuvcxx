@@ -18,8 +18,10 @@ jobs:
       - name: Package project files
         if: success()
         run: >
-          zip -r archives.zip 
-          examples/ include/ tests/ CHANGELOG.md CMakeLists.txt LICENSE README.md
+          zip -r archives.zip . -x "*.zip"
+          -x ".gitmodules"
+          -x ".git/" -x ".git/*"
+          -x "libuv/" -x "libuv/*"
 
       - name: Get the tag name
         if: success()

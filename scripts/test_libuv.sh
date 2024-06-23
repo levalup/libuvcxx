@@ -59,6 +59,8 @@ for tag in "${tags[@]}"; do
     ((succeed++))
   else
     echo " [Failed]"
+    # cat "$f"  #< cat for quick fix
+    echo "[ERROR] Test failed on $tag. Aborted."
     echo "[ERROR] Check $f"
     exit $status
   fi

@@ -178,6 +178,13 @@ namespace uv {
         inline int getcpu() { return uv_thread_getcpu(); }
 
 #endif
+
+        /**
+         * uv::thread_t does not support borrow raw uv_thread_t.
+         * There is no plan to implement it yet.
+         * @return
+         */
+        inline uv_thread_t self();
     }
 }
 

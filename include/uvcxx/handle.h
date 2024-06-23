@@ -27,10 +27,11 @@ namespace uvcxx {
 
 namespace uv {
     /**
-     * The data field of uv_req_t will be retained and used by the UVCXX.
+     * The data field of uv_handle_t will be retained and used by the UVCXX.
      * Please do not modify data.
      * The data' resources will be freed after close. So remember to `close` handle.
-     * Do `close` even if not start but only construct it.
+     * In most of case, only the handles in `Running` state need to be `close` manually.
+     * See [lifecycle.md](https://github.com/levalup/libuvcxx/blob/master/docs/lifecycle.md) for more details.
      * Q: Why not `close` in destructor?
      * A: Because the destructor only be called after it is closed.
      */
@@ -162,11 +163,9 @@ namespace uv {
 
     private:
         std::function<void(void)> attach_data() {
-            return [raw = shared_raw()]() {
-                auto data = (data_t *) raw->data;
+            return [handle = raw()]() {
+                auto data = (data_t *) handle->data;
                 if (!data_t::is_it(data)) return;
-
-                auto handle = raw.get();
                 data->close_for([&](void (*cb)(raw_t *)) {
                     // directly delete data and emit close promise
                     cb(handle);
@@ -175,8 +174,7 @@ namespace uv {
         }
 
         std::function<void(void)> attach_close() {
-            return [raw = shared_raw()]() {
-                auto handle = raw.get();
+            return [handle = raw()]() {
                 auto data = (data_t *) handle->data;
                 if (!data_t::is_it(data)) return;
 
@@ -265,11 +263,10 @@ namespace uv {
 
     protected:
         template<typename...ARGS>
-        void watch(uvcxx::callback<ARGS...> &callback) {
-            callback.template except<uvcxx::close_handle>([raw = shared_raw()]() mutable {
-                auto handle = raw.get();
-                auto data = (data_t *) raw->data;
-                data->close_for([handle, data](void (*cb)(raw_t *)) {
+        void watch(uvcxx::callback<ARGS...> &&callback) {
+            callback.template except<uvcxx::close_handle>([handle = raw()]() mutable {
+                auto data = (data_t *) handle->data;
+                data->close_for([handle](void (*cb)(raw_t *)) {
                     uv_close(handle, cb);
                 });
             });
@@ -277,24 +274,12 @@ namespace uv {
 
         template<typename...ARGS>
         void watch(const uvcxx::callback_emitter<ARGS...> &callback) {
-            callback.callback().template except<uvcxx::close_handle>([raw = shared_raw()]() mutable {
-                auto handle = raw.get();
-                auto data = (data_t *) raw->data;
-                data->close_for([handle, data](void (*cb)(raw_t *)) {
-                    uv_close(handle, cb);
-                });
-            });
+            watch(callback.callback());
         }
 
         template<typename C, typename...ARGS>
         void watch(const uvcxx::callback_cast<C, ARGS...> &callback) {
-            callback.callback().template except<uvcxx::close_handle>([raw = shared_raw()]() mutable {
-                auto handle = raw.get();
-                auto data = (data_t *) raw->data;
-                data->close_for([handle, data](void (*cb)(raw_t *)) {
-                    uv_close(handle, cb);
-                });
-            });
+            watch(callback.callback());
         }
     };
 

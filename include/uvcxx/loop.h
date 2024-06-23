@@ -19,6 +19,10 @@
 #include "utils/defer.h"
 
 namespace uv {
+    /**
+     * The data field of uv_loop_t will be retained and used by the UVCXX.
+     * Please do not modify data.
+     */
     class loop_t : public uvcxx::shared_raw_base_t<uv_loop_t> {
     public:
         using self = loop_t;
@@ -72,6 +76,15 @@ namespace uv {
         [[nodiscard]]
         bool alive() const {
             return uv_loop_alive(*this);
+        }
+
+        void stop() {
+            uv_stop(*this);
+        }
+
+        [[nodiscard]]
+        static size_t size() {
+            return uv_loop_size();
         }
 
         [[nodiscard]]
@@ -131,6 +144,7 @@ namespace uv {
 
         [[nodiscard]]
         void *get_data() const {
+            // cover uv_loop_get_data
             return raw()->data;
         }
 
@@ -151,6 +165,7 @@ namespace uv {
          * @param data
          */
         void set_data(void *data) {
+            // cover uv_loop_set_data
             raw()->data = data;
         }
 

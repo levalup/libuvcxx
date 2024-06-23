@@ -282,6 +282,7 @@ namespace uv {
 
         [[nodiscard]]
         uv_pid_t get_pid() const {
+            // cover uv_process_get_pid
             return (uv_pid_t) raw<raw_t>()->pid;
         }
 

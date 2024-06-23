@@ -19,6 +19,7 @@ namespace uv {
      * The data field of uv_req_t will be retained and used by the UVCXX.
      * Please do not modify data.
      * The data' resources will be freed after each request action finished.
+     * See [lifecycle.md](https://github.com/levalup/libuvcxx/blob/master/docs/lifecycle.md) for more details.
      */
     class req_t : public uvcxx::shared_raw_base_t<uv_req_t> {
     public:
@@ -50,6 +51,7 @@ namespace uv {
 
         [[nodiscard]]
         uv_req_type get_type() const {
+            // cover uv_req_get_type
             return raw()->type;
         }
 
@@ -64,6 +66,7 @@ namespace uv {
 
         [[nodiscard]]
         void *get_data() const {
+            // cover uv_req_get_data
             return raw()->data;
         }
 
@@ -84,6 +87,7 @@ namespace uv {
          * @param data
          */
         void set_data(void *data) {
+            // cover uv_req_set_data
             raw()->data = data;
         }
 

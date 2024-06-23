@@ -38,7 +38,7 @@ Note that all the `handle` and `request` `data` members are used to store data r
 
 If you need to use context, use the capture list of `lambda`.
 
-The `handle`‘s `data` will be recycled after `close`, so be sure to call `close` after the `handle` is confirmed to not be used anymore.
+The `handle`'s `data` will be recycled after `close`, so be sure to call `close` after the `handle` is confirmed to not be used anymore.
 
 The `request`'s `data` will be recycled after the callback is completed, so most of the time there is no need to consider resource recycling issues.
 
@@ -52,31 +52,28 @@ More version compatibility will be specified here after testing.
 
 > Notice: As the development proceeds, compatibility may change with new features.
 
+`libuvcxx` covers approximately `[79%]` of the `libuv` APIs.
+
+See [coverage.md](docs/coverage.md) for more details.
+
 ## 3. Schedule
 
 ### Thread [OK]
 
-> Convert most operations to C++ interface style.
-
 Q: Do we still need to C style `thread` and `mutex` since we have already used C++17?
 
-A: For fun!
-
-### File system operations [OK: 91%]
-
-> Since `libuv` supports synchronous calls about file operations.
-> This feature that has not been supported yet, the feature will be added in the near future.
-> Of course, if synchronous interfaces are used, it may unnecessary to use our C++ wrapper, ahh...
+A: For fun! and... compatible with projects already using libuv, ensuring feature alignment.
 
 ### Miscellaneous utilities [ing]
 
 > This section contains miscellaneous functions that don’t really belong in any other section.
-> 
 
 ### Others
 
 Most of the interfaces have been encapsulated or the reasons for not encapsulating have been explained.
 The next work of `libuvcxx` is mainly about the above content.
+
+See [coverage.md](docs/coverage.md) for more details.
 
 ## 4. Exception
 
@@ -86,7 +83,7 @@ Most interfaces that don't often encounter errors will throw an `uvcxx::errcode`
 This type of exception is thrown to facilitate the flexible use of interfaces in `promise` or `callback` contexts.
 
 Certain interfaces that frequently encounter errors will not throw exceptions.
-In such cases, the success of the interface call should be judged by the return value, for example, uv::process_t::spawn.
+In such cases, the success of the interface call should be judged by the return value, for example, `uv::spawn`.
 
 If you're not sure whether an interface will throw an exception, please directly refer to the implementation code of the corresponding interface.
 After all, we are an open-source, header-only library.
@@ -110,5 +107,5 @@ Such as
 However, some APIs still cannot be fully migrated to C++ with consistent naming,
 so the following lists the interface names with obvious differences (this may not cover all cases).
 
-- `uv_fs_get_type` -> `uv::fs_t::get_fs_type`
+- `uv_fs_get_type` -> `uv::fs_t::fs_type`
 - `uv_read_start` -> `uv::stream_t::alloc` + `uv::stream_t::read_start`

@@ -56,7 +56,7 @@ namespace uv {
 
         [[nodiscard]]
         uint64_t get_due_in() const {
-            return uv_timer_get_repeat(*this);
+            return uv_timer_get_due_in(*this);
         }
 
 #endif

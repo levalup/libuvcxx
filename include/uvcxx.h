@@ -12,6 +12,7 @@
 #include "uvcxx/check.h"
 #include "uvcxx/cond.h"
 #include "uvcxx/connect.h"
+#include "uvcxx/error.h"
 #include "uvcxx/fs.h"
 #include "uvcxx/fs_event.h"
 #include "uvcxx/fs_poll.h"

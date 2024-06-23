@@ -143,7 +143,7 @@ namespace uv {
 
         [[nodiscard]]
         bool is_writable() const {
-            return uv_is_readable(*this);
+            return uv_is_writable(*this);
         }
 
         int set_blocking(int blocking) {
