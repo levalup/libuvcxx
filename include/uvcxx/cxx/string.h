@@ -42,7 +42,7 @@ namespace uvcxx {
 
         template<int Size>
         string_view(const char (&str)[Size])
-                : data(str), size(strnlen_s(str, Size)) {}
+                : data(str), size(strnlen(str, Size)) {}
 
 #if __cplusplus >= 201703L || _MSC_VER >= 1910
 

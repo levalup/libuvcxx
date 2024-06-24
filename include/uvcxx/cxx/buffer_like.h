@@ -86,7 +86,7 @@ namespace uvcxx {
 
         template<size_t Size>
         buffer_like(const char (&arr)[Size])
-                : buf(init(arr, strnlen_s(arr, Size))) {}
+                : buf(init(arr, strnlen(arr, Size))) {}
 
 #if __cplusplus >= 201703L || _MSC_VER >= 1910
 
