@@ -11,6 +11,7 @@
 
 #include <uv.h>
 
+#include "cxx/buffer_like.h"
 #include "inner/base.h"
 
 namespace uv {
@@ -39,10 +40,10 @@ namespace uv {
 
             template<class Len, typename = typename std::enable_if_t<std::is_integral_v<Len>>>
             explicit buf_t(Len size) : self() {
-                auto len = len_t(size);
-                this->base = (base_t) std::malloc(size_t(len));
-                this->len = len;
-                this->capacity = len;
+                auto length = len_t(size);
+                this->base = (base_t) std::malloc(size_t(length));
+                this->len = length;
+                this->capacity = length;
             }
 
             ~buf_t() {
@@ -71,14 +72,14 @@ namespace uv {
 
             template<class Len, typename = typename std::enable_if_t<std::is_integral_v<Len>>>
             void reserve(Len size) {
-                auto len = len_t(size);
-                if (len > this->capacity) {
+                auto length = len_t(size);
+                if (length > this->capacity) {
                     if (this->base) {
-                        this->base = (base_t) std::realloc(this->base, size_t(len));
+                        this->base = (base_t) std::realloc(this->base, size_t(length));
                     } else {
-                        this->base = (base_t) std::malloc(size_t(len));
+                        this->base = (base_t) std::malloc(size_t(length));
                     }
-                    this->capacity = len;
+                    this->capacity = length;
                 }
             }
         };
@@ -135,7 +136,19 @@ namespace uv {
 
         template<class Size, typename = typename std::enable_if_t<std::is_integral_v<Size>>>
         void resize(Size size) { raw()->realloc(size); }
+
+        void memset(int v) {
+            std::memset(data(), v, size());
+        }
     };
+}
+
+namespace uvcxx {
+    inline buffer_like::buffer_like(uv::buf_t &buf)
+            : buf(init(buf.data(), buf.size())) {}
+
+    inline mutable_buffer_like::mutable_buffer_like(uv::buf_t &buf)
+            : buf(init(buf.data(), buf.size())) {}
 }
 
 #endif //LIBUVCXX_BUF_H

@@ -6,6 +6,8 @@
 #ifndef LIBUVCXX_UDP_H
 #define LIBUVCXX_UDP_H
 
+#include "cxx/string.h"
+
 #include "handle.h"
 #include "udp_send.h"
 
@@ -100,7 +102,7 @@ namespace uv {
         }
 
         int set_membership(
-                const char *multicast_addr, const char *interface_addr,
+                uvcxx::string multicast_addr, uvcxx::string interface_addr,
                 uv_membership membership) const {
             auto err = uv_udp_set_membership(
                     *this, multicast_addr, interface_addr, membership);
@@ -111,7 +113,7 @@ namespace uv {
 #if UVCXX_SATISFY_VERSION(1, 32, 0)
 
         int set_source_membership(
-                const char *multicast_addr, const char *interface_addr, const char *source_addr,
+                uvcxx::string multicast_addr, uvcxx::string interface_addr, uvcxx::string source_addr,
                 uv_membership membership) const {
             auto err = uv_udp_set_source_membership(
                     *this, multicast_addr, interface_addr, source_addr, membership);
@@ -133,7 +135,7 @@ namespace uv {
             return err;
         }
 
-        int set_multicast_interface(const char *interface_addr) {
+        int set_multicast_interface(uvcxx::string interface_addr) {
             auto err = uv_udp_set_multicast_interface(*this, interface_addr);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
             return err;
@@ -157,12 +159,46 @@ namespace uv {
         }
 
         [[nodiscard]]
+        uvcxx::promise<> send(const udp_send_t &req, uvcxx::buffer_like buf, const sockaddr *addr) {
+            return send(req, &buf.buf, 1, addr);
+        }
+
+        [[nodiscard]]
+        uvcxx::promise<> send(const udp_send_t &req, std::initializer_list<uvcxx::buffer_like> bufs, const sockaddr *addr) {
+            std::vector<uv_buf_t> buffers;
+            for (auto &buf : bufs) { buffers.emplace_back(buf.buf); }
+            return send(req, buffers.data(), (unsigned int) buffers.size(), addr);
+        }
+
+        [[nodiscard]]
         uvcxx::promise<> send(const uv_buf_t bufs[], unsigned int nbufs, const sockaddr *addr) {
             return uv::udp_send(*this, bufs, nbufs, addr);
         }
 
+        [[nodiscard]]
+        uvcxx::promise<> send(uvcxx::buffer_like buf, const sockaddr *addr) {
+            return send(&buf.buf, 1, addr);
+        }
+
+        [[nodiscard]]
+        uvcxx::promise<> send(std::initializer_list<uvcxx::buffer_like> bufs, const sockaddr *addr) {
+            std::vector<uv_buf_t> buffers;
+            for (auto &buf : bufs) { buffers.emplace_back(buf.buf); }
+            return send(buffers.data(), (unsigned int) buffers.size(), addr);
+        }
+
         int try_send(const uv_buf_t bufs[], unsigned int nbufs, const sockaddr *addr) {
             return uv_udp_try_send(*this, bufs, nbufs, addr);
+        }
+
+        int try_send(uvcxx::mutable_buffer_like buf, const sockaddr *addr) {
+            return try_send(&buf.buf, 1, addr);
+        }
+
+        int try_send(std::initializer_list<uvcxx::mutable_buffer_like> bufs, const sockaddr *addr) {
+            std::vector<uv_buf_t> buffers;
+            for (auto &buf : bufs) { buffers.emplace_back(buf.buf); }
+            return try_send(buffers.data(), (unsigned int) buffers.size(), addr);
         }
 
         [[nodiscard]]

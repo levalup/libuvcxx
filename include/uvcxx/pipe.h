@@ -6,6 +6,8 @@
 #ifndef LIBUVCXX_PIPE_H
 #define LIBUVCXX_PIPE_H
 
+#include "cxx/string.h"
+
 #include "connect.h"
 #include "stream.h"
 
@@ -65,7 +67,7 @@ namespace uv {
             return err;
         }
 
-        int bind(const char *name) {
+        int bind(uvcxx::string name) {
             auto err = uv_pipe_bind(*this, name);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
             return err;
@@ -79,15 +81,23 @@ namespace uv {
             return err;
         }
 
+        int bind2(uvcxx::string_view name, unsigned int flags) {
+            return bind2(name.data, name.size, flags);
+        }
+
+        int bind(uvcxx::string_view name, unsigned int flags) {
+            return bind2(name.data, name.size, flags);
+        }
+
 #endif
 
         [[nodiscard]]
-        uvcxx::promise<> connect(const connect_t &req, const char *name) {
+        uvcxx::promise<> connect(const connect_t &req, uvcxx::string name) {
             return ::uv::pipe_connect(req, *this, name);
         }
 
         [[nodiscard]]
-        uvcxx::promise<> connect(const char *name) {
+        uvcxx::promise<> connect(uvcxx::string name) {
             return ::uv::pipe_connect(*this, name);
         }
 
@@ -101,6 +111,26 @@ namespace uv {
         [[nodiscard]]
         uvcxx::promise<> connect2(const char *name, size_t namelen, unsigned int flags) {
             return ::uv::pipe_connect2(*this, name, namelen, flags);
+        }
+
+        [[nodiscard]]
+        uvcxx::promise<> connect2(const connect_t &req, uvcxx::string_view name, unsigned int flags) {
+            return ::uv::pipe_connect2(req, *this, name.data, name.size, flags);
+        }
+
+        [[nodiscard]]
+        uvcxx::promise<> connect2(uvcxx::string_view name, unsigned int flags) {
+            return ::uv::pipe_connect2(*this, name.data, name.size, flags);
+        }
+
+        [[nodiscard]]
+        uvcxx::promise<> connect(const connect_t &req, uvcxx::string_view name, unsigned int flags) {
+            return ::uv::pipe_connect2(req, *this, name.data, name.size, flags);
+        }
+
+        [[nodiscard]]
+        uvcxx::promise<> connect(uvcxx::string_view name, unsigned int flags) {
+            return ::uv::pipe_connect2(*this, name.data, name.size, flags);
         }
 
 #endif

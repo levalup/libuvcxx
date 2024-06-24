@@ -39,9 +39,9 @@ namespace uv {
 
 #if UVCXX_SATISFY_VERSION(1, 0, 2)
 
-        template<typename T>
-        int configure(uv_loop_option option, T value) {
-            auto err = uv_loop_configure(*this, option, value);
+        template<typename... Value>
+        int configure(uv_loop_option option, Value ...value) {
+            auto err = uv_loop_configure(*this, option, value...);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
             return err;
         }

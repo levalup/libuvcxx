@@ -21,16 +21,16 @@ int main() {
             throw uvcxx::close_handle();
         });
 
-        loop.walk([](uv_handle_t* handle, void* arg) {
-            (*(int *)arg)++;
+        loop.walk([](uv_handle_t *handle, void *arg) {
+            (*(int *) arg)++;
             std::cout << uvcxx::to_string(handle->type) << " " << handle << std::endl;
         }, &before);
     }
 
     loop.run();
 
-    loop.walk([](uv_handle_t* handle, void* arg) {
-        (*(int *)arg)++;
+    loop.walk([](uv_handle_t *handle, void *arg) {
+        (*(int *) arg)++;
         std::cout << uvcxx::to_string(handle->type) << " " << handle << std::endl;
     }, &after);
 

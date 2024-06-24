@@ -12,6 +12,7 @@
 #include <uv.h>
 
 #include "cxx/except.h"
+#include "cxx/string.h"
 #include "inner/base.h"
 
 namespace uv {
@@ -32,7 +33,7 @@ namespace uv {
 
         lib_t(std::nullptr_t) {}
 
-        explicit lib_t(const char *filename) {
+        explicit lib_t(uvcxx::string filename) {
             auto err = uv_dlopen(filename, *this);
             if (err < 0) throw uvcxx::errcode(err, "can not open `", filename, "`");
             m_opened = true;
@@ -46,7 +47,7 @@ namespace uv {
 
         explicit operator bool() const { return m_opened; }
 
-        int open(const char *filename) {
+        int open(uvcxx::string filename) {
             if (m_opened) {
                 uv_dlclose(*this);
                 m_opened = false;
@@ -70,7 +71,7 @@ namespace uv {
             return uv_dlerror(*this);
         }
 
-        int sym(const char *name, void **ptr) const {
+        int sym(uvcxx::string name, void **ptr) const {
             if (!m_opened) UVCXX_THROW_OR_RETURN(UV_EPERM, UV_EPERM, "cannot operate on a closed lib");
             auto err = uv_dlsym(*this, name, ptr);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, err, "cannot find symbol `", name, "`");
@@ -80,7 +81,7 @@ namespace uv {
 
         template<typename FUNC, typename std::enable_if_t<std::is_function_v<FUNC>, int> = 0>
         [[nodiscard]]
-        FUNC *sym(const char *name) const {
+        FUNC *sym(uvcxx::string name) const {
             FUNC *func;
             auto err = sym(name, &func);
             if (err < 0) return nullptr;

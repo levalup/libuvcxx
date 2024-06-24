@@ -55,7 +55,7 @@ namespace uv {
             return this->args((char **) m_c_args.data());
         }
 
-        self &args(const std::initializer_list<std::string> &args) {
+        self &args(std::initializer_list<std::string> args) {
             return this->args(std::vector<std::string>{args.begin(), args.end()});
         }
 
@@ -76,7 +76,7 @@ namespace uv {
             return this->env((char **) m_c_env.data());
         }
 
-        self &env(const std::initializer_list<std::string> &env) {
+        self &env(std::initializer_list<std::string> env) {
             return this->env(std::vector<std::string>{env.begin(), env.end()});
         }
 

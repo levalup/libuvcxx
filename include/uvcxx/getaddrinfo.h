@@ -6,6 +6,8 @@
 #ifndef LIBUVCXX_GETADDRINFO_H
 #define LIBUVCXX_GETADDRINFO_H
 
+#include "cxx/string.h"
+
 #include "loop.h"
 #include "req.h"
 
@@ -61,7 +63,7 @@ namespace uv {
 #if UVCXX_SATISFY_VERSION(1, 3, 0)
 
     inline int getaddrinfo(std::nullptr_t, getaddrinfo_t &req,
-                           const char *node, const char *service, const addrinfo *hints,
+                           uvcxx::string node, uvcxx::string service, const addrinfo *hints,
                            std::nullptr_t) {
         return uv_getaddrinfo(nullptr, req, nullptr, node, service, hints);
     }
@@ -71,7 +73,7 @@ namespace uv {
     [[nodiscard]]
     inline uvcxx::promise<addrinfo *> getaddrinfo(
             const loop_t &loop, const getaddrinfo_t &req,
-            const char *node, const char *service, const addrinfo *hints = nullptr) {
+            uvcxx::string node, uvcxx::string service, const addrinfo *hints = nullptr) {
         auto *data = new getaddrinfo_t::callback_t(req);
         uvcxx::defer_delete delete_data(data);
 
@@ -79,26 +81,27 @@ namespace uv {
         if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
 
         delete_data.release();
+        ((uv_getaddrinfo_t *) req)->data = data;
         return data->promise.promise();
     }
 
     [[nodiscard]]
     inline uvcxx::promise<addrinfo *> getaddrinfo(
-            const char *node, const char *service, const addrinfo *hints = nullptr) {
+            uvcxx::string node, uvcxx::string service, const addrinfo *hints = nullptr) {
         return getaddrinfo(default_loop(), {}, node, service, hints);
     }
 
     [[nodiscard]]
     inline uvcxx::promise<addrinfo *> getaddrinfo(
             const getaddrinfo_t &req,
-            const char *node, const char *service, const addrinfo *hints = nullptr) {
+            uvcxx::string node, uvcxx::string service, const addrinfo *hints = nullptr) {
         return getaddrinfo(default_loop(), req, node, service, hints);
     }
 
     [[nodiscard]]
     inline uvcxx::promise<addrinfo *> getaddrinfo(
             const loop_t &loop,
-            const char *node, const char *service, const addrinfo *hints = nullptr) {
+            uvcxx::string node, uvcxx::string service, const addrinfo *hints = nullptr) {
         return getaddrinfo(loop, {}, node, service, hints);
     }
 }

@@ -6,8 +6,10 @@
 #ifndef LIBUVCXX_FS_EVENT_H
 #define LIBUVCXX_FS_EVENT_H
 
-#include "handle.h"
+#include "cxx/string.h"
 #include "utils/platform.h"
+
+#include "handle.h"
 
 namespace uv {
     class fs_event_t : public inherit_handle_t<uv_fs_event_t, handle_t> {
@@ -27,7 +29,7 @@ namespace uv {
         }
 
         [[nodiscard]]
-        uvcxx::callback<const char *, uv_fs_event, int> start(const char *path, int flags) {
+        uvcxx::callback<const char *, uv_fs_event, int> start(uvcxx::string path, int flags) {
             auto err = uv_fs_event_start(*this, raw_callback, path, flags);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
             _detach_();

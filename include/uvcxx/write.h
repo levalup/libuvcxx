@@ -51,6 +51,7 @@ namespace uv {
         if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
 
         delete_data.release();
+        ((uv_write_t *) req)->data = data;
         return data->promise.promise();
     }
 
@@ -70,6 +71,7 @@ namespace uv {
         if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
 
         delete_data.release();
+        ((uv_write_t *) req)->data = data;
         return data->promise.promise();
     }
 

@@ -144,7 +144,7 @@ namespace uvcxx {
         using type = std::tuple<T...>;
 
         using on_then_t = std::function<void(const T &...)>;
-        using on_except_t = std::function<void(std::exception_ptr)>;
+        using on_except_t = std::function<bool(std::exception_ptr)>;
         using on_finally_t = std::function<void()>;
 
         promise_t() : m_core(std::make_shared<promise_core>()) {}

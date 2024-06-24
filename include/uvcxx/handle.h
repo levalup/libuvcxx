@@ -102,6 +102,7 @@ namespace uv {
         }
 
 #endif
+
         void close(std::nullptr_t) {
             (void) close_for([&](void (*cb)(raw_t *)) {
                 uv_close(*this, cb);

@@ -2,6 +2,24 @@
 
 --------------------------------
 
+## v0.0.3
+
+> Date: 2024-06-24
+
+### New features
+
+- Add `uvcxx::string`, `uvcxx::string_view` and `uvcxx::buffer_like` to simplify the type conversion.
+
+### Bug fix
+
+- Fix `req` not set data field problem.
+
+### Break changes
+
+- Removed some overloaded versions of `fs::read` and `fs::write`. Simplified by using `buffer_like` type. 
+
+--------------------------------
+
 ## v0.0.2
 
 > Date: 2024-06-23

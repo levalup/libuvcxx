@@ -9,8 +9,8 @@
 
 int loop_handle_count(uv::loop_t &loop) {
     int count = 0;
-    loop.walk([](uv_handle_t*, void* arg) {
-        (*(int *)arg)++;
+    loop.walk([](uv_handle_t *, void *arg) {
+        (*(int *) arg)++;
     }, &count);
     return count;
 }

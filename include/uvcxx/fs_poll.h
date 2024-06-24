@@ -6,8 +6,10 @@
 #ifndef LIBUVCXX_FS_POLL_H
 #define LIBUVCXX_FS_POLL_H
 
+#include "cxx/string.h"
+#include "utils/platform.h"
+
 #include "handle.h"
-#include "uvcxx/utils/platform.h"
 
 namespace uv {
     class fs_poll_t : public inherit_handle_t<uv_fs_poll_t, handle_t> {
@@ -24,7 +26,7 @@ namespace uv {
         }
 
         [[nodiscard]]
-        uvcxx::callback<int, const uv_stat_t *, const uv_stat_t *> start(const char *path, unsigned int interval) {
+        uvcxx::callback<int, const uv_stat_t *, const uv_stat_t *> start(uvcxx::string path, unsigned int interval) {
             auto err = uv_fs_poll_start(*this, raw_callback, path, interval);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
             _detach_();
