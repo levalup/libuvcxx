@@ -209,13 +209,11 @@ namespace uv {
                 m_option.exit_cb = raw_exit_callback;
             }
 
-            uvcxx::promise<int64_t, int> spawn(const loop_t &loop) {
-                auto err = uv_spawn(loop, this, &m_option);
+            uvcxx::promise<int64_t, int> spawn(const loop_t &loop_) {
+                auto err = uv_spawn(loop_, this, &m_option);
                 if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
 
-                auto data = (data_t * )
-                this->data;
-                return data->exit_cb.promise();
+                return get_data()->exit_cb.promise();
             }
 
         private:
@@ -235,6 +233,10 @@ namespace uv {
                 explicit data_t(const handle_t &handle) : handle_t::data_t(handle) {
                 }
             };
+
+            data_t *get_data() {
+                return (data_t *) this->data;
+            }
 
             friend class ::uv::process_t;
         };

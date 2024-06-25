@@ -17,7 +17,7 @@ int main() {
     std::cout << "passwd.username = " << passwd.username << std::endl;
     std::cout << "passwd.uid = " << passwd.uid << std::endl;
     std::cout << "passwd.gid = " << passwd.gid << std::endl;
-    std::cout << "passwd.shell = " << passwd.shell << std::endl;
+    std::cout << "passwd.shell = " << (passwd.shell ? passwd.shell : "") << std::endl;
     std::cout << "passwd.homedir = " << passwd.homedir << std::endl;
 #endif
 #if UVCXX_SATISFY_VERSION(1, 12, 0)
@@ -52,33 +52,43 @@ int main() {
     std::cout << "uname.machine = " << uname.machine << std::endl;
 #endif
 #if UVCXX_SATISFY_VERSION(1, 32, 0)
-    auto env_items = uv::os::environ();
+    auto env_items = uv::os::get_environ();
     for (auto &env: env_items) {
         std::cout << "env[" << env.name << "] = '" << env.value << "'" << std::endl;
     }
 #endif
 #if UVCXX_SATISFY_VERSION(1, 45, 0)
-    auto passwd2 = uv::os::get_passwd(passwd.uid);
-    std::cout << "passwd2.username = " << passwd2.username << std::endl;
-    std::cout << "passwd2.uid = " << passwd2.uid << std::endl;
-    std::cout << "passwd2.gid = " << passwd2.gid << std::endl;
-    std::cout << "passwd2.shell = " << passwd2.shell << std::endl;
-    std::cout << "passwd2.homedir = " << passwd2.homedir << std::endl;
-    auto group = uv::os::get_group(passwd.gid);
-    std::cout << "group.groupname = " << group.groupname << std::endl;
-    std::cout << "group.gid = " << group.gid << std::endl;
-    {
-        bool comma = false;
-        std::cout << "group.members = ";
-        auto member = group.members;
-        while (*member) {
-            if (comma) std::cout << ",";
-            else comma = true;
-            std::cout << *member;
-            ++member;
-        }
-        std::cout << std::endl;
+    try {
+        auto passwd2 = uv::os::get_passwd((uv_uid_t) passwd.uid);
+        std::cout << "passwd2.username = " << passwd2.username << std::endl;
+        std::cout << "passwd2.uid = " << passwd2.uid << std::endl;
+        std::cout << "passwd2.gid = " << passwd2.gid << std::endl;
+        std::cout << "passwd2.shell = " << (passwd2.shell ? passwd2.shell : "") << std::endl;
+        std::cout << "passwd2.homedir = " << passwd2.homedir << std::endl;
+    } catch (...) {
+        std::cout << "[ERROR] failed to get_passwd with uid" << std::endl;
     }
+
+    try {
+        auto group = uv::os::get_group((uv_uid_t) passwd.gid);
+        std::cout << "group.groupname = " << group.groupname << std::endl;
+        std::cout << "group.gid = " << group.gid << std::endl;
+        {
+            bool comma = false;
+            std::cout << "group.members = ";
+            auto member = group.members;
+            while (*member) {
+                if (comma) std::cout << ",";
+                else comma = true;
+                std::cout << *member;
+                ++member;
+            }
+            std::cout << std::endl;
+        }
+    } catch (...) {
+        std::cout << "[ERROR] failed to get_group with gid" << std::endl;
+    }
+
 #endif
     return 0;
 }

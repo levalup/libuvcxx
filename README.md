@@ -109,3 +109,4 @@ so the following lists the interface names with obvious differences (this may no
 
 - `uv_fs_get_type` -> `uv::fs_t::fs_type`
 - `uv_read_start` -> `uv::stream_t::alloc` + `uv::stream_t::read_start`
+- `uv_os_environ` -> `uv::os::get_environ`

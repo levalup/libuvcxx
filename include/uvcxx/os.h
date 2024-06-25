@@ -137,7 +137,7 @@ namespace uv::os {
 #endif
 #if UVCXX_SATISFY_VERSION(1, 31, 0)
 
-    inline int environ(uv_env_item_t **envitems, int *count) {
+    inline int get_environ(uv_env_item_t **envitems, int *count) {
         return uv_os_environ(envitems, count);
     }
 
@@ -183,7 +183,7 @@ namespace uv::os {
     };
 
     [[nodiscard]]
-    inline env_items_t environ() {
+    inline env_items_t get_environ() {
         return {};
     }
 
