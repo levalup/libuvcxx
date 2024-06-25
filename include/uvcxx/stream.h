@@ -98,14 +98,14 @@ namespace uv {
         }
 
         [[nodiscard]]
-        uvcxx::promise<> write(const write_t &req, uvcxx::buffer_like buf) {
+        uvcxx::promise<> write(const write_t &req, uvcxx::buffer buf) {
             return write(req, &buf.buf, 1);
         }
 
         [[nodiscard]]
-        uvcxx::promise<> write(const write_t &req, std::initializer_list<uvcxx::buffer_like> bufs) {
+        uvcxx::promise<> write(const write_t &req, std::initializer_list<uvcxx::buffer> bufs) {
             std::vector<uv_buf_t> buffers;
-            for (auto &buf : bufs) { buffers.emplace_back(buf.buf); }
+            for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
             return write(req, buffers.data(), (unsigned int) buffers.size());
         }
 
@@ -115,14 +115,14 @@ namespace uv {
         }
 
         [[nodiscard]]
-        uvcxx::promise<> write(uvcxx::buffer_like buf) {
+        uvcxx::promise<> write(uvcxx::buffer buf) {
             return write(&buf.buf, 1);
         }
 
         [[nodiscard]]
-        uvcxx::promise<> write(std::initializer_list<uvcxx::buffer_like> bufs) {
+        uvcxx::promise<> write(std::initializer_list<uvcxx::buffer> bufs) {
             std::vector<uv_buf_t> buffers;
-            for (auto &buf : bufs) { buffers.emplace_back(buf.buf); }
+            for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
             return write(buffers.data(), (unsigned int) buffers.size());
         }
 
@@ -134,15 +134,15 @@ namespace uv {
 
         [[nodiscard]]
         uvcxx::promise<> write2(const write_t &req,
-                                uvcxx::mutable_buffer_like buf, const stream_t &send_handle) {
+                                uvcxx::mutable_buffer buf, const stream_t &send_handle) {
             return write2(req, &buf.buf, 1, send_handle);
         }
 
         [[nodiscard]]
         uvcxx::promise<> write2(const write_t &req,
-                                std::initializer_list<uvcxx::mutable_buffer_like> bufs, const stream_t &send_handle) {
+                                std::initializer_list<uvcxx::mutable_buffer> bufs, const stream_t &send_handle) {
             std::vector<uv_buf_t> buffers;
-            for (auto &buf : bufs) { buffers.emplace_back(buf.buf); }
+            for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
             return write2(req, buffers.data(), (unsigned int) buffers.size(), send_handle);
         }
 
@@ -152,14 +152,14 @@ namespace uv {
         }
 
         [[nodiscard]]
-        uvcxx::promise<> write2(uvcxx::mutable_buffer_like buf, const stream_t &send_handle) {
+        uvcxx::promise<> write2(uvcxx::mutable_buffer buf, const stream_t &send_handle) {
             return write2(&buf.buf, 1, send_handle);
         }
 
         [[nodiscard]]
-        uvcxx::promise<> write2(std::initializer_list<uvcxx::mutable_buffer_like> bufs, const stream_t &send_handle) {
+        uvcxx::promise<> write2(std::initializer_list<uvcxx::mutable_buffer> bufs, const stream_t &send_handle) {
             std::vector<uv_buf_t> buffers;
-            for (auto &buf : bufs) { buffers.emplace_back(buf.buf); }
+            for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
             return write2(buffers.data(), (unsigned int) buffers.size(), send_handle);
         }
 
@@ -167,13 +167,13 @@ namespace uv {
             return uv_try_write(*this, bufs, nbufs);
         }
 
-        int try_write(uvcxx::mutable_buffer_like buf) {
+        int try_write(uvcxx::mutable_buffer buf) {
             return try_write(&buf.buf, 1);
         }
 
-        int try_write(std::initializer_list<uvcxx::mutable_buffer_like> bufs) {
+        int try_write(std::initializer_list<uvcxx::mutable_buffer> bufs) {
             std::vector<uv_buf_t> buffers;
-            for (auto &buf : bufs) { buffers.emplace_back(buf.buf); }
+            for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
             return try_write(buffers.data(), (unsigned int) buffers.size());
         }
 
@@ -183,13 +183,13 @@ namespace uv {
             return uv_try_write2(*this, bufs, nbufs, send_handle);
         }
 
-        int try_write2(uvcxx::mutable_buffer_like buf, const stream_t &send_handle) {
+        int try_write2(uvcxx::mutable_buffer buf, const stream_t &send_handle) {
             return try_write2(&buf.buf, 1, send_handle);
         }
 
-        int try_write2(std::initializer_list<uvcxx::mutable_buffer_like> bufs, const stream_t &send_handle) {
+        int try_write2(std::initializer_list<uvcxx::mutable_buffer> bufs, const stream_t &send_handle) {
             std::vector<uv_buf_t> buffers;
-            for (auto &buf : bufs) { buffers.emplace_back(buf.buf); }
+            for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
             return try_write2(buffers.data(), (unsigned int) buffers.size(), send_handle);
         }
 

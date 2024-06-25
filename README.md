@@ -52,7 +52,7 @@ More version compatibility will be specified here after testing.
 
 > Notice: As the development proceeds, compatibility may change with new features.
 
-`libuvcxx` covers approximately `[79%]` of the `libuv` APIs.
+`libuvcxx` covers approximately `[99%]` of the `libuv` APIs.
 
 See [coverage.md](docs/coverage.md) for more details.
 

@@ -8,7 +8,7 @@
 
 #include <vector>
 
-#include "cxx/buffer_like.h"
+#include "cxx/buffer.h"
 #include "cxx/string.h"
 
 #include "buf.h"
@@ -281,78 +281,78 @@ namespace uv {
         }
 
         inline int read(std::nullptr_t, fs_t &req,
-                        uv_file file, uvcxx::mutable_buffer_like buf, int64_t offset,
+                        uv_file file, uvcxx::mutable_buffer buf, int64_t offset,
                         std::nullptr_t) {
             return read(nullptr, req, file, &buf.buf, 1, offset, nullptr);
         }
 
         inline int read(std::nullptr_t, fs_t &req,
-                        uv_file file, std::initializer_list<uvcxx::mutable_buffer_like> bufs, int64_t offset,
+                        uv_file file, std::initializer_list<uvcxx::mutable_buffer> bufs, int64_t offset,
                         std::nullptr_t) {
             std::vector<uv_buf_t> buffers;
-            for (auto &buf : bufs) { buffers.emplace_back(buf.buf); }
+            for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
             return read(nullptr, req, file, buffers.data(), (unsigned int) buffers.size(), offset, nullptr);
         }
 
         [[nodiscard]]
         inline uvcxx::promise<ssize_t> read(
                 const loop_t &loop, const fs_t &req,
-                uv_file file, uvcxx::mutable_buffer_like buf, int64_t offset) {
+                uv_file file, uvcxx::mutable_buffer buf, int64_t offset) {
             return read(loop, req, file, &buf.buf, 1, offset);
         }
 
         [[nodiscard]]
         inline uvcxx::promise<ssize_t> read(
                 const loop_t &loop, const fs_t &req,
-                uv_file file, std::initializer_list<uvcxx::mutable_buffer_like> bufs, int64_t offset) {
+                uv_file file, std::initializer_list<uvcxx::mutable_buffer> bufs, int64_t offset) {
             std::vector<uv_buf_t> buffers;
-            for (auto &buf : bufs) { buffers.emplace_back(buf.buf); }
+            for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
             return read(loop, req, file, buffers.data(), (unsigned int) buffers.size(), offset);
         }
 
         [[nodiscard]]
         inline uvcxx::promise<ssize_t> read(
-                uv_file file, uvcxx::mutable_buffer_like buf, int64_t offset) {
+                uv_file file, uvcxx::mutable_buffer buf, int64_t offset) {
             return read(file, &buf.buf, 1, offset);
         }
 
         [[nodiscard]]
         inline uvcxx::promise<ssize_t> read(
-                uv_file file, std::initializer_list<uvcxx::mutable_buffer_like> bufs, int64_t offset) {
+                uv_file file, std::initializer_list<uvcxx::mutable_buffer> bufs, int64_t offset) {
             std::vector<uv_buf_t> buffers;
-            for (auto &buf : bufs) { buffers.emplace_back(buf.buf); }
+            for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
             return read(file, buffers.data(), (unsigned int) buffers.size(), offset);
         }
 
         [[nodiscard]]
         inline uvcxx::promise<ssize_t> read(
                 const loop_t &loop,
-                uv_file file, uvcxx::mutable_buffer_like buf, int64_t offset) {
+                uv_file file, uvcxx::mutable_buffer buf, int64_t offset) {
             return read(loop, file, &buf.buf, 1, offset);
         }
 
         [[nodiscard]]
         inline uvcxx::promise<ssize_t> read(
                 const loop_t &loop,
-                uv_file file, std::initializer_list<uvcxx::mutable_buffer_like> bufs, int64_t offset) {
+                uv_file file, std::initializer_list<uvcxx::mutable_buffer> bufs, int64_t offset) {
             std::vector<uv_buf_t> buffers;
-            for (auto &buf : bufs) { buffers.emplace_back(buf.buf); }
+            for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
             return read(loop, file, buffers.data(), (unsigned int) buffers.size(), offset);
         }
 
         [[nodiscard]]
         inline uvcxx::promise<ssize_t> read(
                 const fs_t &req,
-                uv_file file, uvcxx::mutable_buffer_like buf, int64_t offset) {
+                uv_file file, uvcxx::mutable_buffer buf, int64_t offset) {
             return read(req, file, &buf.buf, 1, offset);
         }
 
         [[nodiscard]]
         inline uvcxx::promise<ssize_t> read(
                 const fs_t &req,
-                uv_file file, std::initializer_list<uvcxx::mutable_buffer_like> bufs, int64_t offset) {
+                uv_file file, std::initializer_list<uvcxx::mutable_buffer> bufs, int64_t offset) {
             std::vector<uv_buf_t> buffers;
-            for (auto &buf : bufs) { buffers.emplace_back(buf.buf); }
+            for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
             return read(req, file, buffers.data(), (unsigned int) buffers.size(), offset);
         }
 
@@ -392,78 +392,78 @@ namespace uv {
         }
 
         inline int write(std::nullptr_t, fs_t &req,
-                         uv_file file, uvcxx::buffer_like buf, int64_t offset,
+                         uv_file file, uvcxx::buffer buf, int64_t offset,
                          std::nullptr_t) {
             return write(nullptr, req, file, &buf.buf, 1, offset, nullptr);
         }
 
         inline int write(std::nullptr_t, fs_t &req,
-                         uv_file file, std::initializer_list<uvcxx::buffer_like> bufs, int64_t offset,
+                         uv_file file, std::initializer_list<uvcxx::buffer> bufs, int64_t offset,
                          std::nullptr_t) {
             std::vector<uv_buf_t> buffers;
-            for (auto &buf : bufs) { buffers.emplace_back(buf.buf); }
+            for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
             return write(nullptr, req, file, buffers.data(), (unsigned int) buffers.size(), offset, nullptr);
         }
 
         [[nodiscard]]
         inline uvcxx::promise<ssize_t> write(
                 const loop_t &loop, const fs_t &req,
-                uv_file file, uvcxx::buffer_like buf, int64_t offset) {
+                uv_file file, uvcxx::buffer buf, int64_t offset) {
             return write(loop, req, file, &buf.buf, 1, offset);
         }
 
         [[nodiscard]]
         inline uvcxx::promise<ssize_t> write(
                 const loop_t &loop, const fs_t &req,
-                uv_file file, std::initializer_list<uvcxx::buffer_like> bufs, int64_t offset) {
+                uv_file file, std::initializer_list<uvcxx::buffer> bufs, int64_t offset) {
             std::vector<uv_buf_t> buffers;
-            for (auto &buf : bufs) { buffers.emplace_back(buf.buf); }
+            for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
             return write(loop, req, file, buffers.data(), (unsigned int) buffers.size(), offset);
         }
 
         [[nodiscard]]
         inline uvcxx::promise<ssize_t> write(
-                uv_file file, uvcxx::buffer_like buf, int64_t offset) {
+                uv_file file, uvcxx::buffer buf, int64_t offset) {
             return write(file, &buf.buf, 1, offset);
         }
 
         [[nodiscard]]
         inline uvcxx::promise<ssize_t> write(
-                uv_file file, std::initializer_list<uvcxx::buffer_like> bufs, int64_t offset) {
+                uv_file file, std::initializer_list<uvcxx::buffer> bufs, int64_t offset) {
             std::vector<uv_buf_t> buffers;
-            for (auto &buf : bufs) { buffers.emplace_back(buf.buf); }
+            for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
             return write(file, buffers.data(), (unsigned int) buffers.size(), offset);
         }
 
         [[nodiscard]]
         inline uvcxx::promise<ssize_t> write(
                 const loop_t &loop,
-                uv_file file, uvcxx::buffer_like buf, int64_t offset) {
+                uv_file file, uvcxx::buffer buf, int64_t offset) {
             return write(loop, file, &buf.buf, 1, offset);
         }
 
         [[nodiscard]]
         inline uvcxx::promise<ssize_t> write(
                 const loop_t &loop,
-                uv_file file, std::initializer_list<uvcxx::buffer_like> bufs, int64_t offset) {
+                uv_file file, std::initializer_list<uvcxx::buffer> bufs, int64_t offset) {
             std::vector<uv_buf_t> buffers;
-            for (auto &buf : bufs) { buffers.emplace_back(buf.buf); }
+            for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
             return write(loop, file, buffers.data(), (unsigned int) buffers.size(), offset);
         }
 
         [[nodiscard]]
         inline uvcxx::promise<ssize_t> write(
                 const fs_t &req,
-                uv_file file, uvcxx::buffer_like buf, int64_t offset) {
+                uv_file file, uvcxx::buffer buf, int64_t offset) {
             return write(req, file, &buf.buf, 1, offset);
         }
 
         [[nodiscard]]
         inline uvcxx::promise<ssize_t> write(
                 const fs_t &req,
-                uv_file file, std::initializer_list<uvcxx::buffer_like> bufs, int64_t offset) {
+                uv_file file, std::initializer_list<uvcxx::buffer> bufs, int64_t offset) {
             std::vector<uv_buf_t> buffers;
-            for (auto &buf : bufs) { buffers.emplace_back(buf.buf); }
+            for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
             return write(req, file, buffers.data(), (unsigned int) buffers.size(), offset);
         }
 

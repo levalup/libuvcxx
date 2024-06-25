@@ -86,11 +86,13 @@ namespace uv {
 
         [[nodiscard]]
         loop_t get_loop() const {
+            // cover uv_handle_get_loop
             return loop();
         }
 
         [[nodiscard]]
         uv_handle_type get_type() const {
+            // cover uv_handle_get_type
             return raw()->type;
         }
 
@@ -118,6 +120,7 @@ namespace uv {
 
         [[nodiscard]]
         void *get_data() const {
+            // cover uv_handle_get_data
             return raw()->data;
         }
 
@@ -138,6 +141,7 @@ namespace uv {
          * @param data
          */
         void set_data(void *data) {
+            // cover uv_handle_set_data
             raw()->data = data;
         }
 

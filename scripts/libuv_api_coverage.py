@@ -51,7 +51,7 @@ def get_libuv_functions(url: str) -> Tuple[str, List[str]]:
     name = h1
 
     sections = re.findall(
-        r'<section id="(?:api|functions)">(.*?)</section>',
+        r'<section id="(?:.*?)">(.*?)</section>',
         content,
         re.M | re.S)
 

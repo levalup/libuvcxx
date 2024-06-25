@@ -2,6 +2,23 @@
 
 --------------------------------
 
+## v0.0.4
+
+> Since: 2024-06-25
+
+### New features
+
+- Cover about `[99%]` APIs of `libuv`.
+  - Add `uv::os` wrapper for `uv_os_xxx`.
+  - Add most of miscellaneous utilities.
+
+### Break changes
+
+- Rename `uvcxx::buffer_like` to `uvcxx::buffer`.
+- Rename `uvcxx::mutable_buffer_like` to `uvcxx::mutable_buffer`.
+
+--------------------------------
+
 ## v0.0.3
 
 > Date: 2024-06-24

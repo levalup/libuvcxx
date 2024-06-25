@@ -3,8 +3,8 @@
 // L.eval: Let programmer get rid of only work jobs.
 //
 
-#ifndef LIBUVCXX_EXCEPT_H
-#define LIBUVCXX_EXCEPT_H
+#ifndef LIBUVCXX_CXX_EXCEPT_H
+#define LIBUVCXX_CXX_EXCEPT_H
 
 #include <sstream>
 #include <stdexcept>
@@ -94,4 +94,4 @@ namespace uvcxx {
 #define UVCXX_THROW_OR_RETURN(code, ret, ...) throw ::uvcxx::errcode(code, ## __VA_ARGS__)
 #endif
 
-#endif //LIBUVCXX_EXCEPT_H
+#endif //LIBUVCXX_CXX_EXCEPT_H

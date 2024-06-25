@@ -11,7 +11,7 @@
 
 #include <uv.h>
 
-#include "cxx/buffer_like.h"
+#include "cxx/buffer.h"
 #include "inner/base.h"
 
 namespace uv {
@@ -141,13 +141,22 @@ namespace uv {
             std::memset(data(), v, size());
         }
     };
+
+    template<typename I, typename std::enable_if<std::is_integral<I>::value, int>::type = 0>
+    inline uv_buf_t buf_init(const void *base, I len) {
+        // cover uv_buf_init
+        uv_buf_t buf{};
+        buf.base = (decltype(buf.base)) (base);
+        buf.len = (decltype(buf.len)) (len);
+        return buf;
+    }
 }
 
 namespace uvcxx {
-    inline buffer_like::buffer_like(uv::buf_t &buf)
+    inline buffer::buffer(uv::buf_t &buf)
             : buf(init(buf.data(), buf.size())) {}
 
-    inline mutable_buffer_like::mutable_buffer_like(uv::buf_t &buf)
+    inline mutable_buffer::mutable_buffer(uv::buf_t &buf)
             : buf(init(buf.data(), buf.size())) {}
 }
 

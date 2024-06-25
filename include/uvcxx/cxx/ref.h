@@ -3,8 +3,8 @@
 // L.eval: Let programmer get rid of only work jobs.
 //
 
-#ifndef LIBUVCXX_REF_H
-#define LIBUVCXX_REF_H
+#ifndef LIBUVCXX_CXX_REF_H
+#define LIBUVCXX_CXX_REF_H
 
 #include "../handle.h"
 
@@ -142,4 +142,4 @@ namespace uvcxx {
     ref(const std::shared_ptr<Handle> &handle) -> ref<Handle>;
 }
 
-#endif //LIBUVCXX_REF_H
+#endif //LIBUVCXX_CXX_REF_H

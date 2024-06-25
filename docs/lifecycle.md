@@ -1,8 +1,10 @@
 # Lifecycle Design
 
-There are mainly many types of resources involved in the project that need to be managed, including `loop`, `request`, and `handle`.
+There are mainly many types of resources involved in the project that need to be managed, including `loop`, `request`,
+and `handle`.
 
-Besides the objects related to `libuv`, the relevant resources also contain objects for C++ features, and the relevant data is stored in the member `data`.
+Besides the objects related to `libuv`, the relevant resources also contain objects for C++ features, and the relevant
+data is stored in the member `data`.
 
 ## Loop
 
@@ -32,9 +34,7 @@ stateDiagram-v2
 - **run**: Run the `loop`.
 - **close**: Close the `loop`.
 
-
 The context data will be allocated and released with `uv_loop_t`.
-
 
 **Note**: object cannot be used after `close`.
 
@@ -67,7 +67,6 @@ stateDiagram-v2
 
 - **request**: New context data. Call request method, such as `fs::open`, `random` and `tcp::connect`.
 - **response**: Release previous context data. `resolve` the request's `promise`.
-
 
 Resources will be properly recycled in all states.  
 However, it should be noted that `request` operations can only be performed in the `Hanging` and `Dealing` states.
@@ -106,9 +105,10 @@ stateDiagram-v2
 - **stop**: Stop callback operations, but not close handle. such as `stop` for `timer`.
 - **close**: Close `handle`. Release context data and reset `handle->data`.
 
+If the `handle` is in the `attached` state, resources will be automatically recycled when the `handle` is no longer
+referenced.
 
-If the `handle` is in the `attached` state, resources will be automatically recycled when the `handle` is no longer referenced.
-
-If the `handle` is in the `detached` state, resources will not be automatically recycled. Users need to explicitly call `close` or throw `uvcxx::close_handle` in the `handle` callback.
+If the `handle` is in the `detached` state, resources will not be automatically recycled. Users need to explicitly
+call `close` or throw `uvcxx::close_handle` in the `handle` callback.
 
 **Note**: object cannot be used after `close`.

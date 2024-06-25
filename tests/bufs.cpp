@@ -5,53 +5,90 @@
 
 #include <iostream>
 
-#include "uvcxx/cxx/buffer_like.h"
-#include "uvcxx/buf.h"
+#include "uvcxx/cxx/buffer.h"
 #include "uvcxx/utils/assert.h"
+#include "uvcxx/buf.h"
 
-int f(const uv_buf_t[], int) {
-    std::cout << "uv_buf_t" << std::endl;
-    return 0;
-}
-
-int f(uvcxx::buffer_like buf) {
-    // std::cout << "uvcxx::buffer_like" << std::endl;
-    std::cout << std::string((char *) buf.buf.base, buf.buf.len) << std::endl;
-    return 1;
-}
-
-int f(std::initializer_list<uvcxx::buffer_like> bufs) {
-    // std::cout << "std::initializer_list<uvcxx::buffer_like>" << std::endl;
-    for (auto &buf: bufs) {
-        f({buf.buf.base, buf.buf.len});
+void init_buffer(void *data, size_t size) {
+    int c = 0;
+    auto dest = (char *) data;
+    for (size_t i = 0; i < size; ++i) {
+        c = (c + 1) % 10;
+        dest[i] = char('0' + c);
     }
-    return 2;
 }
 
-struct A {
-    int a;
-};
+std::string mb(uvcxx::mutable_buffer buf) {
+    return {(char *) buf.buf.base, buf.buf.len};
+}
 
-struct B {
-    std::vector<int> tt;
-};
+std::string b(uvcxx::buffer buf) {
+    return {(char *) buf.buf.base, buf.buf.len};
+}
 
 int main() {
-    f("A");
-    f({"123456", 3});
-    uv::buf_t buf;
-    buf.resize(12);
-    buf.memset(0);
-    buf.data()[0] = 'T';
-    f(buf);
-    f({"AA", "CC"});
-    f({"string"});
-    // f(std::string("tmp string"));
-    // f({std::string("tmp string") + " 2"});
-    // f({std::string("tmp string") + " 3", std::string("tmp string") + " 4"});
+    uv::buf_t uvcxx_buf(3);
+    char uv_buf_data[4] = {};
+    auto uv_buf = uv_buf_init(uv_buf_data, 4);
+    std::vector<int16_t> std_vec(3);
+    int16_t c_arr[4] = {};
+    std::array<int32_t, 2> std_arr{};
+    std::string std_str = "123456789";
+    const char c_str1[] = "1234567";
+    char c_str2[7] = {};
+    int64_t ii = {};
 
-    int ii = 0x34353637;
-    f(uvcxx::buffer_to(ii));
+    init_buffer(uvcxx_buf.data(), uvcxx_buf.size());
+    init_buffer(uv_buf.base, uv_buf.len);
+    init_buffer(std_vec.data(), std_vec.size() * sizeof(int16_t));
+    init_buffer(c_arr, sizeof(c_arr));
+    init_buffer(std_arr.data(), std_arr.size() * sizeof(int32_t));
+    init_buffer(c_str2, sizeof(c_str2));
+    c_str2[6] = '\0';
+    init_buffer(&ii, sizeof(ii));
+
+    uvcxx_assert(b(nullptr).empty());
+    uvcxx_assert(mb(nullptr).empty());
+
+    uvcxx_assert(b(uvcxx_buf) == "123");
+    uvcxx_assert(b(&uv_buf) == "1234");
+    uvcxx_assert(b(uv_buf) == "1234");
+    uvcxx_assert(b({c_arr, 5}) == "12345");
+    uvcxx_assert(b(std_vec) == "123456");
+    uvcxx_assert(b(std_str) == "123456789");
+    uvcxx_assert(b(c_str1) == "1234567");
+    uvcxx_assert(b(c_str2) == "123456");    // different to `mutable_buffer`
+    uvcxx_assert(b("vwxyz") == "vwxyz");
+    uvcxx_assert(b("vwxyz\0") == "vwxyz");
+    uvcxx_assert(b(uvcxx::buffer_to(ii)) == "12345678");
+
+    uvcxx_assert(mb(uvcxx_buf) == "123");
+    uvcxx_assert(mb(&uv_buf) == "1234");
+    uvcxx_assert(mb(uv_buf) == "1234");
+    uvcxx_assert(mb({c_arr, 5}) == "12345");
+    uvcxx_assert(mb(std_vec) == "123456");
+    uvcxx_assert(mb(c_arr) == "12345678");
+    uvcxx_assert(mb(std_arr) == "12345678");
+    uvcxx_assert(mb(c_str2) == std::string("123456\0", 7));    // different to `buffer`
+    uvcxx_assert(mb(uvcxx::buffer_to(ii)) == "12345678");
+
+    auto constructible_buffer_c_arr = std::is_constructible<uvcxx::buffer, decltype(c_arr)>::value;
+    uvcxx_assert(!constructible_buffer_c_arr);
+
+    auto constructible_buffer_std_arr = std::is_constructible<uvcxx::buffer, decltype(std_arr)>::value;
+    uvcxx_assert(!constructible_buffer_std_arr);
+
+    auto constructible_mutable_buffer_std_str =
+            std::is_constructible<uvcxx::mutable_buffer, decltype(std_str)>::value;
+    uvcxx_assert(!constructible_mutable_buffer_std_str);
+
+    auto constructible_mutable_buffer_c_str1 =
+            std::is_constructible<uvcxx::mutable_buffer, decltype(c_str1)>::value;
+    uvcxx_assert(!constructible_mutable_buffer_c_str1);
+
+    auto constructible_mutable_buffer_literal_str =
+            std::is_constructible<uvcxx::mutable_buffer, decltype("vwxyz")>::value;
+    uvcxx_assert(!constructible_mutable_buffer_literal_str);
 
     return 0;
 }

@@ -120,6 +120,18 @@ namespace uv {
 
 #endif
 
+#if UVCXX_SATISFY_VERSION(1, 8, 0)
+
+        void print_all_handles(FILE *stream) {
+            uv_print_all_handles(*this, stream);
+        }
+
+        void print_active_handles(FILE *stream) {
+            uv_print_active_handles(*this, stream);
+        }
+
+#endif
+
 #if UVCXX_SATISFY_VERSION(1, 39, 0)
 
         uint64_t metrics_idle_time() {

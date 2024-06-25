@@ -3,8 +3,8 @@
 // L.eval: Let programmer get rid of only work jobs.
 //
 
-#ifndef LIBUVCXX_STRING_H
-#define LIBUVCXX_STRING_H
+#ifndef LIBUVCXX_CXX_STRING_H
+#define LIBUVCXX_CXX_STRING_H
 
 #include <string>
 #include <cstring>
@@ -53,4 +53,4 @@ namespace uvcxx {
     };
 }
 
-#endif //LIBUVCXX_STRING_H
+#endif //LIBUVCXX_CXX_STRING_H

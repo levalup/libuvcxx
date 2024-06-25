@@ -8,7 +8,7 @@
 
 #include "uvcxx/thread.h"
 #include "uvcxx/key.h"
-#include "uvcxx/utility.h"
+#include "uvcxx/utilities.h"
 
 int main() {
     // create thread local storage key

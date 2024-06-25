@@ -7,7 +7,7 @@
 
 #include "uvcxx/mutex.h"
 #include "uvcxx/thread.h"
-#include "uvcxx/utility.h"
+#include "uvcxx/utilities.h"
 
 #include "uvcxx/utils/assert.h"
 

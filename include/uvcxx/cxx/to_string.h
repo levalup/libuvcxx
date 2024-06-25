@@ -3,8 +3,8 @@
 // L.eval: Let programmer get rid of only work jobs.
 //
 
-#ifndef LIBUVCXX_TO_STRING_H
-#define LIBUVCXX_TO_STRING_H
+#ifndef LIBUVCXX_CXX_TO_STRING_H
+#define LIBUVCXX_CXX_TO_STRING_H
 
 #include <string>
 #include <sstream>
@@ -278,4 +278,4 @@ namespace uvcxx {
 #pragma pop_macro("UVCXX_DEFAULT")
 
 
-#endif //LIBUVCXX_TO_STRING_H
+#endif //LIBUVCXX_CXX_TO_STRING_H
