@@ -116,7 +116,9 @@ namespace uv {
 
                 promise_cast_t promise;
 
-                explicit callback_t(const cxx_req_t &req, typename promise_cast_t::wrapper_t wrapper)
+                template<typename WRAPPER, typename std::enable_if<
+                        std::is_constructible<promise_cast_t, WRAPPER>::value, int>::type = 0>
+                explicit callback_t(const cxx_req_t &req, WRAPPER wrapper)
                         : supper(req), promise(std::move(wrapper)) {
                 }
 
@@ -157,9 +159,9 @@ namespace uv {
 
                 explicit invoker(std::function<void(callback_t<T...> *)> init) : init(std::move(init)) {}
 
-                template<typename FUNC, typename ...ARGS>
+                template<typename WRAPPER, typename FUNC, typename ...ARGS>
                 uvcxx::promise<T...> operator()(
-                        typename callback_t<T...>::promise_cast_t::wrapper_t wrapper,
+                        WRAPPER wrapper,
                         FUNC func, const loop_t &loop, const cxx_req_t &req, ARGS &&...args) const {
                     auto *data = new callback_t<T...>(req, std::move(wrapper));
                     uvcxx::defer_delete<callback_t<T...>> delete_data(data);
