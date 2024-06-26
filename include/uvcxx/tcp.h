@@ -106,12 +106,12 @@ namespace uv {
             return err;
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::promise<> connect(const connect_t &req, const sockaddr *addr) {
             return ::uv::tcp_connect(req, *this, addr);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::promise<> connect(const sockaddr *addr) {
             return ::uv::tcp_connect(*this, addr);
         }
@@ -124,7 +124,7 @@ namespace uv {
             });
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::promise<> close_reset() {
             return close_for([&](void (*cb)(uv_handle_t *)) {
                 (void) uv_tcp_close_reset(*this, cb);
@@ -136,7 +136,7 @@ namespace uv {
 
 #if UVCXX_SATISFY_VERSION(1, 41, 0)
 
-    [[nodiscard]]
+    UVCXX_NODISCARD
     inline int socketpair(int type, int protocol, uv_os_sock_t socket_vector[2], int flags0, int flags1) {
         auto err = uv_socketpair(type, protocol, socket_vector, flags0, flags1);
         if (err < 0) UVCXX_THROW_OR_RETURN(err, err);

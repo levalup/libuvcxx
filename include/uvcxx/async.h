@@ -19,12 +19,12 @@ namespace uv {
             _attach_data_();
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::callback<> init() {
             return init(default_loop());
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::callback<> init(const loop_t &loop) {
             auto data = get_data<data_t>();
             auto err = uv_async_init(loop, *this, raw_callback);

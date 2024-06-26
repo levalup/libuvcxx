@@ -73,7 +73,7 @@ namespace uv {
                 return new self(id);
             }
 
-            [[nodiscard]]
+            UVCXX_NODISCARD
             bool detached() const { return m_detached; }
 
         private:
@@ -95,11 +95,11 @@ namespace uv {
 
         thread_t &operator=(const thread_t &) = delete;
 
-        thread_t(thread_t &&that) noexcept {
+        thread_t(thread_t &&that) UVCXX_NOEXCEPT {
             this->operator=(std::move(that));
         }
 
-        thread_t &operator=(thread_t &&that) noexcept {
+        thread_t &operator=(thread_t &&that) UVCXX_NOEXCEPT {
             std::swap(m_thread, that.m_thread);
             return *this;
         }
@@ -138,7 +138,7 @@ namespace uv {
 
 #endif
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         bool equal(const self &other) const {
             return uv_thread_equal(*this, other);
         }
@@ -157,7 +157,7 @@ namespace uv {
             return err;
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         int getpriority() const {
             int priority = 0;
             auto err = uv_thread_getpriority(m_thread->tid, &priority);

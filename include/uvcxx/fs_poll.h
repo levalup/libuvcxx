@@ -25,7 +25,7 @@ namespace uv {
             _attach_close_();
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::callback<int, const uv_stat_t *, const uv_stat_t *> start(uvcxx::string path, unsigned int interval) {
             auto err = uv_fs_poll_start(*this, raw_callback, path, interval);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);

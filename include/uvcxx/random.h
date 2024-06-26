@@ -36,11 +36,11 @@ namespace uv {
                 return std::make_tuple(buf, len);
             }) {}
 
-            uvcxx::promise_proxy<raw_t *, int, void *, size_t> &proxy() noexcept override { return promise; }
+            uvcxx::promise_proxy<raw_t *, int, void *, size_t> &proxy() UVCXX_NOEXCEPT override { return promise; }
 
-            void finalize(raw_t *, int, void *, size_t) noexcept override {};
+            void finalize(raw_t *, int, void *, size_t) UVCXX_NOEXCEPT override {};
 
-            int check(raw_t *, int status, void *, size_t) noexcept override { return status; }
+            int check(raw_t *, int status, void *, size_t) UVCXX_NOEXCEPT override { return status; }
         };
     };
 
@@ -50,12 +50,12 @@ namespace uv {
         return uv_random(nullptr, nullptr, buf, buflen, flags, nullptr);
     }
 
-    [[nodiscard]]
+    UVCXX_NODISCARD
     inline uvcxx::promise<void *, size_t> random(
             const loop_t &loop, const random_t &req,
             void *buf, size_t buflen, unsigned int flags = 0) {
         auto *data = new random_t::data_t(req);
-        uvcxx::defer_delete delete_data(data);
+        uvcxx::defer_delete<random_t::data_t> delete_data(data);
 
         auto err = uv_random(loop, req, buf, buflen, flags, random_t::data_t::raw_callback);
         if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
@@ -65,20 +65,20 @@ namespace uv {
         return data->promise.promise();
     }
 
-    [[nodiscard]]
+    UVCXX_NODISCARD
     inline uvcxx::promise<void *, size_t> random(
             void *buf, size_t buflen, unsigned int flags = 0) {
         return random(default_loop(), {}, buf, buflen, flags);
     }
 
-    [[nodiscard]]
+    UVCXX_NODISCARD
     inline uvcxx::promise<void *, size_t> random(
             const loop_t &loop,
             void *buf, size_t buflen, unsigned int flags = 0) {
         return random(loop, {}, buf, buflen, flags);
     }
 
-    [[nodiscard]]
+    UVCXX_NODISCARD
     inline uvcxx::promise<void *, size_t> random(
             const random_t &req,
             void *buf, size_t buflen, unsigned int flags = 0) {

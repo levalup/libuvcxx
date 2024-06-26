@@ -42,27 +42,27 @@ namespace uv {
 
         using supper::supper;
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         loop_t loop() const {
             return loop_t::borrow(raw<raw_t>()->loop);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uv_handle_type type() const {
             return raw<raw_t>()->type;
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         void *data() const {
             return raw()->data;
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         bool is_active() const {
             return uv_is_active(*this);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         bool is_closing() const {
             return uv_is_closing(*this);
         }
@@ -79,18 +79,18 @@ namespace uv {
             return uv_has_ref(*this);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         size_t size() const {
             return uv_handle_size(raw()->type);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         loop_t get_loop() const {
             // cover uv_handle_get_loop
             return loop();
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uv_handle_type get_type() const {
             // cover uv_handle_get_type
             return raw()->type;
@@ -98,7 +98,7 @@ namespace uv {
 
 #if UVCXX_SATISFY_VERSION(1, 19, 0)
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         const char *type_name() const {
             return uv_handle_type_name(raw()->type);
         }
@@ -111,27 +111,27 @@ namespace uv {
             });
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::promise<> close() {
             return close_for([&](void (*cb)(raw_t *)) {
                 uv_close(*this, cb);
             });
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         void *get_data() const {
             // cover uv_handle_get_data
             return raw()->data;
         }
 
         template<typename T>
-        [[nodiscard]]
+        UVCXX_NODISCARD
         T *data() const {
             return (T *) raw()->data;
         }
 
         template<typename T>
-        [[nodiscard]]
+        UVCXX_NODISCARD
         T *get_data() const {
             return (T *) raw()->data;;
         }
@@ -168,7 +168,8 @@ namespace uv {
 
     private:
         std::function<void(void)> attach_data() {
-            return [handle = raw()]() {
+            auto handle = raw();
+            return [handle]() {
                 auto data = (data_t *) handle->data;
                 if (!data_t::is_it(data)) return;
                 data->close_for([&](void (*cb)(raw_t *)) {
@@ -179,7 +180,8 @@ namespace uv {
         }
 
         std::function<void(void)> attach_close() {
-            return [handle = raw()]() {
+            auto handle = raw();
+            return [handle]() {
                 auto data = (data_t *) handle->data;
                 if (!data_t::is_it(data)) return;
 
@@ -214,14 +216,14 @@ namespace uv {
 
             raw_t *handle() { return m_handle.get(); }
 
-            [[nodiscard]]
+            UVCXX_NODISCARD
             const raw_t *handle() const { return m_handle.get(); }
 
             template<typename T>
             T *handle() { return (T *) m_handle.get(); }
 
             template<typename T>
-            [[nodiscard]]
+            UVCXX_NODISCARD
             const T *handle() const { return (const T *) m_handle.get(); }
 
         public:
@@ -266,7 +268,8 @@ namespace uv {
     protected:
         template<typename...ARGS>
         void watch(uvcxx::callback<ARGS...> &&callback) {
-            callback.template except<uvcxx::close_handle>([handle = raw()]() mutable {
+            auto handle = raw();
+            callback.template except<uvcxx::close_handle>([handle]() mutable {
                 auto data = (data_t *) handle->data;
                 data->close_for([handle](void (*cb)(raw_t *)) {
                     uv_close(handle, cb);
@@ -285,7 +288,7 @@ namespace uv {
         }
     };
 
-    template<typename T, typename B, typename=typename std::enable_if_t<std::is_base_of_v<handle_t, B>>>
+    template<typename T, typename B, typename=typename std::enable_if<std::is_base_of<handle_t, B>::value>::type>
     class inherit_handle_t : public B {
     public:
         using self = inherit_handle_t;
@@ -305,7 +308,9 @@ namespace uv {
 
     private:
         static std::shared_ptr<uv_handle_t> make_shared() {
-            return std::reinterpret_pointer_cast<uv_handle_t>(std::make_shared<T>());
+            auto r = std::make_shared<T>();
+            auto p = reinterpret_cast<typename std::shared_ptr<uv_handle_t>::element_type*>(r.get());
+            return std::shared_ptr<uv_handle_t>{r, p};
         }
     };
 }

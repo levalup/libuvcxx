@@ -16,10 +16,10 @@
 #include "version.h"
 
 namespace uvcxx {
-    template<typename T, typename std::enable_if_t<
-            std::is_convertible_v<std::string, decltype(std::to_string(std::declval<const T &>()))>,
-            int> = 0>
-    inline decltype(auto) to_string(const T &t) {
+    template<typename T, typename std::enable_if<
+            std::is_convertible<std::string, decltype(std::to_string(std::declval<const T &>()))>::value,
+            int>::type = 0>
+    inline std::string to_string(const T &t) {
         return std::to_string(t);
     }
 
@@ -28,7 +28,9 @@ namespace uvcxx {
         if (!mask) return zero;
         std::ostringstream oss;
         bool sep = false;
-        for (auto [v, s]: args) {
+        for (auto &vs: args) {
+            auto &v = std::get<0>(vs);
+            auto &s = std::get<1>(vs);
             if (mask & v) {
                 if (sep) oss << "|";
                 oss << s;

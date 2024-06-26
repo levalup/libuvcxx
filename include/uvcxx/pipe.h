@@ -27,7 +27,7 @@ namespace uv {
             _attach_close_();
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         bool ipc() const {
             return raw<raw_t>()->ipc;
         }
@@ -91,44 +91,44 @@ namespace uv {
 
 #endif
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::promise<> connect(const connect_t &req, uvcxx::string name) {
             return ::uv::pipe_connect(req, *this, name);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::promise<> connect(uvcxx::string name) {
             return ::uv::pipe_connect(*this, name);
         }
 
 #if UVCXX_SATISFY_VERSION(1, 46, 0)
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::promise<> connect2(const connect_t &req, const char *name, size_t namelen, unsigned int flags) {
             return ::uv::pipe_connect2(req, *this, name, namelen, flags);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::promise<> connect2(const char *name, size_t namelen, unsigned int flags) {
             return ::uv::pipe_connect2(*this, name, namelen, flags);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::promise<> connect2(const connect_t &req, uvcxx::string_view name, unsigned int flags) {
             return ::uv::pipe_connect2(req, *this, name.data, name.size, flags);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::promise<> connect2(uvcxx::string_view name, unsigned int flags) {
             return ::uv::pipe_connect2(*this, name.data, name.size, flags);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::promise<> connect(const connect_t &req, uvcxx::string_view name, unsigned int flags) {
             return ::uv::pipe_connect2(req, *this, name.data, name.size, flags);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::promise<> connect(uvcxx::string_view name, unsigned int flags) {
             return ::uv::pipe_connect2(*this, name.data, name.size, flags);
         }
@@ -155,12 +155,12 @@ namespace uv {
             uv_pipe_pending_instances(*this, count);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         int pending_count() {
             return uv_pipe_pending_count(*this);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uv_handle_type pending_type() {
             return uv_pipe_pending_type(*this);
         }

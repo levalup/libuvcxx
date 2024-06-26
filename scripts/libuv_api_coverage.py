@@ -145,7 +145,7 @@ def calculate_coverage(libuv_api: Dict, libuvcxx_source: str):
                 print(f'[WARN] {prefix}  - {miss}')
 
     coverage = int(covered_count / function_count * 100)
-    print(f'[INFO] Total API coverage [{coverage}%]')
+    print(f'[INFO] Total API coverage [{coverage}%] - [{covered_count}/{function_count}]')
 
 
 def main():

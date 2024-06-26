@@ -34,7 +34,7 @@ namespace uvcxx {
         }
 
         bool push(value_t v) {
-            std::unique_lock _lock(m_mutex);
+            std::unique_lock<decltype(m_mutex)> _lock(m_mutex);
             // closed queue can not push more values
             if (m_closed) return false;
             while (true) {
@@ -49,7 +49,7 @@ namespace uvcxx {
         }
 
         std::pair<bool, value_t> pop() {
-            std::unique_lock _lock(m_mutex);
+            std::unique_lock<decltype(m_mutex)> _lock(m_mutex);
             while (true) {
                 if (readable()) break;
                 if (m_closed) return {false, {}};
@@ -62,14 +62,14 @@ namespace uvcxx {
         }
 
         void close() {
-            std::unique_lock _lock(m_mutex);
+            std::unique_lock<decltype(m_mutex)> _lock(m_mutex);
             m_closed = true;
             m_cond_writable.notify_all();
             m_cond_readable.notify_all();
         }
 
         void limit(int64_t v) {
-            std::unique_lock _lock(m_mutex);
+            std::unique_lock<decltype(m_mutex)> _lock(m_mutex);
             auto pre = m_limit.load();
             if (v <= 0) {
                 if (pre > 0) m_cond_writable.notify_all();

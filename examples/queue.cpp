@@ -17,7 +17,9 @@ int main() {
     q.push(1, 0);
     q.push(1, 2);
     q.close();
-    for (auto [i, j]: q) {
+    for (auto &ij: q) {
+        auto i = std::get<0>(ij);
+        auto j = std::get<1>(ij);
         std::cout << i << " " << j << std::endl;
     }
 

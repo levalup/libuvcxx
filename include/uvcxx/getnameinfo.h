@@ -15,17 +15,17 @@ namespace uv {
         using self = getnameinfo_t;
         using supper = inherit_req_t<uv_getnameinfo_t, req_t>;
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         loop_t loop() const {
             return loop_t::borrow(raw<raw_t>()->loop);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         const char *host() const {
             return raw<raw_t>()->host;
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         const char *service() const {
             return raw<raw_t>()->service;
         }
@@ -47,14 +47,14 @@ namespace uv {
             }) {
             }
 
-            typename promise_cast_t::supper &proxy() noexcept final {
+            typename promise_cast_t::supper &proxy() UVCXX_NOEXCEPT final {
                 return promise;
             }
 
-            void finalize(raw_t *, int, const char *, const char *) noexcept final {
+            void finalize(raw_t *, int, const char *, const char *) UVCXX_NOEXCEPT final {
             }
 
-            int check(raw_t *, int status, const char *, const char *) noexcept final {
+            int check(raw_t *, int status, const char *, const char *) UVCXX_NOEXCEPT final {
                 return status;
             }
         };
@@ -70,12 +70,12 @@ namespace uv {
 
 #endif
 
-    [[nodiscard]]
+    UVCXX_NODISCARD
     inline uvcxx::promise<const char *, const char *> getnameinfo(
             const loop_t &loop, const getnameinfo_t &req,
             const sockaddr *addr, int flags) {
         auto *data = new getnameinfo_t::callback_t(req);
-        uvcxx::defer_delete delete_data(data);
+        uvcxx::defer_delete<getnameinfo_t::data_t> delete_data(data);
 
         auto err = uv_getnameinfo(loop, req, getnameinfo_t::callback_t::raw_callback, addr, flags);
         if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
@@ -85,20 +85,20 @@ namespace uv {
         return data->promise.promise();
     }
 
-    [[nodiscard]]
+    UVCXX_NODISCARD
     inline uvcxx::promise<const char *, const char *> getnameinfo(
             const sockaddr *addr, int flags) {
         return getnameinfo(default_loop(), {}, addr, flags);
     }
 
-    [[nodiscard]]
+    UVCXX_NODISCARD
     inline uvcxx::promise<const char *, const char *> getnameinfo(
             const getnameinfo_t &req,
             const sockaddr *addr, int flags) {
         return getnameinfo(default_loop(), req, addr, flags);
     }
 
-    [[nodiscard]]
+    UVCXX_NODISCARD
     inline uvcxx::promise<const char *, const char *> getnameinfo(
             const loop_t &loop,
             const sockaddr *addr, int flags) {

@@ -28,12 +28,12 @@ namespace uv {
 
         using supper::supper;
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         void *data() const {
             return raw<raw_t>()->data;
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uv_req_type type() const {
             return raw<raw_t>()->type;
         }
@@ -44,12 +44,12 @@ namespace uv {
             return status;
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         size_t size() const {
             return uv_req_size(raw()->type);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uv_req_type get_type() const {
             // cover uv_req_get_type
             return raw()->type;
@@ -57,27 +57,27 @@ namespace uv {
 
 #if UVCXX_SATISFY_VERSION(1, 19, 0)
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         const char *type_name() const {
             return uv_req_type_name(raw()->type);
         }
 
 #endif
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         void *get_data() const {
             // cover uv_req_get_data
             return raw()->data;
         }
 
         template<typename T>
-        [[nodiscard]]
+        UVCXX_NODISCARD
         T *data() const {
             return (T *) raw()->data;
         }
 
         template<typename T>
-        [[nodiscard]]
+        UVCXX_NODISCARD
         T *get_data() const {
             return (T *) raw()->data;
         }
@@ -114,14 +114,14 @@ namespace uv {
 
             raw_t *req() { return m_req.get(); }
 
-            [[nodiscard]]
+            UVCXX_NODISCARD
             const raw_t *req() const { return m_req.get(); }
 
             template<typename T>
             T *req() { return (T *) m_req.get(); }
 
             template<typename T>
-            [[nodiscard]]
+            UVCXX_NODISCARD
             const T *req() const { return (const T *) m_req.get(); }
 
         private:
@@ -135,7 +135,7 @@ namespace uv {
         }
     };
 
-    template<typename T, typename B, typename=typename std::enable_if_t<std::is_base_of_v<req_t, B>>>
+    template<typename T, typename B, typename=typename std::enable_if<std::is_base_of<req_t, B>::value>::type>
     class inherit_req_t : public B {
     public:
         using self = inherit_req_t;
@@ -153,7 +153,9 @@ namespace uv {
 
     private:
         static std::shared_ptr<uv_req_t> make_shared() {
-            return std::reinterpret_pointer_cast<uv_req_t>(std::make_shared<T>());
+            auto r = std::make_shared<T>();
+            auto p = reinterpret_cast<typename std::shared_ptr<uv_req_t>::element_type*>(r.get());
+            return std::shared_ptr<uv_req_t>{r, p};
         }
     };
 
@@ -165,11 +167,11 @@ namespace uv {
 
         using supper::supper;
 
-        virtual uvcxx::promise_proxy<REQ *, ARGS...> &proxy() noexcept = 0;
+        virtual uvcxx::promise_proxy<REQ *, ARGS...> &proxy() UVCXX_NOEXCEPT = 0;
 
-        virtual void finalize(REQ *req, ARGS... args) noexcept = 0;
+        virtual void finalize(REQ *req, ARGS... args) UVCXX_NOEXCEPT = 0;
 
-        virtual int check(REQ *req, ARGS... args) noexcept = 0;
+        virtual int check(REQ *req, ARGS... args) UVCXX_NOEXCEPT = 0;
 
         static void raw_callback(REQ *req, ARGS... args) {
             auto data = (self *) (req->data);

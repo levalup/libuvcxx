@@ -19,22 +19,22 @@ namespace uv {
 
         using supper::supper;
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         size_t write_queue_size() const {
             return raw<raw_t>()->write_queue_size;
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::promise<> shutdown(const shutdown_t &req) {
             return ::uv::shutdown(req, *this);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::promise<> shutdown() {
             return ::uv::shutdown(*this);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::callback<int> listen(int backlog) {
             auto data = get_data<data_t>();
             if (data->work_mode == WorkMode::Read) {
@@ -55,14 +55,14 @@ namespace uv {
             return err;
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::callback<size_t, uv_buf_t *> alloc() {
             // this alloc is not under Running state, so no `_detach_` applied.
             // memory alloc can not register multi-times callback
             return get_data<data_t>()->alloc_cb.callback().call(nullptr);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::callback<ssize_t, const uv_buf_t *> read_start() {
             auto data = get_data<data_t>();
             if (data->work_mode == WorkMode::Listen) {
@@ -92,53 +92,53 @@ namespace uv {
             return status;
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::promise<> write(const write_t &req, const uv_buf_t bufs[], unsigned int nbufs) {
             return ::uv::write(req, *this, bufs, nbufs);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::promise<> write(const write_t &req, uvcxx::buffer buf) {
             return write(req, &buf.buf, 1);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::promise<> write(const write_t &req, std::initializer_list<uvcxx::buffer> bufs) {
             std::vector<uv_buf_t> buffers;
             for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
             return write(req, buffers.data(), (unsigned int) buffers.size());
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::promise<> write(const uv_buf_t bufs[], unsigned int nbufs) {
             return ::uv::write(*this, bufs, nbufs);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::promise<> write(uvcxx::buffer buf) {
             return write(&buf.buf, 1);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::promise<> write(std::initializer_list<uvcxx::buffer> bufs) {
             std::vector<uv_buf_t> buffers;
             for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
             return write(buffers.data(), (unsigned int) buffers.size());
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::promise<> write2(
                 const write_t &req, const uv_buf_t bufs[], unsigned int nbufs, const stream_t &send_handle) {
             return ::uv::write2(req, *this, bufs, nbufs, send_handle);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::promise<> write2(const write_t &req,
                                 uvcxx::mutable_buffer buf, const stream_t &send_handle) {
             return write2(req, &buf.buf, 1, send_handle);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::promise<> write2(const write_t &req,
                                 std::initializer_list<uvcxx::mutable_buffer> bufs, const stream_t &send_handle) {
             std::vector<uv_buf_t> buffers;
@@ -146,17 +146,17 @@ namespace uv {
             return write2(req, buffers.data(), (unsigned int) buffers.size(), send_handle);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::promise<> write2(const uv_buf_t bufs[], unsigned int nbufs, const stream_t &send_handle) {
             return ::uv::write2(*this, bufs, nbufs, send_handle);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::promise<> write2(uvcxx::mutable_buffer buf, const stream_t &send_handle) {
             return write2(&buf.buf, 1, send_handle);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::promise<> write2(std::initializer_list<uvcxx::mutable_buffer> bufs, const stream_t &send_handle) {
             std::vector<uv_buf_t> buffers;
             for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
@@ -195,12 +195,12 @@ namespace uv {
 
 #endif
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         bool is_readable() const {
             return uv_is_readable(*this);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         bool is_writable() const {
             return uv_is_writable(*this);
         }
@@ -211,7 +211,7 @@ namespace uv {
 
 #if UVCXX_SATISFY_VERSION(1, 19, 0)
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         size_t get_write_queue_size() const {
             return uv_stream_get_write_queue_size(*this);
         }
@@ -282,7 +282,7 @@ namespace uv {
 
         virtual stream_t accept() = 0;
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::callback<stream_t> listen_accept(int backlog) {
             this->listen(backlog).call(nullptr).call([this](int status) {
                 auto data = this->data<data_t>();
@@ -312,22 +312,22 @@ namespace uv {
         };
     };
 
-    [[nodiscard]]
+    UVCXX_NODISCARD
     inline stream_t connect_t::handle() const {
         return stream_t::borrow(raw<raw_t>()->handle);
     }
 
-    [[nodiscard]]
+    UVCXX_NODISCARD
     inline stream_t shutdown_t::handle() const {
         return stream_t::borrow(raw<raw_t>()->handle);
     }
 
-    [[nodiscard]]
+    UVCXX_NODISCARD
     inline stream_t write_t::handle() const {
         return stream_t::borrow(raw<raw_t>()->handle);
     }
 
-    [[nodiscard]]
+    UVCXX_NODISCARD
     inline stream_t write_t::send_handle() const {
         return stream_t::borrow(raw<raw_t>()->send_handle);
     }

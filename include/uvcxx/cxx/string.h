@@ -8,6 +8,7 @@
 
 #include <string>
 #include <cstring>
+#include <ostream>
 
 namespace uvcxx {
     class string {
@@ -22,6 +23,10 @@ namespace uvcxx {
 
         operator const char *() const { return c_str; }
     };
+
+    inline std::ostream &operator<<(std::ostream &out, const string &s) {
+        return out << s.c_str;
+    }
 
     class string_view {
     public:
@@ -43,14 +48,29 @@ namespace uvcxx {
         template<int Size>
         string_view(const char (&str)[Size])
                 : data(str), size(strnlen(str, Size)) {}
-
-#if __cplusplus >= 201703L || _MSC_VER >= 1910
+// std::string_view
+#if __cpp_lib_string_view >= 201606L || __cplusplus >= 201703L || _MSC_VER >= 1910
 
         string_view(const std::string_view &str)
                 : data(str.data()), size(str.size()) {}
 
 #endif
     };
+
+// std::string_view
+#if __cpp_lib_string_view >= 201606L || __cplusplus >= 201703L || _MSC_VER >= 1910
+
+    inline std::ostream &operator<<(std::ostream &out, const string_view &s) {
+        return out << std::string_view(s.data, s.size);
+    }
+
+#else
+
+    inline std::ostream &operator<<(std::ostream &out, const string_view &s) {
+        return out << std::string(s.data, s.size);
+    }
+
+#endif
 }
 
 #endif //LIBUVCXX_CXX_STRING_H

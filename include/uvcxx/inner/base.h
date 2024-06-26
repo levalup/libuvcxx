@@ -9,6 +9,8 @@
 #include <memory>
 #include <type_traits>
 
+#include "../utils/standard.h"
+
 namespace uvcxx {
     /**
      * The base class of all `libuvcxx` wrapper types.
@@ -27,9 +29,9 @@ namespace uvcxx {
 
         shared_raw_base_t &operator=(const shared_raw_base_t &) = default;
 
-        shared_raw_base_t(shared_raw_base_t &&that) noexcept = default;
+        shared_raw_base_t(shared_raw_base_t &&that) UVCXX_NOEXCEPT = default;
 
-        shared_raw_base_t &operator=(shared_raw_base_t &&that) noexcept = default;
+        shared_raw_base_t &operator=(shared_raw_base_t &&that) UVCXX_NOEXCEPT = default;
 
         shared_raw_base_t(std::nullptr_t) {}
 
@@ -70,8 +72,9 @@ namespace uvcxx {
                 : m_raw(std::shared_ptr<raw_t>(borrow.raw, [](raw_t *) {})) {}
 
         template<typename K>
-        static std::shared_ptr<raw_t> cast_raw(const std::shared_ptr<K> &p) {
-            return std::reinterpret_pointer_cast<raw_t>(p);
+        static std::shared_ptr<raw_t> cast_raw(const std::shared_ptr<K> &r) {
+            auto p = reinterpret_cast<typename std::shared_ptr<raw_t>::element_type*>(r.get());
+            return std::shared_ptr<raw_t>{r, p};
         }
 
     private:
@@ -88,11 +91,11 @@ namespace uvcxx {
 
         pointer_raw_base_t &operator=(const pointer_raw_base_t &) = delete;
 
-        pointer_raw_base_t(pointer_raw_base_t &&that) noexcept {
+        pointer_raw_base_t(pointer_raw_base_t &&that) UVCXX_NOEXCEPT {
             this->operator=(std::move(that));
         }
 
-        pointer_raw_base_t &operator=(pointer_raw_base_t &&that) noexcept {
+        pointer_raw_base_t &operator=(pointer_raw_base_t &&that) UVCXX_NOEXCEPT {
             std::swap(m_raw, that.m_raw);
             return *this;
         };
@@ -138,11 +141,11 @@ namespace uvcxx {
 
         inherit_raw_base_t &operator=(const inherit_raw_base_t &) = default;
 
-        inherit_raw_base_t(inherit_raw_base_t &&that) noexcept {
+        inherit_raw_base_t(inherit_raw_base_t &&that) UVCXX_NOEXCEPT {
             this->operator=(std::move(that));
         }
 
-        inherit_raw_base_t &operator=(inherit_raw_base_t &&that) noexcept {
+        inherit_raw_base_t &operator=(inherit_raw_base_t &&that) UVCXX_NOEXCEPT {
             std::swap(*((T *) this), *((T *) &that));
             return *this;
         };
@@ -177,11 +180,11 @@ namespace uvcxx {
 
         extend_raw_base_t &operator=(const extend_raw_base_t &) = default;
 
-        extend_raw_base_t(extend_raw_base_t &&that) noexcept {
+        extend_raw_base_t(extend_raw_base_t &&that) UVCXX_NOEXCEPT {
             this->operator=(std::move(that));
         }
 
-        extend_raw_base_t &operator=(extend_raw_base_t &&that) noexcept {
+        extend_raw_base_t &operator=(extend_raw_base_t &&that) UVCXX_NOEXCEPT {
             std::swap(m_raw, that.m_raw);
             return *this;
         };

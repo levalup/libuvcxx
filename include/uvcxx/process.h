@@ -9,6 +9,7 @@
 #include <cstring>
 #include <sstream>
 
+#include "cxx/string.h"
 #include "handle.h"
 
 namespace uv {
@@ -20,6 +21,10 @@ namespace uv {
         process_option_t(const process_option_t &) = delete;
 
         process_option_t &operator=(const process_option_t &) = delete;
+
+        process_option_t(process_option_t &&) = default;
+
+        process_option_t &operator=(process_option_t &&) = default;
 
         explicit process_option_t(const char *file) {
             std::memset(raw(), 0, sizeof(raw_t));
@@ -126,9 +131,9 @@ namespace uv {
             return *this;
         }
 
-        template<typename V, typename std::enable_if_t<std::is_convertible_v<std::ostream &,
-                decltype(std::declval<std::ostream &>() << std::declval<const V &>())>, int> = 0>
-        self &env(const std::string_view &key, const V &value) {
+        template<typename V, typename std::enable_if<std::is_convertible<std::ostream &,
+                decltype(std::declval<std::ostream &>() << std::declval<const V &>())>::value, int>::type = 0>
+        self &env(uvcxx::string_view key, const V &value) {
             std::ostringstream oss;
             oss << key << "=" << value;
             m_env.emplace_back(oss.str());
@@ -140,7 +145,7 @@ namespace uv {
             return this->env((char **) m_c_env.data());
         }
 
-        self &env(const std::string_view &key, const std::string_view &value) {
+        self &env(uvcxx::string_view key, uvcxx::string_view value) {
             std::ostringstream oss;
             oss << key << "=" << value;
             m_env.emplace_back(oss.str());
@@ -256,7 +261,7 @@ namespace uv {
             _attach_data_();
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         int pid() const {
             return raw<raw_t>()->pid;
         }
@@ -282,7 +287,7 @@ namespace uv {
             return status;
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uv_pid_t get_pid() const {
             // cover uv_process_get_pid
             return (uv_pid_t) raw<raw_t>()->pid;

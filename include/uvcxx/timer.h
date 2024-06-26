@@ -22,7 +22,7 @@ namespace uv {
             _attach_close_();
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::callback<> start(uint64_t timeout, uint64_t repeat) {
             auto err = uv_timer_start(*this, raw_callback, timeout, repeat);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
@@ -47,14 +47,14 @@ namespace uv {
             uv_timer_set_repeat(*this, repeat);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uint64_t get_repeat() const {
             return uv_timer_get_repeat(*this);
         }
 
 #if UVCXX_SATISFY_VERSION(1, 40, 0)
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uint64_t get_due_in() const {
             return uv_timer_get_due_in(*this);
         }

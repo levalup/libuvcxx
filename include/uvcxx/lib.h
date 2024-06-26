@@ -27,9 +27,9 @@ namespace uv {
 
         lib_t &operator=(const lib_t &) = delete;
 
-        lib_t(lib_t &&that) noexcept = default;
+        lib_t(lib_t &&that) UVCXX_NOEXCEPT = default;
 
-        lib_t &operator=(lib_t &&that) noexcept = default;
+        lib_t &operator=(lib_t &&that) UVCXX_NOEXCEPT = default;
 
         lib_t(std::nullptr_t) {}
 
@@ -65,7 +65,7 @@ namespace uv {
             }
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         const char *error() const {
             if (!m_opened) UVCXX_THROW_OR_RETURN(UV_EPERM, "", "cannot operate on a closed lib");
             return uv_dlerror(*this);
@@ -79,8 +79,8 @@ namespace uv {
             return err;
         }
 
-        template<typename FUNC, typename std::enable_if_t<std::is_function_v<FUNC>, int> = 0>
-        [[nodiscard]]
+        template<typename FUNC, typename std::enable_if<std::is_function<FUNC>::value, int>::type = 0>
+        UVCXX_NODISCARD
         FUNC *sym(uvcxx::string name) const {
             FUNC *func;
             auto err = sym(name, &func);

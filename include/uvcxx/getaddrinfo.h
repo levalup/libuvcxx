@@ -17,12 +17,12 @@ namespace uv {
         using self = getaddrinfo_t;
         using supper = inherit_req_t<uv_getaddrinfo_t, req_t>;
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         loop_t loop() const {
             return loop_t::borrow(raw<raw_t>()->loop);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         struct addrinfo *addrinfo() const {
             return raw<raw_t>()->addrinfo;
         }
@@ -44,15 +44,15 @@ namespace uv {
             }) {
             }
 
-            typename promise_cast_t::supper &proxy() noexcept final {
+            typename promise_cast_t::supper &proxy() UVCXX_NOEXCEPT final {
                 return promise;
             }
 
-            void finalize(raw_t *, int, ::addrinfo *ai) noexcept final {
+            void finalize(raw_t *, int, ::addrinfo *ai) UVCXX_NOEXCEPT final {
                 uv_freeaddrinfo(ai);
             }
 
-            int check(raw_t *, int status, ::addrinfo *) noexcept final {
+            int check(raw_t *, int status, ::addrinfo *) UVCXX_NOEXCEPT final {
                 return status;
             }
         };
@@ -70,12 +70,12 @@ namespace uv {
 
 #endif
 
-    [[nodiscard]]
+    UVCXX_NODISCARD
     inline uvcxx::promise<addrinfo *> getaddrinfo(
             const loop_t &loop, const getaddrinfo_t &req,
             uvcxx::string node, uvcxx::string service, const addrinfo *hints = nullptr) {
         auto *data = new getaddrinfo_t::callback_t(req);
-        uvcxx::defer_delete delete_data(data);
+        uvcxx::defer_delete<getaddrinfo_t::data_t> delete_data(data);
 
         auto err = uv_getaddrinfo(loop, req, getaddrinfo_t::callback_t::raw_callback, node, service, hints);
         if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
@@ -85,20 +85,20 @@ namespace uv {
         return data->promise.promise();
     }
 
-    [[nodiscard]]
+    UVCXX_NODISCARD
     inline uvcxx::promise<addrinfo *> getaddrinfo(
             uvcxx::string node, uvcxx::string service, const addrinfo *hints = nullptr) {
         return getaddrinfo(default_loop(), {}, node, service, hints);
     }
 
-    [[nodiscard]]
+    UVCXX_NODISCARD
     inline uvcxx::promise<addrinfo *> getaddrinfo(
             const getaddrinfo_t &req,
             uvcxx::string node, uvcxx::string service, const addrinfo *hints = nullptr) {
         return getaddrinfo(default_loop(), req, node, service, hints);
     }
 
-    [[nodiscard]]
+    UVCXX_NODISCARD
     inline uvcxx::promise<addrinfo *> getaddrinfo(
             const loop_t &loop,
             uvcxx::string node, uvcxx::string service, const addrinfo *hints = nullptr) {

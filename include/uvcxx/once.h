@@ -22,9 +22,9 @@ namespace uv {
 
         once_t &operator=(const once_t &) = delete;
 
-        once_t(once_t &&that) noexcept = delete;
+        once_t(once_t &&that) UVCXX_NOEXCEPT = delete;
 
-        once_t &operator=(once_t &&that) noexcept = delete;
+        once_t &operator=(once_t &&that) UVCXX_NOEXCEPT = delete;
 
         once_t() : supper(UV_ONCE_INIT) {}
 

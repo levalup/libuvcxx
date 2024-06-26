@@ -21,9 +21,9 @@ namespace uv {
 
         key_t &operator=(const key_t &) = delete;
 
-        key_t(key_t &&that) noexcept = default;
+        key_t(key_t &&that) UVCXX_NOEXCEPT = default;
 
-        key_t &operator=(key_t &&that) noexcept = default;
+        key_t &operator=(key_t &&that) UVCXX_NOEXCEPT = default;
 
         key_t() {
             auto err = uv_key_create(*this);
@@ -38,19 +38,19 @@ namespace uv {
             uv_key_set(*this, value);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         void *get() const {
             return uv_key_get(*this);
         }
 
         template<typename T>
-        [[nodiscard]]
+        UVCXX_NODISCARD
         T *get() const {
             return (T *) uv_key_get(*this);
         }
 
         template<typename T>
-        [[nodiscard]]
+        UVCXX_NODISCARD
         T &ref() const {
             return *((T *) uv_key_get(*this));
         }

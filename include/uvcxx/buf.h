@@ -38,7 +38,7 @@ namespace uv {
                 this->len = 0;
             }
 
-            template<class Len, typename = typename std::enable_if_t<std::is_integral_v<Len>>>
+            template<class Len, typename std::enable_if<std::is_integral<Len>::value, int>::type = 0>
             explicit buf_t(Len size) : self() {
                 auto length = len_t(size);
                 this->base = (base_t) std::malloc(size_t(length));
@@ -59,18 +59,18 @@ namespace uv {
                 this->capacity = 0;
             }
 
-            template<class Len, typename = typename std::enable_if_t<std::is_integral_v<Len>>>
+            template<class Len, typename std::enable_if<std::is_integral<Len>::value, int>::type = 0>
             void malloc(Len size) {
                 this->realloc(size);
             }
 
-            template<class Len, typename = typename std::enable_if_t<std::is_integral_v<Len>>>
+            template<class Len, typename std::enable_if<std::is_integral<Len>::value, int>::type = 0>
             void realloc(Len size) {
                 this->reserve(size);
                 this->len = len_t(size);
             }
 
-            template<class Len, typename = typename std::enable_if_t<std::is_integral_v<Len>>>
+            template<class Len, typename std::enable_if<std::is_integral<Len>::value, int>::type = 0>
             void reserve(Len size) {
                 auto length = len_t(size);
                 if (length > this->capacity) {
@@ -100,41 +100,41 @@ namespace uv {
 
         buf_t() : supper(std::make_shared<inner::buf_t>()) {}
 
-        template<class Size, typename = typename std::enable_if_t<std::is_integral_v<Size>>>
+        template<class Size, typename std::enable_if<std::is_integral<Size>::value, int>::type = 0>
         explicit buf_t(Size size)
                 : supper(std::make_shared<inner::buf_t>(size)) {}
 
         void free() { raw()->free(); }
 
-        template<class Size, typename = typename std::enable_if_t<std::is_integral_v<Size>>>
+        template<class Size, typename std::enable_if<std::is_integral<Size>::value, int>::type = 0>
         void malloc(Size size) { raw()->malloc(size); }
 
-        template<class Size, typename = typename std::enable_if_t<std::is_integral_v<Size>>>
+        template<class Size, typename std::enable_if<std::is_integral<Size>::value, int>::type = 0>
         void realloc(Size size) { raw()->realloc(size); }
 
-        template<class Size, typename = typename std::enable_if_t<std::is_integral_v<Size>>>
+        template<class Size, typename std::enable_if<std::is_integral<Size>::value, int>::type = 0>
         void reserve(Size size) { raw()->reserve(size); }
 
         char *base() { return raw()->base; }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         const char *base() const { return raw()->base; }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         size_t len() const { return size_t(raw()->len); }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         size_t capacity() const { return size_t(raw()->capacity); }
 
         char *data() { return raw()->base; }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         const char *data() const { return raw()->base; }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         size_t size() const { return size_t(raw()->len); }
 
-        template<class Size, typename = typename std::enable_if_t<std::is_integral_v<Size>>>
+        template<class Size, typename std::enable_if<std::is_integral<Size>::value, int>::type = 0>
         void resize(Size size) { raw()->realloc(size); }
 
         void memset(int v) {
@@ -142,7 +142,7 @@ namespace uv {
         }
     };
 
-    template<typename I, typename std::enable_if<std::is_integral<I>::value, int>::type = 0>
+    template<class I, typename std::enable_if<std::is_integral<I>::value, int>::type = 0>
     inline uv_buf_t buf_init(const void *base, I len) {
         // cover uv_buf_init
         uv_buf_t buf{};

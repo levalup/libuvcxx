@@ -22,7 +22,7 @@ namespace uv {
             _attach_close_();
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::callback<> start() {
             auto err = uv_check_start(*this, raw_callback);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);

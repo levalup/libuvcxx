@@ -92,8 +92,8 @@ namespace uvcxx {
         template<size_t Size>
         buffer(const char (&arr)[Size])
                 : buf(init(arr, strnlen(arr, Size))) {}
-
-#if __cplusplus >= 201703L || _MSC_VER >= 1910
+// std::string_view
+#if __cpp_lib_string_view >= 201606L || __cplusplus >= 201703L || _MSC_VER >= 1910
 
         buffer(std::string_view &str)
                 : buf(init(str.data(), str.size())) {}

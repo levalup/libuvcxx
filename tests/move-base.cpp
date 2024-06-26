@@ -68,10 +68,10 @@ public:
 
     using supper::supper;
 
-    auto &v() { return raw()->v; }
+    int &v() { return raw()->v; }
 
-    [[nodiscard]]
-    const auto &v() const { return raw()->v; }
+    UVCXX_NODISCARD
+    const int &v() const { return raw()->v; }
 };
 
 int main() {

@@ -29,11 +29,10 @@ Following is the output of [libuv_api_coverage.py](../scripts/libuv_api_coverage
 [INFO] Section "Thread pool work scheduling" ... [OK]
 [INFO] Section "DNS utility functions" ... [OK]
 [INFO] Section "Shared library handling" ... [OK]
-[INFO] Section "Threading and synchronization utilities" ... [97%]
-[WARN] Miss:   - uv_thread_self
+[INFO] Section "Threading and synchronization utilities" ... [OK]
 [INFO] Section "Miscellaneous utilities" ... [OK]
 [INFO] Section "Metrics operations" ... [OK]
-[INFO] Total API coverage [99%]
+[INFO] Total API coverage [100%] - [306/306]
 ```
 
 ## API version limit

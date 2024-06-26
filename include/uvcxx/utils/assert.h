@@ -10,7 +10,11 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
-#include <string_view>
+#include <string>
+
+#include "../cxx/string.h"
+#include "./pencil_box.h"
+#include "./standard.h"
 
 namespace uvcxx {
     class assert_failed : public std::logic_error {
@@ -19,55 +23,57 @@ namespace uvcxx {
         using supper = std::logic_error;
 
 
-        explicit assert_failed(const std::string_view &cond)
+        explicit assert_failed(const uvcxx::string_view &cond)
                 : supper(Message(cond)) {}
 
         template<typename... Args>
-        assert_failed(const std::string_view &cond,
-                      const std::string_view &file,
+        assert_failed(uvcxx::string_view cond,
+                      const std::string &file,
                       int line,
                       const Args &...args)
                 : supper(Message(cond, file, line, args...)) {}
 
     public:
-        static std::string Message(const std::string_view &cond) {
+        static std::string Message(const uvcxx::string_view &cond) {
             std::ostringstream oss;
             oss << "assert failed: (" << cond << ")";
             return oss.str();
         }
 
         template<typename... Args>
-        static std::string Message(const std::string_view &cond,
-                                   const std::string_view &file,
+        static std::string Message(uvcxx::string_view cond,
+                                   const std::string &file,
                                    int line,
                                    const Args &...args) {
-            std::string_view filename;
+            std::string filename;
             {
                 auto sep = file.rfind('/');
-                if (sep != std::string_view::npos) {
-                    filename = file.substr(sep + 1);
-                } else if (sep = file.rfind('\\'); sep != std::string_view::npos) {
+                if (sep != std::string::npos) {
                     filename = file.substr(sep + 1);
                 } else {
-                    filename = file;
+                    sep = file.rfind('\\');
+                    if (sep != std::string::npos) {
+                        filename = file.substr(sep + 1);
+                    } else {
+                        filename = file;
+                    }
                 }
             }
 
             std::ostringstream oss;
             oss << "assert failed: (" << cond << ") at " << filename << ":" << line;
-            if constexpr (sizeof...(Args) > 0) oss << "; ";
-            (void) (oss << ... << args);
+            if UVCXX_IF_CONSTEXPR (sizeof...(Args) > 0) {
+                catout(oss, "; ", args...);
+            }
             return oss.str();
         }
     };
 
-    template<typename T, typename ...Args, typename std::enable_if_t<
-            std::is_base_of_v<std::logic_error, T>, int> = 0>
+    template<typename T, typename ...Args, typename std::enable_if<
+            std::is_base_of<std::logic_error, T>::value, int>::type = 0>
     [[noreturn]]
     inline void throws(const Args &...args) {
-        std::ostringstream oss;
-        (oss << ... << args);
-        throw T(oss.str());
+        throw T(catstr(args...));
     }
 }
 

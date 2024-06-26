@@ -51,7 +51,7 @@ namespace uv {
             return init_socket(default_loop(), socket);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::callback<int, int> start(int events) {
             auto data = get_data<data_t>();
 

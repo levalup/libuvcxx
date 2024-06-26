@@ -15,7 +15,7 @@ namespace uv {
         using self = work_t;
         using supper = inherit_req_t<uv_work_t, req_t>;
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         loop_t loop() const {
             return loop_t::borrow(raw<raw_t>()->loop);
         }
@@ -35,20 +35,20 @@ namespace uv {
                     : supper(req), promise([](uv_work_t *, int) { return std::make_tuple(); }) {
             }
 
-            typename promise_cast_t::supper &proxy() noexcept final { return promise; }
+            typename promise_cast_t::supper &proxy() UVCXX_NOEXCEPT final { return promise; }
 
-            void finalize(uv_work_t *, int) noexcept final {}
+            void finalize(uv_work_t *, int) UVCXX_NOEXCEPT final {}
 
-            int check(uv_work_t *, int status) noexcept final { return status; }
+            int check(uv_work_t *, int status) UVCXX_NOEXCEPT final { return status; }
 
             static void raw_work_callback(uv_work_t *) {}
         };
     };
 
-    [[nodiscard]]
+    UVCXX_NODISCARD
     inline uvcxx::promise<> queue_work(const loop_t &loop, const work_t &req) {
         auto data = new work_t::data_t(req);
-        uvcxx::defer_delete delete_data(data);
+        uvcxx::defer_delete<work_t::data_t> delete_data(data);
 
         auto err = uv_queue_work(
                 loop, req,
@@ -61,17 +61,17 @@ namespace uv {
         return data->promise.promise();
     }
 
-    [[nodiscard]]
+    UVCXX_NODISCARD
     inline uvcxx::promise<> queue_work() {
         return queue_work(default_loop(), {});
     }
 
-    [[nodiscard]]
+    UVCXX_NODISCARD
     inline uvcxx::promise<> queue_work(const loop_t &loop) {
         return queue_work(loop, {});
     }
 
-    [[nodiscard]]
+    UVCXX_NODISCARD
     inline uvcxx::promise<> queue_work(const work_t &req) {
         return queue_work(default_loop(), req);
     }

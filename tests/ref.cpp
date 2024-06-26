@@ -15,7 +15,7 @@ int main() {
     int after = 0;
     int idle_times = 0;
     {
-        uvcxx::ref idle = uv::idle_t(loop);
+        uvcxx::ref<uv::idle_t> idle = uv::idle_t(loop);
         idle->start().call([&]() {
             ++idle_times;
             throw uvcxx::close_handle();

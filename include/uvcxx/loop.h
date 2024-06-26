@@ -32,7 +32,7 @@ namespace uv {
 
         loop_t() : self(std::make_shared<loop_with_data_t>()) {}
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         void *data() const {
             return raw()->data;
         }
@@ -73,7 +73,7 @@ namespace uv {
             return err;
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         bool alive() const {
             return uv_loop_alive(*this);
         }
@@ -82,22 +82,22 @@ namespace uv {
             uv_stop(*this);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         static size_t size() {
             return uv_loop_size();
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         int backend_fd() const {
             return uv_backend_fd(*this);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         int backend_timeout() const {
             return uv_backend_timeout(*this);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uint64_t now() const {
             return uv_now(*this);
         }
@@ -154,20 +154,20 @@ namespace uv {
 
 #endif
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         void *get_data() const {
             // cover uv_loop_get_data
             return raw()->data;
         }
 
         template<typename T>
-        [[nodiscard]]
+        UVCXX_NODISCARD
         T *data() const {
             return (T *) raw()->data;
         }
 
         template<typename T>
-        [[nodiscard]]
+        UVCXX_NODISCARD
         T *get_data() const {
             return (T *) raw()->data;
         }

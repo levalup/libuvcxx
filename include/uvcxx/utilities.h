@@ -117,16 +117,16 @@ namespace uv {
             }
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         bool empty() const { return !m_count; }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         int size() const { return m_count; }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         const raw_t *begin() const { return m_infos; }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         const raw_t *end() const { return m_infos + m_count; }
 
     private:
@@ -134,7 +134,7 @@ namespace uv {
         int m_count = 0;
     };
 
-    [[nodiscard]]
+    UVCXX_NODISCARD
     inline cpu_infos_t cpu_info() {
         return {};
     }
@@ -177,16 +177,16 @@ namespace uv {
             }
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         bool empty() const { return !m_count; }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         int size() const { return m_count; }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         const raw_t *begin() const { return m_addresses; }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         const raw_t *end() const { return m_addresses + m_count; }
 
     private:
@@ -194,7 +194,7 @@ namespace uv {
         int m_count = 0;
     };
 
-    [[nodiscard]]
+    UVCXX_NODISCARD
     inline interface_addresses_t interface_addresses() {
         return {};
     }

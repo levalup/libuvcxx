@@ -16,7 +16,7 @@ namespace uv {
         using self = shutdown_t;
         using supper = inherit_req_t<uv_shutdown_t, req_t>;
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         stream_t handle() const;
 
     public:
@@ -31,18 +31,18 @@ namespace uv {
                     : supper(req), promise([](raw_t *, int) { return std::make_tuple(); }) {
             }
 
-            uvcxx::promise_proxy<raw_t *, int> &proxy() noexcept override { return promise; }
+            uvcxx::promise_proxy<raw_t *, int> &proxy() UVCXX_NOEXCEPT override { return promise; }
 
-            void finalize(raw_t *, int) noexcept override {};
+            void finalize(raw_t *, int) UVCXX_NOEXCEPT override {};
 
-            int check(raw_t *, int status) noexcept override { return status; }
+            int check(raw_t *, int status) UVCXX_NOEXCEPT override { return status; }
         };
     };
 
-    [[nodiscard]]
+    UVCXX_NODISCARD
     inline uvcxx::promise<> shutdown(const shutdown_t &req, uv_stream_t *handle) {
         auto data = new shutdown_t::data_t(req);
-        uvcxx::defer_delete delete_data(data);
+        uvcxx::defer_delete<shutdown_t::data_t> delete_data(data);
 
         auto err = uv_shutdown(req, handle, shutdown_t::data_t::raw_callback);
         if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
@@ -52,7 +52,7 @@ namespace uv {
         return data->promise.promise();
     }
 
-    [[nodiscard]]
+    UVCXX_NODISCARD
     inline uvcxx::promise<> shutdown(uv_stream_t *handle) {
         return shutdown({}, handle);
     }

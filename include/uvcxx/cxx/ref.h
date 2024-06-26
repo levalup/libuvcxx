@@ -26,9 +26,9 @@ namespace uvcxx {
     class ref;
 
     template<typename Handle>
-    class ref<Handle, typename std::enable_if_t<
-            std::is_copy_constructible_v<Handle> &&
-            std::is_base_of_v<uv::handle_t, Handle>>> {
+    class ref<Handle, typename std::enable_if<
+            std::is_copy_constructible<Handle>::value &&
+            std::is_base_of<uv::handle_t, Handle>::value>::type> {
     public:
         using self = ref;
 
@@ -83,9 +83,9 @@ namespace uvcxx {
     };
 
     template<typename Handle>
-    class ref<Handle, typename std::enable_if_t<
-            !std::is_copy_constructible_v<Handle> &&
-            std::is_base_of_v<uv::handle_t, Handle>>> {
+    class ref<Handle, typename std::enable_if<
+            !std::is_copy_constructible<Handle>::value &&
+            std::is_base_of<uv::handle_t, Handle>::value>::type> {
     public:
         using self = ref;
 
@@ -134,12 +134,14 @@ namespace uvcxx {
             });
         }
     };
-
+// Class template argument deduction
+#if __cpp_deduction_guides >= 201703L || __cplusplus >= 201703L || _MSC_VER >= 1914
     template<typename Handle>
     ref(Handle handle) -> ref<Handle>;
 
     template<typename Handle>
     ref(const std::shared_ptr<Handle> &handle) -> ref<Handle>;
+#endif
 }
 
 #endif //LIBUVCXX_CXX_REF_H

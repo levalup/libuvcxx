@@ -39,12 +39,12 @@ namespace uv {
 
 #endif
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         size_t send_queue_size() const {
             return raw<raw_t>()->send_queue_size;
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         size_t send_queue_count() const {
             return raw<raw_t>()->send_queue_count;
         }
@@ -153,34 +153,34 @@ namespace uv {
             return err;
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::promise<> send(const udp_send_t &req, const uv_buf_t bufs[], unsigned int nbufs, const sockaddr *addr) {
             return uv::udp_send(req, *this, bufs, nbufs, addr);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::promise<> send(const udp_send_t &req, uvcxx::buffer buf, const sockaddr *addr) {
             return send(req, &buf.buf, 1, addr);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::promise<> send(const udp_send_t &req, std::initializer_list<uvcxx::buffer> bufs, const sockaddr *addr) {
             std::vector<uv_buf_t> buffers;
             for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
             return send(req, buffers.data(), (unsigned int) buffers.size(), addr);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::promise<> send(const uv_buf_t bufs[], unsigned int nbufs, const sockaddr *addr) {
             return uv::udp_send(*this, bufs, nbufs, addr);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::promise<> send(uvcxx::buffer buf, const sockaddr *addr) {
             return send(&buf.buf, 1, addr);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::promise<> send(std::initializer_list<uvcxx::buffer> bufs, const sockaddr *addr) {
             std::vector<uv_buf_t> buffers;
             for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
@@ -201,14 +201,14 @@ namespace uv {
             return try_send(buffers.data(), (unsigned int) buffers.size(), addr);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::callback<size_t, uv_buf_t *> alloc() {
             // this alloc is not under Running state, so no `_detach_` applied.
             // memory alloc can not register multi-times callback
             return get_data<data_t>()->alloc_cb.callback().call(nullptr);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::callback<ssize_t, const uv_buf_t *, const sockaddr *, unsigned>
         recv_start() {
             auto err = uv_udp_recv_start(*this, raw_alloc_callback, raw_recv_callback);
@@ -220,7 +220,7 @@ namespace uv {
 
 #if UVCXX_SATISFY_VERSION(1, 39, 0)
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         bool using_recvmmsg() const {
             return uv_udp_using_recvmmsg(*this);
         }
@@ -236,12 +236,12 @@ namespace uv {
 
 #if UVCXX_SATISFY_VERSION(1, 19, 0)
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         size_t get_send_queue_size() const {
             return uv_udp_get_send_queue_size(*this);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         size_t get_send_queue_count() const {
             return uv_udp_get_send_queue_count(*this);
         }
@@ -283,7 +283,7 @@ namespace uv {
         };
     };
 
-    [[nodiscard]]
+    UVCXX_NODISCARD
     inline udp_t udp_send_t::handle() const {
         return udp_t::borrow(raw<raw_t>()->handle);
     }

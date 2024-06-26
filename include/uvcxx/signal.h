@@ -22,12 +22,12 @@ namespace uv {
             _attach_close_();
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         int signum() const {
             return raw<raw_t>()->signum;
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::callback<int> start(int signum) {
             auto err = uv_signal_start(*this, raw_callback, signum);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
@@ -37,15 +37,16 @@ namespace uv {
 
 #if UVCXX_SATISFY_VERSION(1, 12, 0)
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         uvcxx::callback<int> start_oneshot(int signum) {
             auto err = uv_signal_start_oneshot(*this, raw_callback, signum);
             if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
 
             _detach_();
 
+            auto attachment = *this;
             return get_data<data_t>()->start_cb.callback().finally(nullptr)
-                    .finally([attachment = *this]() mutable {
+                    .finally([attachment]() mutable {
                         finally_recycle_oneshot(attachment);
                     });
         }

@@ -19,7 +19,7 @@ int main() {
     v.then([]() {}).except([](const std::exception &) {}).finally([]() {});
 
     {
-        promise_emitter pm(a);
+        promise_emitter<int, int> pm(a);
         promise_cast<decltype(a), float> t(a, [](float a) {
             return std::make_tuple(std::floor(a), std::ceil(a));
         });

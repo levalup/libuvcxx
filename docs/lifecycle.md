@@ -62,7 +62,7 @@ stateDiagram-v2
 
 - **Hanging[*attached*]**: Request object initialized.
 - **Waiting[*attached*]**: Context data allocated. Request method applied, waiting callback in `loop` event.
-- **Dealing[*detached*]**: Previous context data is about to be released. The request callback is being processed.
+- **Dealing[*attached*]**: Previous context data is about to be released. The request callback is being processed.
 
 
 - **request**: New context data. Call request method, such as `fs::open`, `random` and `tcp::connect`.

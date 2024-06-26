@@ -63,7 +63,7 @@ namespace uvcxx {
             m_core->attach(std::move(attachment));
         }
 
-        auto _attach_count_() {
+        auto _attach_count_() -> decltype(std::declval<std::shared_ptr<attach_core_t>>().use_count()) {
             return m_core.use_count();
         }
 

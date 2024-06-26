@@ -11,11 +11,14 @@
 
 #include <uv.h>
 
+#include "../utils/standard.h"
+#include "../utils/pencil_box.h"
+
 namespace uvcxx {
-    class exception : public std::logic_error {
+    class exception : public std::runtime_error {
     public:
         using self = exception;
-        using supper = std::logic_error;
+        using supper = std::runtime_error;
 
         using supper::supper;
     };
@@ -32,57 +35,50 @@ namespace uvcxx {
         explicit errcode(int errcode, const Args &...args)
                 : supper(Message(errcode, args...)), m_errcode(errcode) {}
 
-        template<typename I, typename=typename std::enable_if_t<
-                !std::is_same_v<int, I> && std::is_convertible_v<int, I>>>
+        template<typename I, typename std::enable_if<
+                !std::is_same<int, I>::value && std::is_convertible<int, I>::value, int>::type = 0>
         explicit errcode(I errcode)
                 : self(int(errcode)) {}
 
-        template<typename I, typename ...Args, typename=typename std::enable_if_t<
-                !std::is_same_v<int, I> && std::is_convertible_v<int, I>>>
+        template<typename I, typename ...Args, typename std::enable_if<
+                !std::is_same<int, I>::value && std::is_convertible<int, I>::value, int>::type = 0>
         explicit errcode(I errcode, const Args &...args)
                 : self(int(errcode), args...) {}
 
         static std::string Message(int errcode) {
-            return Concat(uv_err_name(errcode), "(", errcode, "): ", uv_strerror(errcode));
+            return catstr(uv_err_name(errcode), "(", errcode, "): ", uv_strerror(errcode));
         }
 
         template<typename T, typename ...Args>
         static std::string Message(int errcode, const T &arg, const Args &...args) {
-            return Concat(uv_err_name(errcode), "(", errcode, "): ", uv_strerror(errcode), "; ", arg, args...);
+            return catstr(uv_err_name(errcode), "(", errcode, "): ", uv_strerror(errcode), "; ", arg, args...);
         }
 
-        [[nodiscard]]
+        UVCXX_NODISCARD
         int code() const { return m_errcode; }
 
         operator int() const { return m_errcode; }
 
-        template<typename I, typename=typename std::enable_if_t<std::is_convertible_v<int, I>>>
+        template<typename I, typename std::enable_if<std::is_convertible<int, I>::value, int>::type = 0>
         bool operator==(I v) { return m_errcode == int(v); }
 
-        template<typename I, typename=typename std::enable_if_t<std::is_convertible_v<int, I>>>
+        template<typename I, typename std::enable_if<std::is_convertible<int, I>::value, int>::type = 0>
         bool operator!=(I v) { return m_errcode != int(v); }
 
-        template<typename I, typename=typename std::enable_if_t<std::is_convertible_v<int, I>>>
+        template<typename I, typename std::enable_if<std::is_convertible<int, I>::value, int>::type = 0>
         bool operator<=(I v) { return m_errcode <= int(v); }
 
-        template<typename I, typename=typename std::enable_if_t<std::is_convertible_v<int, I>>>
+        template<typename I, typename std::enable_if<std::is_convertible<int, I>::value, int>::type = 0>
         bool operator>=(I v) { return m_errcode >= int(v); }
 
-        template<typename I, typename=typename std::enable_if_t<std::is_convertible_v<int, I>>>
+        template<typename I, typename std::enable_if<std::is_convertible<int, I>::value, int>::type = 0>
         bool operator<(I v) { return m_errcode < int(v); }
 
-        template<typename I, typename=typename std::enable_if_t<std::is_convertible_v<int, I>>>
+        template<typename I, typename std::enable_if<std::is_convertible<int, I>::value, int>::type = 0>
         bool operator>(I v) { return m_errcode > int(v); }
 
     private:
         int m_errcode = 0;
-
-        template<typename ...Args>
-        static std::string Concat(const Args &...args) {
-            std::ostringstream oss;
-            (oss << ... << args);
-            return oss.str();
-        }
     };
 }
 

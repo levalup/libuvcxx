@@ -4,7 +4,7 @@
     LICENSE)
 [![libuv](https://img.shields.io/badge/libuv-v1.48.0-green?logo=libuv&logoColor=green)](
     https://github.com/libuv/libuv)
-[![C++](https://img.shields.io/badge/C++-17-%23512BD4.svg?logo=C%2B%2B&logoColor=%23512BD4)](
+[![C++](https://img.shields.io/badge/C++-11-%23512BD4.svg?logo=C%2B%2B&logoColor=%23512BD4)](
     https://en.cppreference.com/w/cpp/17)
 [![CMake](https://img.shields.io/badge/CMake-v3.9-%23064F8C?logo=cmake&logoColor=%23064F8C)](
     https://cmake.org)
@@ -47,33 +47,18 @@ See [lifecycle.md](docs/lifecycle.md) for more details.
 ## 2. Compatibility
 
 `libuvcxx` can be compatible with libuv: `>= 1.0.0, <= 1.48.0`.
-
-More version compatibility will be specified here after testing.
+Provided by [test_libuv.sh](scripts/test_libuv.sh).
 
 > Notice: As the development proceeds, compatibility may change with new features.
 
-`libuvcxx` covers approximately `[99%]` of the `libuv` APIs.
+`libuvcxx` covers `[100%]` all `306` APIs described in the [libuv doc](https://docs.libuv.org/en/v1.x/).
+Provided by [libuv_api_coverage.py](scripts/libuv_api_coverage.py).
 
 See [coverage.md](docs/coverage.md) for more details.
 
 ## 3. Schedule
 
-### Thread [OK]
-
-Q: Do we still need to C style `thread` and `mutex` since we have already used C++17?
-
-A: For fun! and... compatible with projects already using libuv, ensuring feature alignment.
-
-### Miscellaneous utilities [ing]
-
-> This section contains miscellaneous functions that don’t really belong in any other section.
-
-### Others
-
-Most of the interfaces have been encapsulated or the reasons for not encapsulating have been explained.
-The next work of `libuvcxx` is mainly about the above content.
-
-See [coverage.md](docs/coverage.md) for more details.
+Adjust the C++ standard downwards to be compatible with C++11 and later versions.
 
 ## 4. Exception
 
