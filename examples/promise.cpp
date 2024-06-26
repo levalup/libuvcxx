@@ -21,7 +21,7 @@ int main() {
     {
         promise_emitter<int, int> pm(a);
         promise_cast<decltype(a), float> t(a, [](float a) {
-            return std::make_tuple((float) std::floor(a), (float) std::ceil(a));
+            return std::make_tuple((int) std::floor(a), (int) std::ceil(a));
         });
         t.resolve(12.6f);
     }
