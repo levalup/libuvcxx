@@ -17,7 +17,7 @@ int main() {
 
     callback_cast<decltype(a), float> cast(
             a, [](float a) {
-                return std::make_tuple(std::floorf(a), std::ceilf(a));
+                return std::make_tuple((float) std::floor(a), (float) std::ceil(a));
             });
     cast(12.4f);
 
