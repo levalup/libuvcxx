@@ -458,7 +458,7 @@ namespace uvcxx {
         template<typename FUNC, typename std::enable_if<
                 std::is_constructible<self, const promise_t<V...> &, FUNC>::value, int>::type = 0>
         explicit promise_cast(FUNC wrapper)
-                : self(promise_t<V...>(), wrapper_t(wrapper)) {}
+                : self(promise_t<V...>(), std::move(wrapper)) {}
 
         explicit operator bool() const { return bool(m_emitter); }
 

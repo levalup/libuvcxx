@@ -23,14 +23,21 @@ namespace uvcxx {
         return std::to_string(t);
     }
 
+    namespace inner {
+        struct mask_string {
+            int mask;
+            const char *string;
+        };
+    }
+
     inline std::string
-    mask_string(int mask, const char *zero, const std::initializer_list<std::tuple<int, const char *>> &args) {
+    mask_string(int mask, const char *zero, const std::initializer_list<inner::mask_string> &args) {
         if (!mask) return zero;
         std::ostringstream oss;
         bool sep = false;
         for (auto &vs: args) {
-            auto &v = std::get<0>(vs);
-            auto &s = std::get<1>(vs);
+            auto &v = vs.mask;
+            auto &s = vs.string;
             if (mask & v) {
                 if (sep) oss << "|";
                 oss << s;
