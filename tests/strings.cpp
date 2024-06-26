@@ -50,7 +50,7 @@ int main() {
     uvcxx_assert(fsw({A().aa, 4}) == "1234");   // use fsw(A().aa) raise problem
     uvcxx_assert(fsw({A().bb, 4}) == "1234");
 
-#if __cplusplus >= 201703L || _MSC_VER >= 1910
+#if UVCXX_STD_STRING_VIEW
     std::string_view sw_str = "sw_str_1";
     uvcxx_assert(fsw(sw_str) == sw_str);
 #endif

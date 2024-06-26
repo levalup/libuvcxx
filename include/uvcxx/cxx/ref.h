@@ -134,8 +134,8 @@ namespace uvcxx {
             });
         }
     };
-// Class template argument deduction
-#if __cpp_deduction_guides >= 201703L || __cplusplus >= 201703L || _MSC_VER >= 1914
+
+#if UVCXX_STD_DEDUCTION_GUIDES
     template<typename Handle>
     ref(Handle handle) -> ref<Handle>;
 

@@ -10,6 +10,8 @@
 #include <cstring>
 #include <ostream>
 
+#include "../utils/standard.h"
+
 namespace uvcxx {
     class string {
     public:
@@ -48,8 +50,8 @@ namespace uvcxx {
         template<int Size>
         string_view(const char (&str)[Size])
                 : data(str), size(strnlen(str, Size)) {}
-// std::string_view
-#if __cpp_lib_string_view >= 201606L || __cplusplus >= 201703L || _MSC_VER >= 1910
+
+#if UVCXX_STD_STRING_VIEW
 
         string_view(const std::string_view &str)
                 : data(str.data()), size(str.size()) {}
@@ -57,8 +59,7 @@ namespace uvcxx {
 #endif
     };
 
-// std::string_view
-#if __cpp_lib_string_view >= 201606L || __cplusplus >= 201703L || _MSC_VER >= 1910
+#if UVCXX_STD_STRING_VIEW
 
     inline std::ostream &operator<<(std::ostream &out, const string_view &s) {
         return out << std::string_view(s.data, s.size);

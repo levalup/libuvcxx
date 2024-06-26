@@ -14,6 +14,8 @@
 
 #include <uv.h>
 
+#include "../utils/standard.h"
+
 namespace uv {
     class buf_t;
 }
@@ -92,8 +94,8 @@ namespace uvcxx {
         template<size_t Size>
         buffer(const char (&arr)[Size])
                 : buf(init(arr, strnlen(arr, Size))) {}
-// std::string_view
-#if __cpp_lib_string_view >= 201606L || __cplusplus >= 201703L || _MSC_VER >= 1910
+
+#if UVCXX_STD_STRING_VIEW
 
         buffer(std::string_view &str)
                 : buf(init(str.data(), str.size())) {}

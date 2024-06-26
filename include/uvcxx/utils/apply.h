@@ -8,8 +8,10 @@
 
 #include <tuple>
 
+#include "standard.h"
+
 namespace uvcxx {
-#if __cpp_lib_apply >= 201603L || __cplusplus >= 201703L || _MSC_VER >= 1900
+#if UVCXX_STD_APPLY
     template <typename F, typename T>
     inline decltype(auto) proxy_apply(F &&f, T &&t) {
         return std::apply(std::forward<F>(f), std::forward<T>(t));

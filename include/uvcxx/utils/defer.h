@@ -100,8 +100,7 @@ namespace uvcxx {
                 !std::is_constructible<std::function<void()>,
                         decltype(std::bind(std::declval<FUNC>(), std::declval<Args>()...))>::value, int>::type = 0>
         static std::function<void()> bind(FUNC func, Args &&... args) {
-// Initialized/Generalized lambda captures (init-capture)
-#if __cpp_init_captures >= 201304L || __cplusplus >= 201402L || _MSC_VER >= 1900
+#if UVCXX_STD_INIT_CAPTURES
             return [void_call = std::bind(func, std::forward<Args>(args)...)]() -> void {
                 (void) void_call();
             };
@@ -172,8 +171,7 @@ namespace uvcxx {
     private:
         defer m_defer;
     };
-// Class template argument deduction
-#if __cpp_deduction_guides >= 201703L || __cplusplus >= 201703L || _MSC_VER >= 1914
+#if UVCXX_STD_DEDUCTION_GUIDES
     template<typename T>
     defer_delete(T *p) -> defer_delete<std::decay_t<decltype(*p)>>;
 #endif

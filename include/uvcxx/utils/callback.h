@@ -64,8 +64,7 @@ namespace uvcxx {
         self &call(on_call_t f) {
             if (!f) return *this;
             if (m_on_call) {
-// Initialized/Generalized lambda captures (init-capture)
-#if __cpp_init_captures >= 201304L || __cplusplus >= 201402L || _MSC_VER >= 1900
+#if UVCXX_STD_INIT_CAPTURES
                 m_on_call = [f = std::move(f), pre = std::move(m_on_call)](void *p) {
                     pre(p);
                     f(p);
@@ -91,8 +90,7 @@ namespace uvcxx {
         self &except(on_except_t f) {
             if (!f) return *this;
             if (m_on_except) {
-// Initialized/Generalized lambda captures (init-capture)
-#if __cpp_init_captures >= 201304L || __cplusplus >= 201402L || _MSC_VER >= 1900
+#if UVCXX_STD_INIT_CAPTURES
                 m_on_except = [f = std::move(f), pre = std::move(m_on_except)](std::exception_ptr p) {
                     if (pre(p)) return true;
                     return f(p);
@@ -118,8 +116,7 @@ namespace uvcxx {
         self &finally(on_finally_t f) {
             if (!f) return *this;
             if (m_on_finally) {
-// Initialized/Generalized lambda captures (init-capture)
-#if __cpp_init_captures >= 201304L || __cplusplus >= 201402L || _MSC_VER >= 1900
+#if UVCXX_STD_INIT_CAPTURES
                 m_on_finally = [f = std::move(f), pre = std::move(m_on_finally)]() {
                     pre();
                     f();
