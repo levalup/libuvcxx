@@ -24,8 +24,6 @@ namespace uv {
 
             using entry_t = std::function<void(void)>;
 
-            raw_t tid{};
-
             thread_t(const thread_t &) = delete;
 
             thread_t &operator=(const thread_t &) = delete;
@@ -55,16 +53,32 @@ namespace uv {
                 return err;
             }
 
+        public:
+            raw_t tid{};
 
         private:
             entry_t m_entry;
             std::atomic<bool> m_joined{false};
+            bool m_detached = false;
 
             static void raw_entry(void *arg) {
                 try {
                     ((self *) arg)->m_entry();
                 } catch (...) {
                 }
+            }
+
+        public:
+            static thread_t *detach(raw_t id) {
+                return new self(id);
+            }
+
+            [[nodiscard]]
+            bool detached() const { return m_detached; }
+
+        private:
+            explicit thread_t(raw_t id)
+                    : tid(id), m_detached(true) {
             }
         };
     }
@@ -108,7 +122,7 @@ namespace uv {
         }
 
         int join() {
-            if (m_thread) return m_thread->join();
+            if (m_thread && !m_thread->detached()) return m_thread->join();
             return 0;
         }
 
@@ -170,6 +184,13 @@ namespace uv {
 
     private:
         inner::thread_t *m_thread = nullptr;
+
+    public:
+        static self detach(uv_thread_t tid) { return self{tid}; }
+
+    private:
+        explicit thread_t(uv_thread_t tid)
+                : m_thread(inner_t::detach(tid)) {}
     };
 
     namespace thread {
@@ -180,11 +201,12 @@ namespace uv {
 #endif
 
         /**
-         * uv::thread_t does not support borrow raw uv_thread_t.
-         * There is no plan to implement it yet.
+         * The return thread is marked as `detached`, so using join on it has no effect.
          * @return
          */
-        inline uv_thread_t self();
+        inline thread_t self() {
+            return thread_t::detach(uv_thread_self());
+        }
     }
 }
 
