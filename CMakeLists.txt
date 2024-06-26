@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.9)
 project(libuvcxx)
 
-set(CMAKE_CXX_STANDARD 17)
+# default using std=c++11
+set(STD "11" CACHE STRING "Set CMAKE_CXX_STANDARD")
 
 option(WALL "If enable all compiler warning check" ON)
 option(WERROR "If treat all warning as error" OFF)
@@ -51,6 +52,11 @@ endif ()
 
 include_directories("${PROJECT_SOURCE_DIR}/include")
 file(GLOB_RECURSE HEADERS "${PROJECT_SOURCE_DIR}/include/*.h")
+
+if (STD)
+    message(STATUS "Using --std=c++${STD}")
+    set(CMAKE_CXX_STANDARD ${STD})
+endif ()
 
 if (WALL)
     message(STATUS "Enabled -Wall")
