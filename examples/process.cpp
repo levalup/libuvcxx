@@ -3,6 +3,10 @@
 // L.eval: Let programmer get rid of only work jobs.
 //
 
+#if defined(_MSC_VER)
+#pragma warning(disable: 4996)
+#endif
+
 #include <iostream>
 #include <cstdlib>
 
