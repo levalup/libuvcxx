@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.9)
 project(libuvcxx)
 
-# default using std=c++11
-set(STD "11" CACHE STRING "Set CMAKE_CXX_STANDARD")
+# default using std=c++17 as libuvcxx has compatibility to C++11
+set(STD "17" CACHE STRING "Set CMAKE_CXX_STANDARD")
 
 option(WALL "If enable all compiler warning check" ON)
 option(WERROR "If treat all warning as error" OFF)
