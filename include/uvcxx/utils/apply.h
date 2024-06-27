@@ -53,6 +53,83 @@ namespace uvcxx {
                          std::get<1>(std::forward<T>(t)),
                          std::get<2>(std::forward<T>(t)));
             }
+
+            template<size_t I, typename F, typename T, typename std::enable_if<I == 4, int>::type = 0>
+            Ret apply(F &&f, T &&t) {
+                return f(std::get<0>(std::forward<T>(t)),
+                         std::get<1>(std::forward<T>(t)),
+                         std::get<2>(std::forward<T>(t)),
+                         std::get<3>(std::forward<T>(t)));
+            }
+
+            template<size_t I, typename F, typename T, typename std::enable_if<I == 5, int>::type = 0>
+            Ret apply(F &&f, T &&t) {
+                return f(std::get<0>(std::forward<T>(t)),
+                         std::get<1>(std::forward<T>(t)),
+                         std::get<2>(std::forward<T>(t)),
+                         std::get<3>(std::forward<T>(t)),
+                         std::get<4>(std::forward<T>(t)));
+            }
+
+            template<size_t I, typename F, typename T, typename std::enable_if<I == 6, int>::type = 0>
+            Ret apply(F &&f, T &&t) {
+                return f(std::get<0>(std::forward<T>(t)),
+                         std::get<1>(std::forward<T>(t)),
+                         std::get<2>(std::forward<T>(t)),
+                         std::get<3>(std::forward<T>(t)),
+                         std::get<4>(std::forward<T>(t)),
+                         std::get<5>(std::forward<T>(t)));
+            }
+
+            template<size_t I, typename F, typename T, typename std::enable_if<I == 7, int>::type = 0>
+            Ret apply(F &&f, T &&t) {
+                return f(std::get<0>(std::forward<T>(t)),
+                         std::get<1>(std::forward<T>(t)),
+                         std::get<2>(std::forward<T>(t)),
+                         std::get<3>(std::forward<T>(t)),
+                         std::get<4>(std::forward<T>(t)),
+                         std::get<5>(std::forward<T>(t)),
+                         std::get<6>(std::forward<T>(t)));
+            }
+
+            template<size_t I, typename F, typename T, typename std::enable_if<I == 8, int>::type = 0>
+            Ret apply(F &&f, T &&t) {
+                return f(std::get<0>(std::forward<T>(t)),
+                         std::get<1>(std::forward<T>(t)),
+                         std::get<2>(std::forward<T>(t)),
+                         std::get<3>(std::forward<T>(t)),
+                         std::get<4>(std::forward<T>(t)),
+                         std::get<5>(std::forward<T>(t)),
+                         std::get<6>(std::forward<T>(t)),
+                         std::get<7>(std::forward<T>(t)));
+            }
+
+            template<size_t I, typename F, typename T, typename std::enable_if<I == 9, int>::type = 0>
+            Ret apply(F &&f, T &&t) {
+                return f(std::get<0>(std::forward<T>(t)),
+                         std::get<1>(std::forward<T>(t)),
+                         std::get<2>(std::forward<T>(t)),
+                         std::get<3>(std::forward<T>(t)),
+                         std::get<4>(std::forward<T>(t)),
+                         std::get<5>(std::forward<T>(t)),
+                         std::get<6>(std::forward<T>(t)),
+                         std::get<7>(std::forward<T>(t)),
+                         std::get<8>(std::forward<T>(t)));
+            }
+
+            template<size_t I, typename F, typename T, typename std::enable_if<I == 10, int>::type = 0>
+            Ret apply(F &&f, T &&t) {
+                return f(std::get<0>(std::forward<T>(t)),
+                         std::get<1>(std::forward<T>(t)),
+                         std::get<2>(std::forward<T>(t)),
+                         std::get<3>(std::forward<T>(t)),
+                         std::get<4>(std::forward<T>(t)),
+                         std::get<5>(std::forward<T>(t)),
+                         std::get<6>(std::forward<T>(t)),
+                         std::get<7>(std::forward<T>(t)),
+                         std::get<8>(std::forward<T>(t)),
+                         std::get<9>(std::forward<T>(t)));
+            }
         };
     }
 

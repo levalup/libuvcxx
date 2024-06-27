@@ -21,9 +21,9 @@ namespace uv {
 
         using supper::supper;
 
-        barrier_t(barrier_t &&) = default;
+        barrier_t(barrier_t &&) UVCXX_NOEXCEPT = default;
 
-        barrier_t &operator=(barrier_t &&) = default;
+        barrier_t &operator=(barrier_t &&) UVCXX_NOEXCEPT = default;
 
         explicit barrier_t(unsigned int count) {
             (void) uv_barrier_init(*this, count);
@@ -33,8 +33,8 @@ namespace uv {
             if (*this) uv_barrier_destroy(*this);
         }
 
-        void wait() {
-            uv_barrier_wait(*this);
+        int wait() {
+            return uv_barrier_wait(*this);
         }
     };
 }

@@ -10,6 +10,7 @@
 
 #include "cxx/except.h"
 #include "cxx/version.h"
+#include "cxx/wrapper.h"
 #include "inner/base.h"
 #include "utils/defer.h"
 #include "utils/promise.h"
@@ -39,9 +40,7 @@ namespace uv {
         }
 
         int cancel() {
-            auto status = uv_cancel(*this);
-            if (status < 0) UVCXX_THROW_OR_RETURN(status, status);
-            return status;
+            UVCXX_PROXY(uv_cancel(*this));
         }
 
         UVCXX_NODISCARD
@@ -100,7 +99,7 @@ namespace uv {
             static constexpr uint64_t MAGIC = 0x554332055443320;
             uint64_t magic = MAGIC;
 
-            static bool is_it(void *data) {
+            static inline bool is_it(void *data) {
                 return data && ((data_t *) data)->magic == MAGIC;
             }
 
@@ -130,7 +129,7 @@ namespace uv {
         };
 
     protected:
-        static self borrow(raw_t *raw) {
+        static inline self borrow(raw_t *raw) {
             return self{borrow_t(raw)};
         }
     };
@@ -152,9 +151,9 @@ namespace uv {
         operator T *() const { return this->template raw<T>(); }
 
     private:
-        static std::shared_ptr<uv_req_t> make_shared() {
+        static inline std::shared_ptr<uv_req_t> make_shared() {
             auto r = std::make_shared<T>();
-            auto p = reinterpret_cast<typename std::shared_ptr<uv_req_t>::element_type*>(r.get());
+            auto p = reinterpret_cast<typename std::shared_ptr<uv_req_t>::element_type *>(r.get());
             return std::shared_ptr<uv_req_t>{r, p};
         }
     };

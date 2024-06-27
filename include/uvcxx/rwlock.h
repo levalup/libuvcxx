@@ -20,9 +20,9 @@ namespace uv {
 
         using supper::supper;
 
-        rwlock_t(rwlock_t &&) = default;
+        rwlock_t(rwlock_t &&) UVCXX_NOEXCEPT = default;
 
-        rwlock_t &operator=(rwlock_t &&) = default;
+        rwlock_t &operator=(rwlock_t &&) UVCXX_NOEXCEPT = default;
 
         rwlock_t() {
             (void) uv_rwlock_init(*this);

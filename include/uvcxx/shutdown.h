@@ -17,7 +17,7 @@ namespace uv {
         using supper = inherit_req_t<uv_shutdown_t, req_t>;
 
         UVCXX_NODISCARD
-        stream_t handle() const;
+        inline stream_t handle() const;
 
     public:
         class data_t : public req_callback_t<raw_t, int> {
@@ -44,8 +44,7 @@ namespace uv {
         auto data = new shutdown_t::data_t(req);
         uvcxx::defer_delete<shutdown_t::data_t> delete_data(data);
 
-        auto err = uv_shutdown(req, handle, shutdown_t::data_t::raw_callback);
-        if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
+        UVCXX_APPLY(uv_shutdown(req, handle, shutdown_t::data_t::raw_callback), nullptr);
 
         delete_data.release();
         ((uv_shutdown_t *) req)->data = data;

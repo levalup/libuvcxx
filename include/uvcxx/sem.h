@@ -21,9 +21,9 @@ namespace uv {
 
         using supper::supper;
 
-        sem_t(sem_t &&) = default;
+        sem_t(sem_t &&) UVCXX_NOEXCEPT = default;
 
-        sem_t &operator=(sem_t &&) = default;
+        sem_t &operator=(sem_t &&) UVCXX_NOEXCEPT = default;
 
         explicit sem_t(unsigned int value) {
             (void) uv_sem_init(*this, value);

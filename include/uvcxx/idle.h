@@ -24,8 +24,7 @@ namespace uv {
 
         UVCXX_NODISCARD
         uvcxx::callback<> start() {
-            auto err = uv_idle_start(*this, raw_callback);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
+            UVCXX_APPLY(uv_idle_start(*this, raw_callback), nullptr);
             _detach_();
             return get_data<data_t>()->start_cb.callback();
         }

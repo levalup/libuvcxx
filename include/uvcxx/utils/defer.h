@@ -83,7 +83,7 @@ namespace uvcxx {
     protected:
         template<typename FUNC, typename... Args, typename std::enable_if<
                 std::is_same<void, typename invoke_result<FUNC, Args...>::type>::value, int>::type = 0>
-        static std::function<void()> bind(FUNC func, Args &&... args) {
+        static inline std::function<void()> bind(FUNC func, Args &&... args) {
             return std::bind(func, std::forward<Args>(args)...);
         }
 
@@ -91,7 +91,7 @@ namespace uvcxx {
                 !std::is_same<void, typename invoke_result<FUNC, Args...>::type>::value &&
                 std::is_constructible<std::function<void()>,
                         decltype(std::bind(std::declval<FUNC>(), std::declval<Args>()...))>::value, int>::type = 0>
-        static std::function<void()> bind(FUNC func, Args &&... args) {
+        static inline std::function<void()> bind(FUNC func, Args &&... args) {
             return std::bind(func, std::forward<Args>(args)...);
         }
 
@@ -99,7 +99,7 @@ namespace uvcxx {
                 !std::is_same<void, typename invoke_result<FUNC, Args...>::type>::value &&
                 !std::is_constructible<std::function<void()>,
                         decltype(std::bind(std::declval<FUNC>(), std::declval<Args>()...))>::value, int>::type = 0>
-        static std::function<void()> bind(FUNC func, Args &&... args) {
+        static inline std::function<void()> bind(FUNC func, Args &&... args) {
 #if UVCXX_STD_INIT_CAPTURES
             return [void_call = std::bind(func, std::forward<Args>(args)...)]() -> void {
                 (void) void_call();
@@ -171,6 +171,7 @@ namespace uvcxx {
     private:
         defer m_defer;
     };
+
 #if UVCXX_STD_DEDUCTION_GUIDES
     template<typename T>
     defer_delete(T *p) -> defer_delete<std::decay_t<decltype(*p)>>;

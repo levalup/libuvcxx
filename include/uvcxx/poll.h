@@ -20,26 +20,20 @@ namespace uv {
         }
 
         self &init(const loop_t &loop, int fd) {
-            auto data = get_data<data_t>();
-            auto err = uv_poll_init(loop, *this, fd);
             // To directly start after init, there is no path to return the error code instead.
             // So an exception is directly thrown. This feature may be modified in the future.
-            if (err < 0) throw uvcxx::errcode(err);
-
+            UVCXX_APPLY_STRICT(uv_poll_init(loop, *this, fd));
             _attach_close_();
-            data->initialized = true;
+            get_data<data_t>()->initialized = true;
             return *this;
         }
 
         self &init_socket(const loop_t &loop, uv_os_sock_t socket) {
-            auto data = get_data<data_t>();
-            auto err = uv_poll_init_socket(loop, *this, socket);
             // To directly start after init, there is no path to return the error code instead.
             // So an exception is directly thrown. This feature may be modified in the future.
-            if (err < 0) throw uvcxx::errcode(err);
-
+            UVCXX_APPLY_STRICT(uv_poll_init_socket(loop, *this, socket));
             _attach_close_();
-            data->initialized = true;
+            get_data<data_t>()->initialized = true;
             return *this;
         }
 
@@ -59,8 +53,7 @@ namespace uv {
                 UVCXX_THROW_OR_RETURN(UV_EINVAL, nullptr, "should call `init` or `init_socket` first");
             }
 
-            auto err = uv_poll_start(*this, events, raw_callback);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
+            UVCXX_APPLY(uv_poll_start(*this, events, raw_callback), nullptr);
 
             _detach_();
             return data->start_cb.callback();

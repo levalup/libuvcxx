@@ -20,9 +20,9 @@ namespace uv {
 
         using supper::supper;
 
-        mutex_t(mutex_t &&) = default;
+        mutex_t(mutex_t &&) UVCXX_NOEXCEPT = default;
 
-        mutex_t &operator=(mutex_t &&) = default;
+        mutex_t &operator=(mutex_t &&) UVCXX_NOEXCEPT = default;
 
         mutex_t() {
             (void) uv_mutex_init(*this);

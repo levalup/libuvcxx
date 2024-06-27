@@ -47,7 +47,7 @@ namespace uv {
     inline int random(std::nullptr_t, std::nullptr_t,
                       void *buf, size_t buflen, unsigned int flags,
                       std::nullptr_t) {
-        return uv_random(nullptr, nullptr, buf, buflen, flags, nullptr);
+        UVCXX_PROXY(uv_random(nullptr, nullptr, buf, buflen, flags, nullptr));
     }
 
     UVCXX_NODISCARD
@@ -57,8 +57,7 @@ namespace uv {
         auto *data = new random_t::data_t(req);
         uvcxx::defer_delete<random_t::data_t> delete_data(data);
 
-        auto err = uv_random(loop, req, buf, buflen, flags, random_t::data_t::raw_callback);
-        if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
+        UVCXX_APPLY(uv_random(loop, req, buf, buflen, flags, random_t::data_t::raw_callback), nullptr);
 
         delete_data.release();
         ((uv_random_t *) req)->data = data;

@@ -168,13 +168,12 @@ namespace uv {
 
                     if (init) init(data);
 
-                    auto err = func(
+                    UVCXX_APPLY(func(
                             (loop_t::raw_t *) loop,
                             (cxx_req_t::raw_t *) data->req(),
                             std::forward<ARGS>(args)...,
-                            callback_t<T...>::raw_callback);
+                            callback_t<T...>::raw_callback), nullptr);
 
-                    if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
                     delete_data.release();
                     ((raw_req_t *) req)->data = data;
                     return data->promise.promise();
@@ -188,7 +187,7 @@ namespace uv {
         inline int open(std::nullptr_t, fs_t &req,
                         uvcxx::string path, int flags, int mode,
                         std::nullptr_t) {
-            return uv_fs_open(nullptr, req, path, flags, mode, nullptr);
+            UVCXX_PROXY(uv_fs_open(nullptr, req, path, flags, mode, nullptr));
         }
 
         UVCXX_NODISCARD
@@ -217,7 +216,7 @@ namespace uv {
         inline int close(std::nullptr_t, fs_t &req,
                          uv_file file,
                          std::nullptr_t) {
-            return uv_fs_close(nullptr, req, file, nullptr);
+            UVCXX_PROXY(uv_fs_close(nullptr, req, file, nullptr));
         }
 
         UVCXX_NODISCARD
@@ -245,7 +244,7 @@ namespace uv {
         inline int read(std::nullptr_t, fs_t &req,
                         uv_file file, const uv_buf_t bufs[], unsigned int nbufs, int64_t offset,
                         std::nullptr_t) {
-            return uv_fs_read(nullptr, req, file, bufs, nbufs, offset, nullptr);
+            UVCXX_PROXY(uv_fs_read(nullptr, req, file, bufs, nbufs, offset, nullptr));
         }
 
         UVCXX_NODISCARD
@@ -356,7 +355,7 @@ namespace uv {
         inline int write(std::nullptr_t, fs_t &req,
                          uv_file file, const uv_buf_t bufs[], unsigned int nbufs, int64_t offset,
                          std::nullptr_t) {
-            return uv_fs_write(nullptr, req, file, bufs, nbufs, offset, nullptr);
+            UVCXX_PROXY(uv_fs_write(nullptr, req, file, bufs, nbufs, offset, nullptr));
         }
 
         UVCXX_NODISCARD
@@ -467,7 +466,7 @@ namespace uv {
         inline int unlink(std::nullptr_t, fs_t &req,
                           uvcxx::string path,
                           std::nullptr_t) {
-            return uv_fs_unlink(nullptr, req, path, nullptr);
+            UVCXX_PROXY(uv_fs_unlink(nullptr, req, path, nullptr));
         }
 
         UVCXX_NODISCARD
@@ -495,7 +494,10 @@ namespace uv {
         inline int mkdir(std::nullptr_t, fs_t &req,
                          uvcxx::string path, int mode,
                          std::nullptr_t) {
-            return uv_fs_mkdir(nullptr, req, path, mode, nullptr);
+            auto status = uv_fs_mkdir(nullptr, req, path, mode, nullptr);
+            if (status == UV_EEXIST) return status; //< exist ok
+            if (status < 0) UVCXX_THROW_OR_RETURN(status, status);
+            return status;
         }
 
         UVCXX_NODISCARD
@@ -523,7 +525,7 @@ namespace uv {
         inline int mkdtemp(std::nullptr_t, fs_t &req,
                            uvcxx::string tpl,
                            std::nullptr_t) {
-            return uv_fs_mkdtemp(nullptr, req, tpl, nullptr);
+            UVCXX_PROXY(uv_fs_mkdtemp(nullptr, req, tpl, nullptr));
         }
 
         UVCXX_NODISCARD
@@ -553,7 +555,7 @@ namespace uv {
         inline int mkstemp(std::nullptr_t, fs_t &req,
                            uvcxx::string tpl,
                            std::nullptr_t) {
-            return uv_fs_mkstemp(nullptr, req, tpl, nullptr);
+            UVCXX_PROXY(uv_fs_mkstemp(nullptr, req, tpl, nullptr));
         }
 
         UVCXX_NODISCARD
@@ -583,7 +585,7 @@ namespace uv {
         inline int rmdir(std::nullptr_t, fs_t &req,
                          uvcxx::string path,
                          std::nullptr_t) {
-            return uv_fs_rmdir(nullptr, req, path, nullptr);
+            UVCXX_PROXY(uv_fs_rmdir(nullptr, req, path, nullptr));
         }
 
         UVCXX_NODISCARD
@@ -613,7 +615,7 @@ namespace uv {
         inline int opendir(std::nullptr_t, fs_t &req,
                            uvcxx::string path,
                            std::nullptr_t) {
-            return uv_fs_opendir(nullptr, req, path, nullptr);
+            UVCXX_PROXY(uv_fs_opendir(nullptr, req, path, nullptr));
         }
 
         UVCXX_NODISCARD
@@ -641,7 +643,7 @@ namespace uv {
         inline int closedir(std::nullptr_t, fs_t &req,
                             uv_dir_t *dir,
                             std::nullptr_t) {
-            return uv_fs_closedir(nullptr, req, dir, nullptr);
+            UVCXX_PROXY(uv_fs_closedir(nullptr, req, dir, nullptr));
         }
 
         UVCXX_NODISCARD
@@ -669,7 +671,7 @@ namespace uv {
         inline int readdir(std::nullptr_t, fs_t &req,
                            uv_dir_t *dir,
                            std::nullptr_t) {
-            return uv_fs_readdir(nullptr, req, dir, nullptr);
+            UVCXX_PROXY(uv_fs_readdir(nullptr, req, dir, nullptr));
         }
 
         UVCXX_NODISCARD
@@ -705,7 +707,7 @@ namespace uv {
         inline int scandir(std::nullptr_t, fs_t &req,
                            uvcxx::string path, int flags,
                            std::nullptr_t) {
-            return uv_fs_scandir(nullptr, req, path, flags, nullptr);
+            UVCXX_PROXY(uv_fs_scandir(nullptr, req, path, flags, nullptr));
         }
 
         using scan_next = std::function<int(uv_dirent_t *ent)>;
@@ -746,7 +748,7 @@ namespace uv {
         inline int stat(std::nullptr_t, fs_t &req,
                         uvcxx::string path,
                         std::nullptr_t) {
-            return uv_fs_stat(nullptr, req, path, nullptr);
+            UVCXX_PROXY(uv_fs_stat(nullptr, req, path, nullptr));
         }
 
         UVCXX_NODISCARD
@@ -774,7 +776,7 @@ namespace uv {
         inline int fstat(std::nullptr_t, fs_t &req,
                          uv_file file,
                          std::nullptr_t) {
-            return uv_fs_fstat(nullptr, req, file, nullptr);
+            UVCXX_PROXY(uv_fs_fstat(nullptr, req, file, nullptr));
         }
 
         UVCXX_NODISCARD
@@ -802,7 +804,7 @@ namespace uv {
         inline int lstat(std::nullptr_t, fs_t &req,
                          uvcxx::string path,
                          std::nullptr_t) {
-            return uv_fs_lstat(nullptr, req, path, nullptr);
+            UVCXX_PROXY(uv_fs_lstat(nullptr, req, path, nullptr));
         }
 
         UVCXX_NODISCARD
@@ -832,7 +834,7 @@ namespace uv {
         inline int statfs(std::nullptr_t, fs_t &req,
                           uvcxx::string path,
                           std::nullptr_t) {
-            return uv_fs_statfs(nullptr, req, path, nullptr);
+            UVCXX_PROXY(uv_fs_statfs(nullptr, req, path, nullptr));
         }
 
         UVCXX_NODISCARD
@@ -862,7 +864,7 @@ namespace uv {
         inline int rename(std::nullptr_t, fs_t &req,
                           uvcxx::string path, uvcxx::string new_path,
                           std::nullptr_t) {
-            return uv_fs_rename(nullptr, req, path, new_path, nullptr);
+            UVCXX_PROXY(uv_fs_rename(nullptr, req, path, new_path, nullptr));
         }
 
         UVCXX_NODISCARD
@@ -891,7 +893,7 @@ namespace uv {
         inline int fsync(std::nullptr_t, fs_t &req,
                          uv_file file,
                          std::nullptr_t) {
-            return uv_fs_fsync(nullptr, req, file, nullptr);
+            UVCXX_PROXY(uv_fs_fsync(nullptr, req, file, nullptr));
         }
 
         UVCXX_NODISCARD
@@ -919,7 +921,7 @@ namespace uv {
         inline int fdatasync(std::nullptr_t, fs_t &req,
                              uv_file file,
                              std::nullptr_t) {
-            return uv_fs_fdatasync(nullptr, req, file, nullptr);
+            UVCXX_PROXY(uv_fs_fdatasync(nullptr, req, file, nullptr));
         }
 
         UVCXX_NODISCARD
@@ -947,7 +949,7 @@ namespace uv {
         inline int ftruncate(std::nullptr_t, fs_t &req,
                              uv_file file, int64_t offset,
                              std::nullptr_t) {
-            return uv_fs_ftruncate(nullptr, req, file, offset, nullptr);
+            UVCXX_PROXY(uv_fs_ftruncate(nullptr, req, file, offset, nullptr));
         }
 
         UVCXX_NODISCARD
@@ -978,7 +980,7 @@ namespace uv {
         inline int copyfile(std::nullptr_t, fs_t &req,
                             uvcxx::string path, uvcxx::string new_path, int flags,
                             std::nullptr_t) {
-            return uv_fs_copyfile(nullptr, req, path, new_path, flags, nullptr);
+            UVCXX_PROXY(uv_fs_copyfile(nullptr, req, path, new_path, flags, nullptr));
         }
 
         UVCXX_NODISCARD
@@ -1009,7 +1011,7 @@ namespace uv {
         inline int sendfile(std::nullptr_t, fs_t &req,
                             uv_file out_fd, uv_file in_fd, int64_t in_offset, size_t length,
                             std::nullptr_t) {
-            return uv_fs_sendfile(nullptr, req, out_fd, in_fd, in_offset, length, nullptr);
+            UVCXX_PROXY(uv_fs_sendfile(nullptr, req, out_fd, in_fd, in_offset, length, nullptr));
         }
 
         UVCXX_NODISCARD
@@ -1042,7 +1044,7 @@ namespace uv {
         inline int access(std::nullptr_t, fs_t &req,
                           uvcxx::string path, int mode,
                           std::nullptr_t) {
-            return uv_fs_access(nullptr, req, path, mode, nullptr);
+            UVCXX_PROXY(uv_fs_access(nullptr, req, path, mode, nullptr));
         }
 
         UVCXX_NODISCARD
@@ -1070,7 +1072,7 @@ namespace uv {
         inline int chmod(std::nullptr_t, fs_t &req,
                          uvcxx::string path, int mode,
                          std::nullptr_t) {
-            return uv_fs_chmod(nullptr, req, path, mode, nullptr);
+            UVCXX_PROXY(uv_fs_chmod(nullptr, req, path, mode, nullptr));
         }
 
         UVCXX_NODISCARD
@@ -1098,7 +1100,7 @@ namespace uv {
         inline int fchmod(std::nullptr_t, fs_t &req,
                           uv_file file, int mode,
                           std::nullptr_t) {
-            return uv_fs_fchmod(nullptr, req, file, mode, nullptr);
+            UVCXX_PROXY(uv_fs_fchmod(nullptr, req, file, mode, nullptr));
         }
 
         UVCXX_NODISCARD
@@ -1126,7 +1128,7 @@ namespace uv {
         inline int utime(std::nullptr_t, fs_t &req,
                          uvcxx::string path, double atime, double mtime,
                          std::nullptr_t) {
-            return uv_fs_utime(nullptr, req, path, atime, mtime, nullptr);
+            UVCXX_PROXY(uv_fs_utime(nullptr, req, path, atime, mtime, nullptr));
         }
 
         UVCXX_NODISCARD
@@ -1155,7 +1157,7 @@ namespace uv {
         inline int futime(std::nullptr_t, fs_t &req,
                           uv_file file, double atime, double mtime,
                           std::nullptr_t) {
-            return uv_fs_futime(nullptr, req, file, atime, mtime, nullptr);
+            UVCXX_PROXY(uv_fs_futime(nullptr, req, file, atime, mtime, nullptr));
         }
 
         UVCXX_NODISCARD
@@ -1186,7 +1188,7 @@ namespace uv {
         inline int lutime(std::nullptr_t, fs_t &req,
                           uvcxx::string path, double atime, double mtime,
                           std::nullptr_t) {
-            return uv_fs_lutime(nullptr, req, path, atime, mtime, nullptr);
+            UVCXX_PROXY(uv_fs_lutime(nullptr, req, path, atime, mtime, nullptr));
         }
 
         UVCXX_NODISCARD
@@ -1217,7 +1219,7 @@ namespace uv {
         inline int link(std::nullptr_t, fs_t &req,
                         uvcxx::string path, uvcxx::string new_path,
                         std::nullptr_t) {
-            return uv_fs_link(nullptr, req, path, new_path, nullptr);
+            UVCXX_PROXY(uv_fs_link(nullptr, req, path, new_path, nullptr));
         }
 
         UVCXX_NODISCARD
@@ -1246,7 +1248,7 @@ namespace uv {
         inline int symlink(std::nullptr_t, fs_t &req,
                            uvcxx::string path, uvcxx::string new_path, int flags,
                            std::nullptr_t) {
-            return uv_fs_symlink(nullptr, req, path, new_path, flags, nullptr);
+            UVCXX_PROXY(uv_fs_symlink(nullptr, req, path, new_path, flags, nullptr));
         }
 
         UVCXX_NODISCARD
@@ -1275,7 +1277,7 @@ namespace uv {
         inline int readlink(std::nullptr_t, fs_t &req,
                             uvcxx::string path,
                             std::nullptr_t) {
-            return uv_fs_readlink(nullptr, req, path, nullptr);
+            UVCXX_PROXY(uv_fs_readlink(nullptr, req, path, nullptr));
         }
 
         UVCXX_NODISCARD
@@ -1305,7 +1307,7 @@ namespace uv {
         inline int realpath(std::nullptr_t, fs_t &req,
                             uvcxx::string path,
                             std::nullptr_t) {
-            return uv_fs_realpath(nullptr, req, path, nullptr);
+            UVCXX_PROXY(uv_fs_realpath(nullptr, req, path, nullptr));
         }
 
         UVCXX_NODISCARD
@@ -1335,7 +1337,7 @@ namespace uv {
         inline int chown(std::nullptr_t, fs_t &req,
                          uvcxx::string path, uv_uid_t uid, uv_gid_t gid,
                          std::nullptr_t) {
-            return uv_fs_chown(nullptr, req, path, uid, gid, nullptr);
+            UVCXX_PROXY(uv_fs_chown(nullptr, req, path, uid, gid, nullptr));
         }
 
         UVCXX_NODISCARD
@@ -1364,7 +1366,7 @@ namespace uv {
         inline int fchown(std::nullptr_t, fs_t &req,
                           uv_file file, uv_uid_t uid, uv_gid_t gid,
                           std::nullptr_t) {
-            return uv_fs_fchown(nullptr, req, file, uid, gid, nullptr);
+            UVCXX_PROXY(uv_fs_fchown(nullptr, req, file, uid, gid, nullptr));
         }
 
         UVCXX_NODISCARD
@@ -1393,7 +1395,7 @@ namespace uv {
         inline int lchown(std::nullptr_t, fs_t &req,
                           uvcxx::string path, uv_uid_t uid, uv_gid_t gid,
                           std::nullptr_t) {
-            return uv_fs_lchown(nullptr, req, path, uid, gid, nullptr);
+            UVCXX_PROXY(uv_fs_lchown(nullptr, req, path, uid, gid, nullptr));
         }
 
         UVCXX_NODISCARD

@@ -36,84 +36,61 @@ namespace uv {
 #endif
 
         int send_buffer_size(int *value) {
-            auto err = uv_send_buffer_size(*this, value);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_send_buffer_size(*this, value));
         }
 
         int recv_buffer_size(int *value) {
-            auto err = uv_recv_buffer_size(*this, value);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_recv_buffer_size(*this, value));
         }
 
         int fileno(uv_os_fd_t *fd) const {
-            auto err = uv_fileno(*this, fd);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_fileno(*this, fd));
         }
 
         stream_t accept() override {
             self client(this->loop());
-            uvcxx::defer close_client([&]() { client.close(nullptr); });
 
-            auto err = uv_accept(*this, client);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
+            UVCXX_APPLY(uv_accept(*this, client), nullptr);
 
-            close_client.release();
             return client;
         }
 
         int open(uv_os_sock_t sock) {
-            auto err = uv_tcp_open(*this, sock);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_tcp_open(*this, sock));
         }
 
         int nodelay(bool enable) {
-            auto err = uv_tcp_nodelay(*this, int(enable));
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_tcp_nodelay(*this, int(enable)));
         }
 
         int keepalive(bool enable, unsigned int delay) {
-            auto err = uv_tcp_keepalive(*this, int(enable), delay);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_tcp_keepalive(*this, int(enable), delay));
         }
 
         int simultaneous_accepts(bool enable) {
-            auto err = uv_tcp_simultaneous_accepts(*this, int(enable));
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_tcp_simultaneous_accepts(*this, int(enable)));
         }
 
         int bind(const struct sockaddr *addr, unsigned int flags) {
-            auto err = uv_tcp_bind(*this, addr, flags);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_tcp_bind(*this, addr, flags));
         }
 
         int getsockname(struct sockaddr *name, int *namelen) const {
-            auto err = uv_tcp_getsockname(*this, name, namelen);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_tcp_getsockname(*this, name, namelen));
         }
 
         int getpeername(struct sockaddr *name, int *namelen) const {
-            auto err = uv_tcp_getpeername(*this, name, namelen);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_tcp_getpeername(*this, name, namelen));
         }
 
         UVCXX_NODISCARD
         uvcxx::promise<> connect(const connect_t &req, const sockaddr *addr) {
-            return ::uv::tcp_connect(req, *this, addr);
+            return tcp_connect(req, *this, addr);
         }
 
         UVCXX_NODISCARD
         uvcxx::promise<> connect(const sockaddr *addr) {
-            return ::uv::tcp_connect(*this, addr);
+            return tcp_connect(*this, addr);
         }
 
 #if UVCXX_SATISFY_VERSION(1, 32, 0)
@@ -138,9 +115,7 @@ namespace uv {
 
     UVCXX_NODISCARD
     inline int socketpair(int type, int protocol, uv_os_sock_t socket_vector[2], int flags0, int flags1) {
-        auto err = uv_socketpair(type, protocol, socket_vector, flags0, flags1);
-        if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-        return err;
+        UVCXX_PROXY(uv_socketpair(type, protocol, socket_vector, flags0, flags1));
     }
 
 #endif

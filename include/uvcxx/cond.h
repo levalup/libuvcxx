@@ -21,9 +21,9 @@ namespace uv {
 
         using supper::supper;
 
-        cond_t(cond_t &&) = default;
+        cond_t(cond_t &&) UVCXX_NOEXCEPT = default;
 
-        cond_t &operator=(cond_t &&) = default;
+        cond_t &operator=(cond_t &&) UVCXX_NOEXCEPT = default;
 
         cond_t() {
             (void) uv_cond_init(*this);

@@ -42,17 +42,14 @@ namespace uv {
             }
             data->work_mode = WorkMode::Listen;
 
-            auto err = uv_listen(*this, backlog, raw_listen_callback);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
+            UVCXX_APPLY(uv_listen(*this, backlog, raw_listen_callback), nullptr);
 
             _detach_();
             return data->listen_cb.callback();
         }
 
         int accept(stream_t &client) {
-            auto err = uv_accept(*this, client);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_accept(*this, client));
         }
 
         UVCXX_NODISCARD
@@ -80,16 +77,15 @@ namespace uv {
         int read_stop() {
             auto data = get_data<data_t>();
             if (data->work_mode == WorkMode::Listen) {
-                UVCXX_THROW_OR_RETURN(UV_EPERM, nullptr, "can not stop listening stream");
+                UVCXX_THROW_OR_RETURN(UV_EPERM, UV_EPERM, "can not stop listening stream");
             }
 
-            auto status = uv_read_stop(*this);
-            if (status < 0) UVCXX_THROW_OR_RETURN(status, status);
+            UVCXX_APPLY(uv_read_stop(*this), status);
 
             data->work_mode = WorkMode::Notset;
 
             _attach_close_();
-            return status;
+            return 0;
         }
 
         UVCXX_NODISCARD
@@ -206,7 +202,7 @@ namespace uv {
         }
 
         int set_blocking(int blocking) {
-            return uv_stream_set_blocking(*this, blocking);
+            UVCXX_PROXY(uv_stream_set_blocking(*this, blocking));
         }
 
 #if UVCXX_SATISFY_VERSION(1, 19, 0)
@@ -223,7 +219,7 @@ namespace uv {
 
         operator uv_stream_t *() const { return raw<raw_t>(); }
 
-        static self borrow(raw_t *raw) {
+        static inline self borrow(raw_t *raw) {
             return self{borrow_t(raw)};
         }
 

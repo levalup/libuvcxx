@@ -50,64 +50,46 @@ namespace uv {
         }
 
         int send_buffer_size(int *value) {
-            auto err = uv_send_buffer_size(*this, value);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_send_buffer_size(*this, value));
         }
 
         int recv_buffer_size(int *value) {
-            auto err = uv_recv_buffer_size(*this, value);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_recv_buffer_size(*this, value));
         }
 
         int fileno(uv_os_fd_t *fd) const {
-            auto err = uv_fileno(*this, fd);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_fileno(*this, fd));
         }
 
         int open(uv_os_sock_t sock) {
-            auto err = uv_udp_open(*this, sock);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_udp_open(*this, sock));
         }
 
         int bind(const struct sockaddr *addr, unsigned int flags) {
-            auto err = uv_udp_bind(*this, addr, flags);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_udp_bind(*this, addr, flags));
         }
 
 #if UVCXX_SATISFY_VERSION(1, 27, 0)
 
         int connect(const sockaddr *addr) {
-            auto err = uv_udp_connect(*this, addr);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_udp_connect(*this, addr));
         }
 
         int getpeername(struct sockaddr *name, int *namelen) const {
-            auto err = uv_udp_getpeername(*this, name, namelen);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_udp_getpeername(*this, name, namelen));
         }
 
 #endif
 
         int getsockname(struct sockaddr *name, int *namelen) const {
-            auto err = uv_udp_getsockname(*this, name, namelen);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_udp_getsockname(*this, name, namelen));
         }
 
         int set_membership(
                 uvcxx::string multicast_addr, uvcxx::string interface_addr,
                 uv_membership membership) const {
-            auto err = uv_udp_set_membership(
-                    *this, multicast_addr, interface_addr, membership);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_udp_set_membership(
+                    *this, multicast_addr, interface_addr, membership));
         }
 
 #if UVCXX_SATISFY_VERSION(1, 32, 0)
@@ -115,47 +97,35 @@ namespace uv {
         int set_source_membership(
                 uvcxx::string multicast_addr, uvcxx::string interface_addr, uvcxx::string source_addr,
                 uv_membership membership) const {
-            auto err = uv_udp_set_source_membership(
-                    *this, multicast_addr, interface_addr, source_addr, membership);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_udp_set_source_membership(
+                    *this, multicast_addr, interface_addr, source_addr, membership));
         }
 
 #endif
 
         int set_multicast_loop(bool on) {
-            auto err = uv_udp_set_multicast_loop(*this, int(on));
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_udp_set_multicast_loop(*this, int(on)));
         }
 
         int set_multicast_ttl(int ttl) {
-            auto err = uv_udp_set_multicast_ttl(*this, ttl);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_udp_set_multicast_ttl(*this, ttl));
         }
 
         int set_multicast_interface(uvcxx::string interface_addr) {
-            auto err = uv_udp_set_multicast_interface(*this, interface_addr);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_udp_set_multicast_interface(*this, interface_addr));
         }
 
         int set_broadcast(bool on) {
-            auto err = uv_udp_set_broadcast(*this, int(on));
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_udp_set_broadcast(*this, int(on)));
         }
 
         int set_ttl(int ttl) {
-            auto err = uv_udp_set_ttl(*this, ttl);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_udp_set_ttl(*this, ttl));
         }
 
         UVCXX_NODISCARD
         uvcxx::promise<> send(const udp_send_t &req, const uv_buf_t bufs[], unsigned int nbufs, const sockaddr *addr) {
-            return uv::udp_send(req, *this, bufs, nbufs, addr);
+            return udp_send(req, *this, bufs, nbufs, addr);
         }
 
         UVCXX_NODISCARD
@@ -172,7 +142,7 @@ namespace uv {
 
         UVCXX_NODISCARD
         uvcxx::promise<> send(const uv_buf_t bufs[], unsigned int nbufs, const sockaddr *addr) {
-            return uv::udp_send(*this, bufs, nbufs, addr);
+            return udp_send(*this, bufs, nbufs, addr);
         }
 
         UVCXX_NODISCARD
@@ -211,9 +181,7 @@ namespace uv {
         UVCXX_NODISCARD
         uvcxx::callback<ssize_t, const uv_buf_t *, const sockaddr *, unsigned>
         recv_start() {
-            auto err = uv_udp_recv_start(*this, raw_alloc_callback, raw_recv_callback);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
-
+            UVCXX_APPLY(uv_udp_recv_start(*this, raw_alloc_callback, raw_recv_callback), nullptr);
             _detach_();
             return get_data<data_t>()->recv_cb.callback();
         }
@@ -228,10 +196,9 @@ namespace uv {
 #endif
 
         int recv_stop() {
-            auto err = uv_udp_recv_stop(*this);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
+            UVCXX_APPLY(uv_udp_recv_stop(*this), status);
             _attach_close_();
-            return err;
+            return 0;
         }
 
 #if UVCXX_SATISFY_VERSION(1, 19, 0)
@@ -249,7 +216,7 @@ namespace uv {
 #endif
 
     public:
-        static self borrow(raw_t *raw) {
+        static inline self borrow(raw_t *raw) {
             return self{borrow_t(raw)};
         }
 

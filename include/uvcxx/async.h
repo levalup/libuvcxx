@@ -26,17 +26,13 @@ namespace uv {
 
         UVCXX_NODISCARD
         uvcxx::callback<> init(const loop_t &loop) {
-            auto data = get_data<data_t>();
-            auto err = uv_async_init(loop, *this, raw_callback);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);;
-            _detach_();  // it's running after init
-            return data->send_cb.callback();
+            UVCXX_APPLY(uv_async_init(loop, *this, raw_callback), nullptr);
+            _detach_();
+            return get_data<data_t>()->send_cb.callback();
         }
 
         int send() {
-            auto err = uv_async_send(*this);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_async_send(*this));
         }
 
     private:

@@ -23,19 +23,14 @@ namespace uv {
         }
 
         int fileno(uv_os_fd_t *fd) const {
-            auto err = uv_fileno(*this, fd);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_fileno(*this, fd));
         }
 
         stream_t accept(uv_file fd, int unused) {
             self client(this->loop(), fd, unused);
-            uvcxx::defer close_client([&]() { client.close(nullptr); });
 
-            auto err = uv_accept(*this, client);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
+            UVCXX_APPLY(uv_accept(*this, client), nullptr);
 
-            close_client.release();
             return client;
         }
 
@@ -44,23 +39,17 @@ namespace uv {
 #endif
 
         int set_mode(uv_tty_mode_t mode) {
-            auto err = uv_tty_set_mode(*this, mode);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_tty_set_mode(*this, mode));
         }
 
         int get_winsize(int *width, int *height) const {
-            auto err = uv_tty_get_winsize(*this, width, height);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_tty_get_winsize(*this, width, height));
         }
     };
 
     namespace tty {
         inline int reset_mode() {
-            auto err = uv_tty_reset_mode();
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_tty_reset_mode());
         }
 
 #if UVCXX_SATISFY_VERSION(1, 33, 0)
@@ -74,15 +63,12 @@ namespace uv {
 #if UVCXX_SATISFY_VERSION(1, 40, 0)
 
         inline int get_vterm_state(uv_tty_vtermstate_t *state) {
-            auto err = uv_tty_get_vterm_state(state);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_tty_get_vterm_state(state));
         }
 
         inline uv_tty_vtermstate_t get_vterm_state() {
-            uv_tty_vtermstate_t state{};
-            auto err = uv_tty_get_vterm_state(&state);
-            if (err < 0) throw uvcxx::errcode(err);
+            uv_tty_vtermstate_t state = UV_TTY_UNSUPPORTED;
+            (void) get_vterm_state(&state);
             return state;
         }
 

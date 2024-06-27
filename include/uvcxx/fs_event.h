@@ -30,8 +30,7 @@ namespace uv {
 
         UVCXX_NODISCARD
         uvcxx::callback<const char *, uv_fs_event, int> start(uvcxx::string path, int flags) {
-            auto err = uv_fs_event_start(*this, raw_callback, path, flags);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
+            UVCXX_APPLY(uv_fs_event_start(*this, raw_callback, path, flags), nullptr);
             _detach_();
             return get_data<data_t>()->start_cb.callback();
         }

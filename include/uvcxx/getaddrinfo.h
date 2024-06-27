@@ -65,7 +65,7 @@ namespace uv {
     inline int getaddrinfo(std::nullptr_t, getaddrinfo_t &req,
                            uvcxx::string node, uvcxx::string service, const addrinfo *hints,
                            std::nullptr_t) {
-        return uv_getaddrinfo(nullptr, req, nullptr, node, service, hints);
+        UVCXX_PROXY(uv_getaddrinfo(nullptr, req, nullptr, node, service, hints));
     }
 
 #endif
@@ -77,8 +77,7 @@ namespace uv {
         auto *data = new getaddrinfo_t::callback_t(req);
         uvcxx::defer_delete<getaddrinfo_t::data_t> delete_data(data);
 
-        auto err = uv_getaddrinfo(loop, req, getaddrinfo_t::callback_t::raw_callback, node, service, hints);
-        if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
+        UVCXX_APPLY(uv_getaddrinfo(loop, req, getaddrinfo_t::callback_t::raw_callback, node, service, hints), nullptr);
 
         delete_data.release();
         ((uv_getaddrinfo_t *) req)->data = data;

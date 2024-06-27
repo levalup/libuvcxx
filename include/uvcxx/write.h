@@ -17,10 +17,10 @@ namespace uv {
         using supper = inherit_req_t<uv_write_t, req_t>;
 
         UVCXX_NODISCARD
-        stream_t handle() const;
+        inline stream_t handle() const;
 
         UVCXX_NODISCARD
-        stream_t send_handle() const;
+        inline stream_t send_handle() const;
 
     public:
         class data_t : public req_callback_t<raw_t, int> {
@@ -47,8 +47,7 @@ namespace uv {
         auto data = new write_t::data_t(req);
         uvcxx::defer_delete<write_t::data_t> delete_data(data);
 
-        auto err = uv_write(req, handle, bufs, nbufs, write_t::data_t::raw_callback);
-        if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
+        UVCXX_APPLY(uv_write(req, handle, bufs, nbufs, write_t::data_t::raw_callback), nullptr);
 
         delete_data.release();
         ((uv_write_t *) req)->data = data;
@@ -67,8 +66,7 @@ namespace uv {
         auto data = new write_t::data_t(req);
         uvcxx::defer_delete<write_t::data_t> delete_data(data);
 
-        auto err = uv_write2(req, handle, bufs, nbufs, send_handle, write_t::data_t::raw_callback);
-        if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
+        UVCXX_APPLY(uv_write2(req, handle, bufs, nbufs, send_handle, write_t::data_t::raw_callback), nullptr);
 
         delete_data.release();
         ((uv_write_t *) req)->data = data;

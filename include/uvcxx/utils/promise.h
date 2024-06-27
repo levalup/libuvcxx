@@ -38,13 +38,25 @@ namespace uvcxx {
             }
         }
 
+        /**
+         * Allow MAX_RETRY times throw exception while processing `on_except`.
+         * @param p exception pointer
+         */
         void reject(std::exception_ptr p) UVCXX_NOEXCEPT {
-            try {
-                if (m_on_except) m_on_except(p);
-                else default_on_except(p);
-            } catch (...) {
-                default_on_except(p);
+            constexpr int MAX_RETRY = 1;
+            if (m_on_except) {
+                int caught = 0;
+                while (true) {
+                    try {
+                        m_on_except(p);
+                        return;
+                    } catch (...) {
+                        p = std::current_exception();
+                    }
+                    if (++caught > MAX_RETRY) break;
+                }
             }
+            default_on_except(p);
         }
 
         void finalize() UVCXX_NOEXCEPT {
@@ -134,13 +146,13 @@ namespace uvcxx {
             return *this;
         }
 
-        static void default_on_except(const std::exception &e) {
+        static inline void default_on_except(const std::exception &e) UVCXX_NOEXCEPT {
             std::ostringstream oss;
             oss << "[ERROR] " << e.what() << std::endl;
             std::cerr << oss.str();
         }
 
-        static void default_on_except(std::exception_ptr p) {
+        static inline void default_on_except(std::exception_ptr p) UVCXX_NOEXCEPT {
             try {
                 std::rethrow_exception(p);
             } catch (const std::exception &e) {

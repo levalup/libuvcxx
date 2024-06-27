@@ -72,8 +72,8 @@ namespace uvcxx {
                 : m_raw(std::shared_ptr<raw_t>(borrow.raw, [](raw_t *) {})) {}
 
         template<typename K>
-        static std::shared_ptr<raw_t> cast_raw(const std::shared_ptr<K> &r) {
-            auto p = reinterpret_cast<typename std::shared_ptr<raw_t>::element_type*>(r.get());
+        static inline std::shared_ptr<raw_t> cast_raw(const std::shared_ptr<K> &r) {
+            auto p = reinterpret_cast<typename std::shared_ptr<raw_t>::element_type *>(r.get());
             return std::shared_ptr<raw_t>{r, p};
         }
 
@@ -125,6 +125,23 @@ namespace uvcxx {
 
         template<typename K>
         K *raw() const { return (K *) m_raw; }
+
+        raw_t *reset_raw(raw_t *raw) {
+            auto pre = m_raw;
+            m_raw = raw;
+            return pre;
+        }
+
+        raw_t *reset_raw(raw_t *raw, void(*del)(raw_t *)) {
+            auto pre = m_raw;
+            m_raw = raw;
+            if (pre && del) {
+                del(pre);
+                return nullptr;
+            } else {
+                return pre;
+            }
+        }
 
     private:
         raw_t *m_raw = nullptr;

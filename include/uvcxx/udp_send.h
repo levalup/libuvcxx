@@ -17,7 +17,7 @@ namespace uv {
         using supper = inherit_req_t<uv_udp_send_t, req_t>;
 
         UVCXX_NODISCARD
-        udp_t handle() const;
+        inline udp_t handle() const;
 
     public:
         class data_t : public req_callback_t<raw_t, int> {
@@ -46,8 +46,7 @@ namespace uv {
         auto data = new udp_send_t::data_t(req);
         uvcxx::defer_delete<udp_send_t::data_t> delete_data(data);
 
-        auto err = uv_udp_send(req, handle, bufs, nbufs, addr, udp_send_t::data_t::raw_callback);
-        if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
+        UVCXX_APPLY(uv_udp_send(req, handle, bufs, nbufs, addr, udp_send_t::data_t::raw_callback), 0);
 
         delete_data.release();
         ((uv_udp_send_t *) req)->data = data;

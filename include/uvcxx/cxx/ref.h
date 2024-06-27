@@ -74,7 +74,7 @@ namespace uvcxx {
     private:
         std::shared_ptr<Handle> m_handle;
 
-        static std::shared_ptr<Handle> make_shared(Handle handle) {
+        static inline std::shared_ptr<Handle> make_shared(Handle handle) {
             return std::shared_ptr<Handle>(new Handle(std::move(handle)), [](Handle *handle) {
                 handle->close(nullptr);
                 delete handle;
@@ -127,7 +127,7 @@ namespace uvcxx {
     private:
         std::shared_ptr<PHandle> m_handle;
 
-        static std::shared_ptr<PHandle> make_shared(PHandle handle) {
+        static inline std::shared_ptr<PHandle> make_shared(PHandle handle) {
             return std::shared_ptr<PHandle>(new PHandle(std::move(handle)), [](PHandle *handle) {
                 (*handle)->close(nullptr);
                 delete handle;

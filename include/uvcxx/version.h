@@ -18,9 +18,9 @@
 
 
 namespace uv {
-    unsigned int version() { return uv_version(); }
+    inline unsigned int version() { return uv_version(); }
 
-    const char *version_string() { return uv_version_string(); }
+    inline const char *version_string() { return uv_version_string(); }
 }
 
 #endif //LIBUVCXX_VERSION_H

@@ -27,8 +27,7 @@ namespace uv {
 
         UVCXX_NODISCARD
         uvcxx::callback<int, const uv_stat_t *, const uv_stat_t *> start(uvcxx::string path, unsigned int interval) {
-            auto err = uv_fs_poll_start(*this, raw_callback, path, interval);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
+            UVCXX_APPLY(uv_fs_poll_start(*this, raw_callback, path, interval), nullptr);
             _detach_();
             return get_data<data_t>()->start_cb.callback();
         }
@@ -38,8 +37,16 @@ namespace uv {
             _attach_close_();
         }
 
-        int getpath(char *buffer, size_t *size) {
+        int getpath(char *buffer, size_t *size) const {
             return uv_fs_poll_getpath(*this, buffer, size);
+        }
+
+        UVCXX_NODISCARD
+        std::string getpath() const {
+            uv_fs_poll_t *handle = *this;
+            return uvcxx::get_string<UVCXX_MAX_PATH>([handle](char *buffer, size_t *size) {
+                return uv_fs_poll_getpath(handle, buffer, size);
+            });
         }
 
     private:

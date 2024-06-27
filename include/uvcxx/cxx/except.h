@@ -14,6 +14,8 @@
 #include "../utils/standard.h"
 #include "../utils/pencil_box.h"
 
+// #define UVCXX_NO_EXCEPTION
+
 namespace uvcxx {
     class exception : public std::runtime_error {
     public:
@@ -45,12 +47,12 @@ namespace uvcxx {
         explicit errcode(I errcode, const Args &...args)
                 : self(int(errcode), args...) {}
 
-        static std::string Message(int errcode) {
+        static inline std::string Message(int errcode) {
             return catstr(uv_err_name(errcode), "(", errcode, "): ", uv_strerror(errcode));
         }
 
         template<typename T, typename ...Args>
-        static std::string Message(int errcode, const T &arg, const Args &...args) {
+        static inline std::string Message(int errcode, const T &arg, const Args &...args) {
             return catstr(uv_err_name(errcode), "(", errcode, "): ", uv_strerror(errcode), "; ", arg, args...);
         }
 

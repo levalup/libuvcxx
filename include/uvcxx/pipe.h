@@ -33,52 +33,37 @@ namespace uv {
         }
 
         int send_buffer_size(int *value) {
-            auto err = uv_send_buffer_size(*this, value);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_send_buffer_size(*this, value));
         }
 
         int recv_buffer_size(int *value) {
-            auto err = uv_recv_buffer_size(*this, value);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_recv_buffer_size(*this, value));
         }
 
         int fileno(uv_os_fd_t *fd) const {
-            auto err = uv_fileno(*this, fd);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_fileno(*this, fd));
         }
 
         stream_t accept() override {
             self client(this->loop());
-            uvcxx::defer close_client([&]() { client.close(nullptr); });
 
-            auto err = uv_accept(*this, client);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
+            UVCXX_APPLY(uv_accept(*this, client), nullptr);
 
-            close_client.release();
             return client;
         }
 
         int open(uv_file file) {
-            auto err = uv_pipe_open(*this, file);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_pipe_open(*this, file));
         }
 
         int bind(uvcxx::string name) {
-            auto err = uv_pipe_bind(*this, name);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_pipe_bind(*this, name));
         }
 
 #if UVCXX_SATISFY_VERSION(1, 46, 0)
 
         int bind2(const char *name, size_t namelen, unsigned int flags) {
-            auto err = uv_pipe_bind2(*this, name, namelen, flags);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_pipe_bind2(*this, name, namelen, flags));
         }
 
         int bind2(uvcxx::string_view name, unsigned int flags) {
@@ -93,60 +78,72 @@ namespace uv {
 
         UVCXX_NODISCARD
         uvcxx::promise<> connect(const connect_t &req, uvcxx::string name) {
-            return ::uv::pipe_connect(req, *this, name);
+            return pipe_connect(req, *this, name);
         }
 
         UVCXX_NODISCARD
         uvcxx::promise<> connect(uvcxx::string name) {
-            return ::uv::pipe_connect(*this, name);
+            return pipe_connect(*this, name);
         }
 
 #if UVCXX_SATISFY_VERSION(1, 46, 0)
 
         UVCXX_NODISCARD
         uvcxx::promise<> connect2(const connect_t &req, const char *name, size_t namelen, unsigned int flags) {
-            return ::uv::pipe_connect2(req, *this, name, namelen, flags);
+            return pipe_connect2(req, *this, name, namelen, flags);
         }
 
         UVCXX_NODISCARD
         uvcxx::promise<> connect2(const char *name, size_t namelen, unsigned int flags) {
-            return ::uv::pipe_connect2(*this, name, namelen, flags);
+            return pipe_connect2(*this, name, namelen, flags);
         }
 
         UVCXX_NODISCARD
         uvcxx::promise<> connect2(const connect_t &req, uvcxx::string_view name, unsigned int flags) {
-            return ::uv::pipe_connect2(req, *this, name.data, name.size, flags);
+            return pipe_connect2(req, *this, name.data, name.size, flags);
         }
 
         UVCXX_NODISCARD
         uvcxx::promise<> connect2(uvcxx::string_view name, unsigned int flags) {
-            return ::uv::pipe_connect2(*this, name.data, name.size, flags);
+            return pipe_connect2(*this, name.data, name.size, flags);
         }
 
         UVCXX_NODISCARD
         uvcxx::promise<> connect(const connect_t &req, uvcxx::string_view name, unsigned int flags) {
-            return ::uv::pipe_connect2(req, *this, name.data, name.size, flags);
+            return pipe_connect2(req, *this, name.data, name.size, flags);
         }
 
         UVCXX_NODISCARD
         uvcxx::promise<> connect(uvcxx::string_view name, unsigned int flags) {
-            return ::uv::pipe_connect2(*this, name.data, name.size, flags);
+            return pipe_connect2(*this, name.data, name.size, flags);
         }
 
 #endif
 
         int getsockname(char *buffer, size_t *size) const {
-            auto err = uv_pipe_getsockname(*this, buffer, size);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            return uv_pipe_getsockname(*this, buffer, size);
+        }
+
+        UVCXX_NODISCARD
+        std::string getsockname() const {
+            uv_pipe_t *handle = *this;
+            return uvcxx::get_string<256>([handle](char *buffer, size_t *size) {
+                return uv_pipe_getsockname(handle, buffer, size);
+            });
         }
 
 #if UVCXX_SATISFY_VERSION(1, 3, 0)
 
         int getpeername(char *buffer, size_t *size) const {
-            auto err = uv_pipe_getpeername(*this, buffer, size);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            return uv_pipe_getpeername(*this, buffer, size);
+        }
+
+        UVCXX_NODISCARD
+        std::string getpeername() const {
+            uv_pipe_t *handle = *this;
+            return uvcxx::get_string<256>([handle](char *buffer, size_t *size) {
+                return uv_pipe_getpeername(handle, buffer, size);
+            });
         }
 
 #endif
@@ -168,9 +165,7 @@ namespace uv {
 #if UVCXX_SATISFY_VERSION(1, 16, 0)
 
         int chmod(int flags) {
-            auto err = uv_pipe_chmod(*this, flags);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_pipe_chmod(*this, flags));
         }
 
 #endif
@@ -179,7 +174,7 @@ namespace uv {
 #if UVCXX_SATISFY_VERSION(1, 41, 0)
 
     inline int pipe(uv_file fds[2], int read_flags, int write_flags) {
-        return uv_pipe(fds, read_flags, write_flags);
+        UVCXX_PROXY(uv_pipe(fds, read_flags, write_flags));
     }
 
 #endif

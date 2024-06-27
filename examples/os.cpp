@@ -65,8 +65,8 @@ int main() {
         std::cout << "passwd2.gid = " << passwd2.gid << std::endl;
         std::cout << "passwd2.shell = " << (passwd2.shell ? passwd2.shell : "") << std::endl;
         std::cout << "passwd2.homedir = " << passwd2.homedir << std::endl;
-    } catch (...) {
-        std::cout << "[ERROR] failed to get_passwd with uid" << std::endl;
+    } catch (const std::exception &e) {
+        std::cout << e.what() << std::endl;
     }
 
     try {
@@ -85,8 +85,8 @@ int main() {
             }
             std::cout << std::endl;
         }
-    } catch (...) {
-        std::cout << "[ERROR] failed to get_group with gid" << std::endl;
+    } catch (const std::exception &e) {
+        std::cout << e.what() << std::endl;
     }
 
 #endif

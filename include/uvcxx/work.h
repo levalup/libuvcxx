@@ -50,11 +50,10 @@ namespace uv {
         auto data = new work_t::data_t(req);
         uvcxx::defer_delete<work_t::data_t> delete_data(data);
 
-        auto err = uv_queue_work(
+        UVCXX_APPLY(uv_queue_work(
                 loop, req,
                 work_t::data_t::raw_work_callback,
-                work_t::data_t::raw_callback);
-        if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
+                work_t::data_t::raw_callback), nullptr);
 
         delete_data.release();
         ((uv_work_t *) req)->data = data;

@@ -24,23 +24,19 @@ namespace uv {
 
         UVCXX_NODISCARD
         uvcxx::callback<> start(uint64_t timeout, uint64_t repeat) {
-            auto err = uv_timer_start(*this, raw_callback, timeout, repeat);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
+            UVCXX_APPLY(uv_timer_start(*this, raw_callback, timeout, repeat), nullptr);
             _detach_();
             return get_data<data_t>()->start_cb.callback();
         }
 
         int stop() {
-            auto err = uv_timer_stop(*this);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
+            UVCXX_APPLY(uv_timer_stop(*this), status);
             _attach_close_();
-            return err;
+            return 0;
         }
 
         int again() {
-            auto err = uv_timer_again(*this);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_timer_again(*this));
         }
 
         void set_repeat(uint64_t repeat) {

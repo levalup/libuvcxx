@@ -44,6 +44,7 @@ namespace uvcxx {
     class attach_t {
     public:
         using self = attach_t;
+        using count_t = decltype(std::declval<std::shared_ptr<attach_core_t>>().use_count());
 
         using core_t = attach_core_t;
         using attachment_t = core_t::attachment_t;
@@ -54,16 +55,15 @@ namespace uvcxx {
         explicit attach_t(attachment_t attachment)
                 : m_core(std::make_shared<core_t>(std::move(attachment))) {}
 
-    protected:
-        void _detach_() {
+        void detach() {
             m_core->detach();
         }
 
-        void _attach_(attachment_t attachment) {
+        void attach(attachment_t attachment) {
             m_core->attach(std::move(attachment));
         }
 
-        auto _attach_count_() -> decltype(std::declval<std::shared_ptr<attach_core_t>>().use_count()) {
+        count_t attach_count() {
             return m_core.use_count();
         }
 
@@ -72,7 +72,7 @@ namespace uvcxx {
          * use to free capture values of lambda function
          * @return
          */
-        void _unref_attach_() {
+        void unref_attach() {
             m_core.reset();
         }
 

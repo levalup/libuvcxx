@@ -29,8 +29,7 @@ namespace uv {
 
         UVCXX_NODISCARD
         uvcxx::callback<int> start(int signum) {
-            auto err = uv_signal_start(*this, raw_callback, signum);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
+            UVCXX_APPLY(uv_signal_start(*this, raw_callback, signum), nullptr);
             _detach_();
             return get_data<data_t>()->start_cb.callback();
         }
@@ -39,8 +38,7 @@ namespace uv {
 
         UVCXX_NODISCARD
         uvcxx::callback<int> start_oneshot(int signum) {
-            auto err = uv_signal_start_oneshot(*this, raw_callback, signum);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
+            UVCXX_APPLY(uv_signal_start_oneshot(*this, raw_callback, signum), nullptr);
 
             _detach_();
 
@@ -54,10 +52,9 @@ namespace uv {
 #endif
 
         int stop() {
-            auto err = uv_signal_stop(*this);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
+            UVCXX_APPLY(uv_signal_stop(*this), status);
             _attach_close_();
-            return err;
+            return 0;
         }
 
 #if UVCXX_SATISFY_VERSION(1, 12, 0)
@@ -69,7 +66,7 @@ namespace uv {
          * if use_count > 1, attach_close and unref_attach, telling other refs that its attached again. and i'm done.
          * @param grab
          */
-        static void finally_recycle_oneshot(signal_t &grab) {
+        static inline void finally_recycle_oneshot(signal_t &grab) {
             if (grab._attach_count_() == 1) {
                 grab.close(nullptr);
             } else {

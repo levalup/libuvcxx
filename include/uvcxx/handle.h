@@ -16,12 +16,20 @@
 #include "loop.h"
 
 namespace uvcxx {
-    class close_handle : public std::logic_error {
+    class close_handle : public std::exception {
     public:
         using self = close_handle;
-        using supper = std::logic_error;
+        using supper = std::exception;
 
-        close_handle() : supper("close handle") {}
+        close_handle() = default;
+
+        UVCXX_NODISCARD
+        const char *what() const UVCXX_NOEXCEPT override  {
+            return m_what;
+        }
+
+    private:
+        const char *m_what = "close_handle";
     };
 }
 
@@ -35,7 +43,7 @@ namespace uv {
      * Q: Why not `close` in destructor?
      * A: Because the destructor only be called after it is closed.
      */
-    class handle_t : public uvcxx::attach_t, public uvcxx::shared_raw_base_t<uv_handle_t> {
+    class handle_t : public uvcxx::shared_raw_base_t<uv_handle_t> {
     public:
         using self = handle_t;
         using supper = uvcxx::shared_raw_base_t<uv_handle_t>;
@@ -145,52 +153,6 @@ namespace uv {
             raw()->data = data;
         }
 
-    protected:
-        uvcxx::promise<> close_for(const std::function<void(void (*)(raw_t *))> &close) {
-            auto data = get_data<data_t>();
-            if (!data_t::is_it(data)) {
-                throw uvcxx::errcode(UV_EPERM, "close invalid libuvcxx handle");
-            }
-
-            (void) data->close_for(close);
-            _detach_();
-
-            return data->close_cb.promise();
-        }
-
-        void _attach_data_() {
-            _attach_(this->attach_data());
-        }
-
-        void _attach_close_() {
-            _attach_(this->attach_close());
-        }
-
-    private:
-        std::function<void(void)> attach_data() {
-            auto handle = raw();
-            return [handle]() {
-                auto data = (data_t *) handle->data;
-                if (!data_t::is_it(data)) return;
-                data->close_for([&](void (*cb)(raw_t *)) {
-                    // directly delete data and emit close promise
-                    cb(handle);
-                });
-            };
-        }
-
-        std::function<void(void)> attach_close() {
-            auto handle = raw();
-            return [handle]() {
-                auto data = (data_t *) handle->data;
-                if (!data_t::is_it(data)) return;
-
-                data->close_for([&](void (*cb)(raw_t *)) {
-                    uv_close(handle, cb);
-                });
-            };
-        }
-
     public:
         /**
          * the uv_handle_t->data must be the sub-class of data_t
@@ -202,7 +164,7 @@ namespace uv {
 
             uvcxx::promise_emitter<> close_cb;
 
-            static bool is_it(void *data) {
+            static inline bool is_it(void *data) {
                 return data && ((data_t *) data)->magic == MAGIC;
             }
 
@@ -249,11 +211,6 @@ namespace uv {
             std::atomic<bool> m_closed{false};
         };
 
-    protected:
-        static self borrow(raw_t *raw) {
-            return self{borrow_t(raw)};
-        }
-
     private:
         static void raw_close_callback(raw_t *raw) {
             auto data = (data_t *) raw->data;
@@ -263,6 +220,19 @@ namespace uv {
             uvcxx::defer reset_data([&]() { raw->data = nullptr; });
 
             data->close_cb.resolve();
+        }
+
+    protected:
+        uvcxx::promise<> close_for(const std::function<void(void (*)(raw_t *))> &close) {
+            auto data = get_data<data_t>();
+            if (!data_t::is_it(data)) {
+                throw uvcxx::errcode(UV_EPERM, "close invalid libuvcxx handle");
+            }
+
+            (void) data->close_for(close);
+            _detach_();
+
+            return data->close_cb.promise();
         }
 
     protected:
@@ -286,6 +256,55 @@ namespace uv {
         void watch(const uvcxx::callback_cast<C, ARGS...> &callback) {
             watch(callback.callback());
         }
+
+    private:
+        uvcxx::attach_t m_attach;
+
+    protected:
+        void _attach_data_() {
+            m_attach.attach(this->attach_data());
+        }
+
+        void _attach_close_() {
+            m_attach.attach(this->attach_close());
+        }
+
+        void _detach_() {
+            m_attach.detach();
+        }
+
+        uvcxx::attach_t::count_t _attach_count_() {
+            return m_attach.attach_count();
+        }
+
+        void _unref_attach_() {
+            m_attach.unref_attach();
+        }
+
+    private:
+        std::function<void(void)> attach_data() {
+            auto handle = raw();
+            return [handle]() {
+                auto data = (data_t *) handle->data;
+                if (!data_t::is_it(data)) return;
+                data->close_for([&](void (*cb)(raw_t *)) {
+                    // directly delete data and emit close promise
+                    cb(handle);
+                });
+            };
+        }
+
+        std::function<void(void)> attach_close() {
+            auto handle = raw();
+            return [handle]() {
+                auto data = (data_t *) handle->data;
+                if (!data_t::is_it(data)) return;
+
+                data->close_for([&](void (*cb)(raw_t *)) {
+                    uv_close(handle, cb);
+                });
+            };
+        }
     };
 
     template<typename T, typename B, typename=typename std::enable_if<std::is_base_of<handle_t, B>::value>::type>
@@ -307,9 +326,9 @@ namespace uv {
         operator T *() const { return this->template raw<T>(); }
 
     private:
-        static std::shared_ptr<uv_handle_t> make_shared() {
+        static inline std::shared_ptr<uv_handle_t> make_shared() {
             auto r = std::make_shared<T>();
-            auto p = reinterpret_cast<typename std::shared_ptr<uv_handle_t>::element_type*>(r.get());
+            auto p = reinterpret_cast<typename std::shared_ptr<uv_handle_t>::element_type *>(r.get());
             return std::shared_ptr<uv_handle_t>{r, p};
         }
     };

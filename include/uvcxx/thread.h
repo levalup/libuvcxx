@@ -11,9 +11,10 @@
 
 #include <uv.h>
 
-#include "uvcxx/cxx/except.h"
-#include "uvcxx/cxx/version.h"
-#include "uvcxx/inner/base.h"
+#include "cxx/except.h"
+#include "cxx/version.h"
+#include "cxx/wrapper.h"
+#include "inner/base.h"
 
 namespace uv {
     namespace inner {
@@ -30,16 +31,14 @@ namespace uv {
 
             explicit thread_t(entry_t entry)
                     : m_entry(std::move(entry)) {
-                auto err = uv_thread_create(&tid, raw_entry, this);
-                if (err < 0) throw uvcxx::errcode(err);
+                UVCXX_APPLY_STRICT(uv_thread_create(&tid, raw_entry, this));
             }
 
 #if UVCXX_SATISFY_VERSION(1, 26, 0)
 
             explicit thread_t(entry_t entry, const uv_thread_options_t *params)
                     : m_entry(std::move(entry)) {
-                auto err = uv_thread_create_ex(&tid, params, raw_entry, this);
-                if (err < 0) throw uvcxx::errcode(err);
+                UVCXX_APPLY_STRICT(uv_thread_create_ex(&tid, params, raw_entry, this));
             }
 
 #endif
@@ -48,9 +47,7 @@ namespace uv {
                 bool joined = false;
                 if (!m_joined.compare_exchange_strong(joined, true)) { return 0; }
 
-                auto err = uv_thread_join(&tid);
-                if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-                return err;
+                UVCXX_PROXY(uv_thread_join(&tid));
             }
 
         public:
@@ -69,7 +66,7 @@ namespace uv {
             }
 
         public:
-            static thread_t *detach(raw_t id) {
+            static inline thread_t *detach(raw_t id) {
                 return new self(id);
             }
 
@@ -96,7 +93,7 @@ namespace uv {
         thread_t &operator=(const thread_t &) = delete;
 
         thread_t(thread_t &&that) UVCXX_NOEXCEPT {
-            this->operator=(std::move(that));
+            (void) this->operator=(std::move(that));
         }
 
         thread_t &operator=(thread_t &&that) UVCXX_NOEXCEPT {
@@ -129,11 +126,11 @@ namespace uv {
 #if UVCXX_SATISFY_VERSION(1, 45, 0)
 
         int setaffinity(char *cpumask, char *oldmask, size_t mask_size) {
-            return uv_thread_setaffinity(*this, cpumask, oldmask, mask_size);
+            UVCXX_PROXY(uv_thread_setaffinity(*this, cpumask, oldmask, mask_size));
         }
 
         int getaffinity(char *cpumask, size_t mask_size) const {
-            return uv_thread_getaffinity(*this, cpumask, mask_size);
+            UVCXX_PROXY(uv_thread_getaffinity(*this, cpumask, mask_size));
         }
 
 #endif
@@ -146,22 +143,17 @@ namespace uv {
 #if UVCXX_SATISFY_VERSION(1, 48, 0)
 
         int setpriority(int priority) {
-            auto err = uv_thread_setpriority(m_thread->tid, priority);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_thread_setpriority(m_thread->tid, priority));
         }
 
         int getpriority(int *priority) const {
-            auto err = uv_thread_getpriority(m_thread->tid, priority);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_thread_getpriority(m_thread->tid, priority));
         }
 
         UVCXX_NODISCARD
         int getpriority() const {
             int priority = 0;
-            auto err = uv_thread_getpriority(m_thread->tid, &priority);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, 0);
+            (void) getpriority(&priority);
             return priority;
         }
 
@@ -186,7 +178,7 @@ namespace uv {
         inner::thread_t *m_thread = nullptr;
 
     public:
-        static self detach(uv_thread_t tid) { return self{tid}; }
+        static inline self detach(uv_thread_t tid) { return self{tid}; }
 
     private:
         explicit thread_t(uv_thread_t tid)

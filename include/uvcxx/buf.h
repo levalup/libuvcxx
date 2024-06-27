@@ -93,8 +93,9 @@ namespace uv {
     public:
         using self = buf_t;
         using supper = uvcxx::shared_raw_base_t<inner::buf_t>;
-
         using raw_t = uv_buf_t;
+
+        using supper::supper;
 
         buf_t(std::nullptr_t) : supper(nullptr) {}
 

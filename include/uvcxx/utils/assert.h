@@ -34,14 +34,14 @@ namespace uvcxx {
                 : supper(Message(cond, file, line, args...)) {}
 
     public:
-        static std::string Message(const uvcxx::string_view &cond) {
+        static inline std::string Message(const uvcxx::string_view &cond) {
             std::ostringstream oss;
             oss << "assert failed: (" << cond << ")";
             return oss.str();
         }
 
         template<typename... Args>
-        static std::string Message(uvcxx::string_view cond,
+        static inline std::string Message(uvcxx::string_view cond,
                                    const std::string &file,
                                    int line,
                                    const Args &...args) {

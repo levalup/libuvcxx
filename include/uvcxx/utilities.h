@@ -8,8 +8,8 @@
 
 #include "cxx/except.h"
 #include "cxx/string.h"
-#include "cxx/utils.h"
 #include "cxx/version.h"
+#include "cxx/wrapper.h"
 #include "inner/base.h"
 
 #if !UVCXX_SATISFY_VERSION(1, 34, 0)
@@ -26,14 +26,12 @@ namespace uv {
 
 #if UVCXX_SATISFY_VERSION(1, 6, 0)
 
-    int replace_allocator(
+    inline int replace_allocator(
             uv_malloc_func malloc_func,
             uv_realloc_func realloc_func,
             uv_calloc_func calloc_func,
             uv_free_func free_func) {
-        auto status = uv_replace_allocator(malloc_func, realloc_func, calloc_func, free_func);
-        if (status < 0) UVCXX_THROW_OR_RETURN(status, status);
-        return status;
+        UVCXX_PROXY(uv_replace_allocator(malloc_func, realloc_func, calloc_func, free_func));
     }
 
 #endif
@@ -54,43 +52,35 @@ namespace uv {
     }
 
     inline std::string get_process_title() {
-        return uvcxx::try_get<256>(uv_get_process_title);
+        return uvcxx::get_string<256>(uv_get_process_title);
     }
 
     inline int set_process_title(uvcxx::string title) {
-        auto status = uv_set_process_title(title);
-        if (status < 0) UVCXX_THROW_OR_RETURN(status, status);
-        return status;
+        UVCXX_PROXY(uv_set_process_title(title));
     }
 
     inline int resident_set_memory(size_t *rss) {
-        auto status = uv_resident_set_memory(rss);
-        if (status < 0) UVCXX_THROW_OR_RETURN(status, status);
-        return status;
+        UVCXX_PROXY(uv_resident_set_memory(rss));
     }
 
     inline int uptime(double *uptime) {
-        auto status = uv_uptime(uptime);
-        if (status < 0) UVCXX_THROW_OR_RETURN(status, status);
-        return status;
+        UVCXX_PROXY(uv_uptime(uptime));
     }
 
     inline int getrusage(uv_rusage_t *rusage) {
-        auto status = uv_getrusage(rusage);
-        if (status < 0) UVCXX_THROW_OR_RETURN(status, status);
-        return status;
+        UVCXX_PROXY(uv_getrusage(rusage));
     }
 
 #if UVCXX_SATISFY_VERSION(1, 44, 0)
 
-    unsigned int available_parallelism() {
+    inline unsigned int available_parallelism() {
         return uv_available_parallelism();
     }
 
 #endif
 
     inline int cpu_info(uv_cpu_info_t **cpu_infos, int *count) {
-        return uv_cpu_info(cpu_infos, count);
+        UVCXX_PROXY(uv_cpu_info(cpu_infos, count));
     }
 
     inline void free_cpu_info(uv_cpu_info_t *cpu_infos, int count) {
@@ -106,9 +96,18 @@ namespace uv {
 
         cpu_infos_t &operator=(const cpu_infos_t &) = delete;
 
+        cpu_infos_t(cpu_infos_t &&that) UVCXX_NOEXCEPT {
+            (void) this->operator=(std::move(that));
+        }
+
+        cpu_infos_t &operator=(cpu_infos_t &&that) UVCXX_NOEXCEPT {
+            std::swap(m_infos, that.m_infos);
+            std::swap(m_count, that.m_count);
+            return *this;
+        }
+
         cpu_infos_t() {
-            auto status = uv_cpu_info(&m_infos, &m_count);
-            if (status < 0) UVCXX_THROW(status, "failed to retrieve cpu info");
+            UVCXX_APPLY_STRICT(uv_cpu_info(&m_infos, &m_count), "failed to retrieve cpu info");
         }
 
         ~cpu_infos_t() {
@@ -142,15 +141,13 @@ namespace uv {
 #if UVCXX_SATISFY_VERSION(1, 45, 0)
 
     inline int cpumask_size() {
-        auto status = uv_cpumask_size();
-        if (status < 0) UVCXX_THROW_OR_RETURN(status, status);
-        return status;
+        UVCXX_PROXY(uv_cpumask_size());
     }
 
 #endif
 
     inline int interface_addresses(uv_interface_address_t **addresses, int *count) {
-        return uv_interface_addresses(addresses, count);
+        UVCXX_PROXY(uv_interface_addresses(addresses, count));
     }
 
     inline void free_interface_addresses(uv_interface_address_t *addresses, int count) {
@@ -166,9 +163,18 @@ namespace uv {
 
         interface_addresses_t &operator=(const interface_addresses_t &) = delete;
 
+        interface_addresses_t(interface_addresses_t &&that) UVCXX_NOEXCEPT {
+            (void) this->operator=(std::move(that));
+        }
+
+        interface_addresses_t &operator=(interface_addresses_t &&that) UVCXX_NOEXCEPT {
+            std::swap(m_addresses, that.m_addresses);
+            std::swap(m_count, that.m_count);
+            return *this;
+        }
+
         interface_addresses_t() {
-            auto status = uv_interface_addresses(&m_addresses, &m_count);
-            if (status < 0) UVCXX_THROW(status, "failed to retrieve network addresses");
+            UVCXX_APPLY_STRICT(uv_interface_addresses(&m_addresses, &m_count), "failed to retrieve network addresses");
         }
 
         ~interface_addresses_t() {
@@ -204,49 +210,35 @@ namespace uv {
     }
 
     inline int ip4_addr(uvcxx::string ip, int port, sockaddr_in *addr) {
-        auto status = uv_ip4_addr(ip, port, addr);
-        if (status < 0) UVCXX_THROW_OR_RETURN(status, status);
-        return status;
+        UVCXX_PROXY(uv_ip4_addr(ip, port, addr));
     }
 
     inline int ip6_addr(uvcxx::string ip, int port, sockaddr_in6 *addr) {
-        auto status = uv_ip6_addr(ip, port, addr);
-        if (status < 0) UVCXX_THROW_OR_RETURN(status, status);
-        return status;
+        UVCXX_PROXY(uv_ip6_addr(ip, port, addr));
     }
 
     inline int ip4_name(const sockaddr_in *src, char *dst, size_t size) {
-        auto status = uv_ip4_name(src, dst, size);
-        if (status < 0) UVCXX_THROW_OR_RETURN(status, status);
-        return status;
+        UVCXX_PROXY(uv_ip4_name(src, dst, size));
     }
 
     inline int ip6_name(const sockaddr_in6 *src, char *dst, size_t size) {
-        auto status = uv_ip6_name(src, dst, size);
-        if (status < 0) UVCXX_THROW_OR_RETURN(status, status);
-        return status;
+        UVCXX_PROXY(uv_ip6_name(src, dst, size));
     }
 
 #if UVCXX_SATISFY_VERSION(1, 43, 0)
 
     inline int ip_name(const sockaddr *src, char *dst, size_t size) {
-        auto status = uv_ip_name(src, dst, size);
-        if (status < 0) UVCXX_THROW_OR_RETURN(status, status);
-        return status;
+        UVCXX_PROXY(uv_ip_name(src, dst, size));
     }
 
 #endif
 
     inline int inet_ntop(int af, uvcxx::string src, char *dst, size_t size) {
-        auto status = uv_inet_ntop(af, src, dst, size);
-        if (status < 0) UVCXX_THROW_OR_RETURN(status, status);
-        return status;
+        UVCXX_PROXY(uv_inet_ntop(af, src, dst, size));
     }
 
     inline int inet_pton(int af, uvcxx::string src, char *dst) {
-        auto status = uv_inet_pton(af, src, dst);
-        if (status < 0) UVCXX_THROW_OR_RETURN(status, status);
-        return status;
+        UVCXX_PROXY(uv_inet_pton(af, src, dst));
     }
 
 #if !UVCXX_SATISFY_VERSION(1, 16, 0) && !defined(UV_IF_NAMESIZE)
@@ -260,7 +252,7 @@ namespace uv {
     }
 
     inline std::string if_indextoname(unsigned int ifindex) {
-        return uvcxx::try_get<UV_IF_NAMESIZE - 1>([ifindex](char *buffer, size_t *size) {
+        return uvcxx::get_string<UV_IF_NAMESIZE - 1>([ifindex](char *buffer, size_t *size) {
             return uv_if_indextoname(ifindex, buffer, size);
         });
     }
@@ -270,7 +262,7 @@ namespace uv {
     }
 
     inline std::string if_indextoiid(unsigned int ifindex) {
-        return uvcxx::try_get<UV_IF_NAMESIZE - 1>([ifindex](char *buffer, size_t *size) {
+        return uvcxx::get_string<UV_IF_NAMESIZE - 1>([ifindex](char *buffer, size_t *size) {
             return uv_if_indextoiid(ifindex, buffer, size);
         });
     }
@@ -282,7 +274,7 @@ namespace uv {
     }
 
     inline std::string exepath() {
-        return uvcxx::try_get<UVCXX_MAX_PATH>(uv_exepath);
+        return uvcxx::get_string<UVCXX_MAX_PATH>(uv_exepath);
     }
 
     inline int cwd(char *buffer, size_t *size) {
@@ -290,13 +282,11 @@ namespace uv {
     }
 
     inline std::string cwd() {
-        return uvcxx::try_get<UVCXX_MAX_PATH>(uv_cwd);
+        return uvcxx::get_string<UVCXX_MAX_PATH>(uv_cwd);
     }
 
     inline int chdir(uvcxx::string dir) {
-        auto status = uv_chdir(dir);
-        if (status < 0) UVCXX_THROW_OR_RETURN(status, status);
-        return status;
+        UVCXX_PROXY(uv_chdir(dir));
     }
 
     inline uint64_t get_free_memory() {
@@ -334,7 +324,8 @@ namespace uv {
 
     inline uv_timespec64_t clock_gettime(uv_clock_id clock_id) {
         uv_timespec64_t ts{};
-        (void) uv_clock_gettime(clock_id, &ts);
+        std::memset(&ts, 0, sizeof(ts));
+        (void) clock_gettime(clock_id, &ts);
         return ts;
     }
 
@@ -347,7 +338,8 @@ namespace uv {
 
     inline uv_timeval64_t gettimeofday() {
         uv_timeval64_t tv{};
-        (void) uv_gettimeofday(&tv);
+        std::memset(&tv, 0, sizeof(tv));
+        (void) gettimeofday(&tv);
         return tv;
     }
 

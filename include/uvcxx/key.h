@@ -9,29 +9,27 @@
 #include <uv.h>
 
 #include "cxx/except.h"
+#include "cxx/wrapper.h"
 #include "inner/base.h"
 
 namespace uv {
-    class key_t : public uvcxx::extend_raw_base_t<uv_key_t> {
+    class key_t : public uvcxx::pointer_raw_base_t<uv_key_t> {
     public:
         using self = key_t;
-        using supper = uvcxx::extend_raw_base_t<uv_key_t>;
+        using supper = uvcxx::pointer_raw_base_t<uv_key_t>;
 
-        key_t(const key_t &) = delete;
+        using supper::supper;
 
-        key_t &operator=(const key_t &) = delete;
+        key_t(key_t &&) UVCXX_NOEXCEPT = default;
 
-        key_t(key_t &&that) UVCXX_NOEXCEPT = default;
-
-        key_t &operator=(key_t &&that) UVCXX_NOEXCEPT = default;
+        key_t &operator=(key_t &&) UVCXX_NOEXCEPT = default;
 
         key_t() {
-            auto err = uv_key_create(*this);
-            if (err < 0) throw uvcxx::errcode(err, "can not create key");
+            UVCXX_APPLY_STRICT(uv_key_create(*this), "can not create key");
         }
 
-        ~key_t() {
-            uv_key_delete(*this);
+        ~key_t() override {
+            if (*this) uv_key_delete(*this);
         }
 
         void set(void *value) {

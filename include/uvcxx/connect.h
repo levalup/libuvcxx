@@ -17,7 +17,7 @@ namespace uv {
         using supper = inherit_req_t<uv_connect_t, req_t>;
 
         UVCXX_NODISCARD
-        stream_t handle() const;
+        inline stream_t handle() const;
 
     public:
         class callback_t : public req_callback_t<raw_t, int> {
@@ -44,8 +44,7 @@ namespace uv {
         auto data = new connect_t::callback_t(req);
         uvcxx::defer_delete<connect_t::callback_t> delete_data(data);
 
-        auto err = uv_tcp_connect(req, handle, addr, connect_t::callback_t::raw_callback);
-        if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
+        UVCXX_APPLY(uv_tcp_connect(req, handle, addr, connect_t::callback_t::raw_callback), nullptr);
 
         delete_data.release();
         ((uv_connect_t *) req)->data = data;
@@ -81,8 +80,7 @@ namespace uv {
         auto data = new connect_t::callback_t(req);
         uvcxx::defer_delete<connect_t::callback_t> delete_data(data);
 
-        auto err = uv_pipe_connect2(req, handle, name, namelen, flags, connect_t::callback_t::raw_callback);
-        if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
+        UVCXX_APPLY(uv_pipe_connect2(req, handle, name, namelen, flags, connect_t::callback_t::raw_callback), nullptr);
 
         delete_data.release();
         ((uv_connect_t *) req)->data = data;

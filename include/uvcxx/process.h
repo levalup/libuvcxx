@@ -22,25 +22,28 @@ namespace uv {
 
         process_option_t &operator=(const process_option_t &) = delete;
 
-        process_option_t(process_option_t &&) = default;
+        process_option_t(process_option_t &&that) UVCXX_NOEXCEPT {
+            (void) operator=(std::move(that));
+        }
 
-        process_option_t &operator=(process_option_t &&) = default;
+        process_option_t &operator=(process_option_t &&that) UVCXX_NOEXCEPT {
+            *(raw()) = *that.raw();
+            m_cxx = std::move(that.m_cxx);
+            m_cxx.dump(*this);
+            return *this;
+        }
 
         explicit process_option_t(const char *file) {
             std::memset(raw(), 0, sizeof(raw_t));
             raw()->file = file;
-
-            m_c_args.resize(1, nullptr);
-            raw()->args = (char **) m_c_args.data();
+            m_cxx.dump_args(*this);
         }
 
-        explicit process_option_t(std::string file)
-                : m_file(std::move(file)) {
+        explicit process_option_t(std::string file) {
+            m_cxx.file = std::move(file);
             std::memset(raw(), 0, sizeof(raw_t));
-            raw()->file = m_file.c_str();
-
-            m_c_args.resize(1, nullptr);
-            raw()->args = (char **) m_c_args.data();
+            m_cxx.dump_file(*this);
+            m_cxx.dump_args(*this);
         }
 
         self &args(char **args) {
@@ -49,15 +52,9 @@ namespace uv {
         }
 
         self &args(std::vector<std::string> args) {
-            m_args = std::move(args);
-            m_c_args.resize(m_args.size() + 1);
-
-            for (size_t i = 0; i < m_args.size(); ++i) {
-                m_c_args[i] = m_args[i].c_str();
-            }
-            m_c_args.back() = nullptr;
-
-            return this->args((char **) m_c_args.data());
+            m_cxx.args = std::move(args);
+            m_cxx.dump_args(*this);
+            return *this;
         }
 
         self &args(std::initializer_list<std::string> args) {
@@ -70,15 +67,9 @@ namespace uv {
         }
 
         self &env(std::vector<std::string> env) {
-            m_env = std::move(env);
-            m_c_env.resize(m_env.size() + 1);
-
-            for (size_t i = 0; i < m_env.size(); ++i) {
-                m_c_env[i] = m_env[i].c_str();
-            }
-            m_c_env.back() = nullptr;
-
-            return this->env((char **) m_c_env.data());
+            m_cxx.env = std::move(env);
+            m_cxx.dump_env(*this);
+            return *this;
         }
 
         self &env(std::initializer_list<std::string> env) {
@@ -91,8 +82,8 @@ namespace uv {
         }
 
         self &cwd(std::string cwd) {
-            m_cwd = std::move(cwd);
-            return this->cwd(m_cwd.c_str());
+            m_cxx.cwd = std::move(cwd);
+            return this->cwd(m_cxx.cwd.c_str());
         }
 
         self &flags(unsigned int flags) {
@@ -107,8 +98,8 @@ namespace uv {
         }
 
         self &stdio(std::vector<uv_stdio_container_t> stdio) {
-            m_stdio = std::move(stdio);
-            return this->stdio(m_stdio.data(), (int) m_stdio.size());
+            m_cxx.stdio = std::move(stdio);
+            return this->stdio(m_cxx.stdio.data(), (int) m_cxx.stdio.size());
         }
 
         self &uid(uv_uid_t uid) {
@@ -136,36 +127,28 @@ namespace uv {
         self &env(uvcxx::string_view key, const V &value) {
             std::ostringstream oss;
             oss << key << "=" << value;
-            m_env.emplace_back(oss.str());
-            m_c_env.resize(m_env.size() + 1);
-            for (size_t i = 0; i < m_env.size(); ++i) {
-                m_c_env[i] = m_env[i].c_str();
-            }
-            m_c_env.back() = nullptr;
-            return this->env((char **) m_c_env.data());
+            m_cxx.env.emplace_back(oss.str());
+            m_cxx.dump_env(*this);
+            return *this;
         }
 
         self &env(uvcxx::string_view key, uvcxx::string_view value) {
             std::ostringstream oss;
             oss << key << "=" << value;
-            m_env.emplace_back(oss.str());
-            m_c_env.resize(m_env.size() + 1);
-            for (size_t i = 0; i < m_env.size(); ++i) {
-                m_c_env[i] = m_env[i].c_str();
-            }
-            m_c_env.back() = nullptr;
-            return this->env((char **) m_c_env.data());
+            m_cxx.env.emplace_back(oss.str());
+            m_cxx.dump_env(*this);
+            return *this;
         }
 
         self &stdio(int i, uv_stdio_container_t *io) {
             auto size = size_t(i) + 1;
-            if (size > m_stdio.size()) {
+            if (size > m_cxx.stdio.size()) {
                 uv_stdio_container_t ignore{};
                 ignore.flags = UV_IGNORE;
-                m_stdio.resize(size, ignore);
+                m_cxx.stdio.resize(size, ignore);
             }
-            m_stdio[i] = *io;
-            return this->stdio(m_stdio.data(), (int) m_stdio.size());
+            m_cxx.stdio[i] = *io;
+            return this->stdio(m_cxx.stdio.data(), (int) m_cxx.stdio.size());
         }
 
         self &stdio(int i, uv_stdio_flags flags) {
@@ -189,63 +172,56 @@ namespace uv {
         }
 
     private:
-        std::string m_file;
-        std::vector<std::string> m_args;
-        std::vector<const char *> m_c_args;
-        std::vector<std::string> m_env;
-        std::vector<const char *> m_c_env;
-        std::string m_cwd;
-        std::vector<uv_stdio_container_t> m_stdio;
-    };
+        struct {
+            std::string file;
+            std::vector<std::string> args;
+            std::vector<std::string> env;
+            std::string cwd;
+            std::vector<uv_stdio_container_t> stdio;
 
-    class process_t;
+            mutable std::vector<const char *> c_args;
+            mutable std::vector<const char *> c_env;
 
-    namespace inner {
-        /**
-         * inner process class
-         * add support for join, exit callback, state grab and so on.
-         */
-        class process_t : public uv_process_t {
-        public:
-            using self = process_t;
-            using supper = uv_process_t;
-
-            process_t() : supper() {
-                m_option.exit_cb = raw_exit_callback;
+            void dump_file(uv_process_options_t *option) const {
+                option->file = file.c_str();
             }
 
-            uvcxx::promise<int64_t, int> spawn(const loop_t &loop_) {
-                auto err = uv_spawn(loop_, this, &m_option);
-                if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
-
-                return get_data()->exit_cb.promise();
-            }
-
-        private:
-            uv_process_options_t m_option{};
-
-        private:
-            static void raw_exit_callback(uv_process_t *handle, int64_t exit_status, int term_signal) {
-                auto data = (data_t *) handle->data;
-                if (!data_t::is_it(data)) return;
-                data->exit_cb.resolve(exit_status, term_signal);
-            }
-
-            class data_t : public handle_t::data_t {
-            public:
-                uvcxx::promise_emitter<int64_t, int> exit_cb;
-
-                explicit data_t(const handle_t &handle) : handle_t::data_t(handle) {
+            void dump_args(uv_process_options_t *option) const {
+                c_args.resize(args.size() + 1);
+                for (size_t i = 0; i < args.size(); ++i) {
+                    c_args[i] = args[i].c_str();
                 }
-            };
-
-            data_t *get_data() {
-                return (data_t *) this->data;
+                c_args.back() = nullptr;
+                option->args = (char **) c_args.data();
             }
 
-            friend class ::uv::process_t;
-        };
-    }
+            void dump_env(uv_process_options_t *option) const {
+                c_env.resize(env.size() + 1);
+                for (size_t i = 0; i < env.size(); ++i) {
+                    c_env[i] = env[i].c_str();
+                }
+                c_env.back() = nullptr;
+                option->env = (char **) c_env.data();
+            }
+
+            void dump_cwd(uv_process_options_t *option) const {
+                option->cwd = cwd.c_str();
+            }
+
+            void dump_stdio(uv_process_options_t *option) const {
+                option->stdio = (uv_stdio_container_t *) stdio.data();
+                option->stdio_count = (int) stdio.size();
+            }
+
+            void dump(uv_process_options_t *option) const {
+                dump_file(option);
+                dump_args(option);
+                dump_env(option);
+                dump_cwd(option);
+                dump_stdio(option);
+            }
+        } m_cxx;
+    };
 
     /**
      * After the process is successfully `spawn`, `close` will be automatically called when the process exits,
@@ -270,8 +246,7 @@ namespace uv {
             auto fix_options = *options;
             fix_options.exit_cb = raw_exit_callback;
 
-            auto status = uv_spawn(loop, *this, &fix_options);
-            if (status < 0) UVCXX_THROW_OR_RETURN(status, nullptr);
+            UVCXX_APPLY(uv_spawn(loop, *this, &fix_options), nullptr);
 
             _detach_();
             return get_data<data_t>()->exit_cb.promise();
@@ -282,9 +257,7 @@ namespace uv {
         }
 
         int kill(int signum) {
-            auto status = uv_process_kill(*this, signum);
-            if (status < 0) UVCXX_THROW_OR_RETURN(status, status);
-            return status;
+            UVCXX_PROXY(uv_process_kill(*this, signum));
         }
 
         UVCXX_NODISCARD
@@ -317,9 +290,7 @@ namespace uv {
     inline void disable_stdio_inheritance() { uv_disable_stdio_inheritance(); }
 
     inline int kill(int pid, int signum) {
-        auto status = uv_kill(pid, signum);
-        if (status < 0) UVCXX_THROW_OR_RETURN(status, status);
-        return status;
+        UVCXX_PROXY(uv_kill(pid, signum));
     }
 }
 

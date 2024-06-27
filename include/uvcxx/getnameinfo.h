@@ -65,7 +65,7 @@ namespace uv {
     inline int getnameinfo(std::nullptr_t, getnameinfo_t &req,
                            const sockaddr *addr, int flags,
                            std::nullptr_t) {
-        return uv_getnameinfo(nullptr, req, nullptr, addr, flags);
+        UVCXX_PROXY(uv_getnameinfo(nullptr, req, nullptr, addr, flags));
     }
 
 #endif
@@ -77,8 +77,7 @@ namespace uv {
         auto *data = new getnameinfo_t::callback_t(req);
         uvcxx::defer_delete<getnameinfo_t::data_t> delete_data(data);
 
-        auto err = uv_getnameinfo(loop, req, getnameinfo_t::callback_t::raw_callback, addr, flags);
-        if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
+        UVCXX_APPLY(uv_getnameinfo(loop, req, getnameinfo_t::callback_t::raw_callback, addr, flags), nullptr);
 
         delete_data.release();
         ((uv_getnameinfo_t *) req)->data = data;

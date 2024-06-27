@@ -7,14 +7,15 @@
 #define LIBUVCXX_LOOP_H
 
 #include <atomic>
+#include <cstring>
 #include <memory>
 #include <mutex>
-#include <cassert>
 
 #include <uv.h>
 
 #include "cxx/except.h"
 #include "cxx/version.h"
+#include "cxx/wrapper.h"
 #include "inner/base.h"
 #include "utils/defer.h"
 
@@ -41,9 +42,7 @@ namespace uv {
 
         template<typename... Value>
         int configure(uv_loop_option option, Value ...value) {
-            auto err = uv_loop_configure(*this, option, value...);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_loop_configure(*this, option, value...));
         }
 
 #endif
@@ -51,26 +50,18 @@ namespace uv {
         int close() {
             auto data = (data_t *) raw()->data;
             if (data_t::is_it(data)) {
-                auto status = raw<loop_with_data_t>()->close();
-                if (status < 0) UVCXX_THROW_OR_RETURN(status, status);
-                return status;
+                UVCXX_PROXY(raw<loop_with_data_t>()->close());
             } else {
-                auto status = uv_loop_close(raw());
-                if (status < 0) UVCXX_THROW_OR_RETURN(status, status);
-                return status;
+                UVCXX_PROXY(uv_loop_close(raw()));
             }
         }
 
         int run() {
-            auto err = uv_run(*this, UV_RUN_DEFAULT);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_run(*this, UV_RUN_DEFAULT));
         }
 
         int run(uv_run_mode mode) {
-            auto err = uv_run(*this, mode);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_run(*this, mode));
         }
 
         UVCXX_NODISCARD
@@ -83,7 +74,7 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
-        static size_t size() {
+        static inline size_t size() {
             return uv_loop_size();
         }
 
@@ -113,9 +104,7 @@ namespace uv {
 #if UVCXX_SATISFY_VERSION(1, 12, 0)
 
         int fork() {
-            auto err = uv_loop_fork(*this);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, err);
-            return err;
+            UVCXX_PROXY(uv_loop_fork(*this));
         }
 
 #endif
@@ -143,12 +132,13 @@ namespace uv {
 #if UVCXX_SATISFY_VERSION(1, 45, 0)
 
         int metrics_info(uv_metrics_t *metrics) {
-            return uv_metrics_info(*this, metrics);
+            UVCXX_PROXY(uv_metrics_info(*this, metrics));
         }
 
         uv_metrics_t metrics_info() {
             uv_metrics_t metrics{};
-            (void) uv_metrics_info(*this, &metrics);
+            std::memset(&metrics, 0, sizeof(uv_metrics_t));
+            (void) metrics_info(&metrics);
             return metrics;
         }
 
@@ -182,7 +172,7 @@ namespace uv {
         }
 
     public:
-        static self borrow(raw_t *raw) {
+        static inline self borrow(raw_t *raw) {
             return self{borrow_t(raw)};
         }
 
@@ -192,7 +182,7 @@ namespace uv {
             static constexpr uint64_t MAGIC = 0x1155665044332210;
             uint64_t magic = MAGIC;
 
-            static bool is_it(void *data) {
+            static inline bool is_it(void *data) {
                 return data && ((data_t *) data)->magic == MAGIC;
             }
 
@@ -215,8 +205,7 @@ namespace uv {
         class loop_with_data_t : public uv_loop_t {
         public:
             loop_with_data_t() : uv_loop_t() {
-                auto status = uv_loop_init(this);
-                if (status < 0) throw uvcxx::errcode(status, "can not init loop");
+                UVCXX_APPLY_STRICT(uv_loop_init(this), "can not init loop");
                 this->data = &m_data;
             }
 

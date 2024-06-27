@@ -51,7 +51,7 @@ namespace uvcxx {
         mutable_buffer(T (&arr)[Size])
                 : buf(init(arr, Size * sizeof(T))) {}
 
-        mutable_buffer(uv::buf_t &buf);
+        inline mutable_buffer(uv::buf_t &buf);
 
         operator uv_buf_t *() { return &buf; }
 
@@ -59,7 +59,7 @@ namespace uvcxx {
 
     private:
         template<typename I, typename std::enable_if<std::is_integral<I>::value, int>::type = 0>
-        static uv_buf_t init(void *data, I size) {
+        static inline uv_buf_t init(void *data, I size) {
             uv_buf_t buf{};
             buf.base = (decltype(buf.base)) (data);
             buf.len = (decltype(buf.len)) (size);
@@ -104,13 +104,13 @@ namespace uvcxx {
 
         buffer(const mutable_buffer &buf) : buf(buf.buf) {}
 
-        buffer(uv::buf_t &buf);
+        inline buffer(uv::buf_t &buf);
 
         operator const uv_buf_t *() const { return &buf; }
 
     private:
         template<typename I, typename std::enable_if<std::is_integral<I>::value, int>::type = 0>
-        static uv_buf_t init(const void *data, I size) {
+        static inline uv_buf_t init(const void *data, I size) {
             uv_buf_t buf{};
             buf.base = (decltype(buf.base)) (data);
             buf.len = (decltype(buf.len)) (size);

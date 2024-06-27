@@ -12,8 +12,8 @@
 
 #include "cxx/except.h"
 #include "cxx/string.h"
-#include "cxx/utils.h"
 #include "cxx/version.h"
+#include "cxx/wrapper.h"
 #include "inner/base.h"
 
 namespace uv {
@@ -39,7 +39,7 @@ namespace uv {
         }
 
         inline std::string homedir() {
-            return uvcxx::try_get<UVCXX_MAX_PATH>(uv_os_homedir);
+            return uvcxx::get_string<UVCXX_MAX_PATH>(uv_os_homedir);
         }
 
 #endif
@@ -50,11 +50,11 @@ namespace uv {
         }
 
         inline std::string tmpdir() {
-            return uvcxx::try_get<UVCXX_MAX_PATH>(uv_os_tmpdir);
+            return uvcxx::get_string<UVCXX_MAX_PATH>(uv_os_tmpdir);
         }
 
         inline int get_passwd(uv_passwd_t *pwd) {
-            return uv_os_get_passwd(pwd);
+            UVCXX_PROXY(uv_os_get_passwd(pwd));
         }
 
         inline void free_passwd(uv_passwd_t *pwd) {
@@ -63,17 +63,26 @@ namespace uv {
 
         class passwd_t : public uvcxx::inherit_raw_base_t<uv_passwd_t> {
         public:
+            using self = passwd_t;
+            using supper = uvcxx::inherit_raw_base_t<uv_passwd_t>;
+
             passwd_t(const passwd_t &) = delete;
 
             passwd_t &operator=(const passwd_t &) = delete;
 
-            passwd_t(passwd_t &&) = default;
+            passwd_t(passwd_t &&that) UVCXX_NOEXCEPT {
+                std::memset(raw(), 0, sizeof(raw_t));
+                (void) this->operator=(std::move(that));
+            };
 
-            passwd_t &operator=(passwd_t &&) = default;
+            passwd_t &operator=(passwd_t &&) UVCXX_NOEXCEPT = default;
+
+            passwd_t(std::nullptr_t) {
+                std::memset(raw(), 0, sizeof(raw_t));
+            }
 
             passwd_t() {
-                auto status = uv_os_get_passwd(this);
-                if (status < 0) throw uvcxx::errcode(status, "failed to get_passwd");
+                UVCXX_APPLY_STRICT(uv_os_get_passwd(*this), "failed to get_passwd");
             }
 
             /**
@@ -83,7 +92,11 @@ namespace uv {
             explicit passwd_t(uv_uid_t uid);
 
             ~passwd_t() {
-                uv_os_free_passwd(this);
+                if (*this) uv_os_free_passwd(*this);
+            }
+
+            explicit operator bool() const {
+                return raw()->username;
             }
         };
 
@@ -95,7 +108,7 @@ namespace uv {
 #if UVCXX_SATISFY_VERSION(1, 45, 0)
 
         inline int get_passwd2(uv_passwd_t *pwd, uv_uid_t uid) {
-            return uv_os_get_passwd2(pwd, uid);
+            UVCXX_PROXY(uv_os_get_passwd2(pwd, uid));
         }
 
         inline int get_passwd(uv_passwd_t *pwd, uv_uid_t uid) {
@@ -103,8 +116,7 @@ namespace uv {
         }
 
         inline passwd_t::passwd_t(uv_uid_t uid) {
-            auto status = uv_os_get_passwd2(this, uid);
-            if (status < 0) throw uvcxx::errcode(status, "failed to get_passwd2");
+            UVCXX_APPLY_STRICT(uv_os_get_passwd2(*this, uid), "failed to get_passwd2(", (ssize_t) uid, ")");
         }
 
         inline passwd_t get_passwd(uv_uid_t uid) {
@@ -112,7 +124,7 @@ namespace uv {
         }
 
         inline int get_group(uv_group_t *grp, uv_uid_t gid) {
-            return uv_os_get_group(grp, gid);
+            UVCXX_PROXY(uv_os_get_group(grp, gid));
         }
 
         inline void free_group(uv_group_t *grp) {
@@ -121,21 +133,34 @@ namespace uv {
 
         class group_t : public uvcxx::inherit_raw_base_t<uv_group_t> {
         public:
+            using self = group_t;
+            using supper = uvcxx::inherit_raw_base_t<uv_group_t>;
+
             group_t(const group_t &) = delete;
 
             group_t &operator=(const group_t &) = delete;
 
-            group_t(group_t &&) = default;
+            group_t(group_t &&that) UVCXX_NOEXCEPT {
+                std::memset(raw(), 0, sizeof(raw_t));
+                (void) this->operator=(std::move(that));
+            };
 
-            group_t &operator=(group_t &&) = default;
+            group_t &operator=(group_t &&) UVCXX_NOEXCEPT = default;
+
+            group_t(std::nullptr_t) {
+                std::memset(raw(), 0, sizeof(raw_t));
+            }
 
             explicit group_t(uv_uid_t gid) {
-                auto status = uv_os_get_group(this, gid);
-                if (status < 0) throw uvcxx::errcode(status, "failed to get_group");
+                UVCXX_APPLY_STRICT(uv_os_get_group(*this, gid), "failed to get_group(", (ssize_t) gid, ")");
             }
 
             ~group_t() {
-                uv_os_free_group(this);
+                if (*this) uv_os_free_group(*this);
+            }
+
+            explicit operator bool() const {
+                return raw()->members;
             }
         };
 
@@ -147,7 +172,7 @@ namespace uv {
 #if UVCXX_SATISFY_VERSION(1, 31, 0)
 
         inline int get_environ(uv_env_item_t **envitems, int *count) {
-            return uv_os_environ(envitems, count);
+            UVCXX_PROXY(uv_os_environ(envitems, count));
         }
 
         inline void free_environ(uv_env_item_t *envitems, int count) {
@@ -163,13 +188,18 @@ namespace uv {
 
             env_items_t &operator=(const env_items_t &) = delete;
 
-            env_items_t(env_items_t &&) = default;
+            env_items_t(env_items_t &&that) UVCXX_NOEXCEPT {
+                (void) this->operator=(std::move(that));
+            }
 
-            env_items_t &operator=(env_items_t &&) = default;
+            env_items_t &operator=(env_items_t &&that) UVCXX_NOEXCEPT {
+                std::swap(m_items, that.m_items);
+                std::swap(m_count, that.m_count);
+                return *this;
+            }
 
             env_items_t() {
-                auto status = uv_os_environ(&m_items, &m_count);
-                if (status < 0) UVCXX_THROW(status, "failed to retrieve environ");
+                UVCXX_APPLY_STRICT(uv_os_environ(&m_items, &m_count), "failed to retrieve environ");
             }
 
             ~env_items_t() {
@@ -212,25 +242,17 @@ namespace uv {
 
         inline std::string getenv(uvcxx::string name) {
             const char *c_name = name;
-            return uvcxx::try_get<UVCXX_MAX_PATH>([c_name](char *buffer, size_t *size) {
+            return uvcxx::get_string<UVCXX_MAX_PATH>([c_name](char *buffer, size_t *size) {
                 return uv_os_getenv(c_name, buffer, size);
             });
         }
 
         int setenv(uvcxx::string name, uvcxx::string value) {
-            auto status = uv_os_setenv(name, value);
-            if (status < 0)
-                UVCXX_THROW_OR_RETURN(
-                        status, status, "can not setenv['", name.c_str, "']='", value.c_str, "'");
-            return status;
+            UVCXX_PROXY(uv_os_setenv(name, value), "can not setenv['", name.c_str, "']='", value.c_str, "'");
         }
 
         int unsetenv(uvcxx::string name) {
-            auto status = uv_os_unsetenv(name);
-            if (status < 0)
-                UVCXX_THROW_OR_RETURN(
-                        status, status, "can not unsetenv['", name.c_str, "']");
-            return status;
+            UVCXX_PROXY(uv_os_unsetenv(name), "can not unsetenv['", name.c_str, "']");
         }
 
         inline int gethostname(char *buffer, size_t *size) {
@@ -238,28 +260,23 @@ namespace uv {
         }
 
         inline std::string gethostname() {
-            return uvcxx::try_get<UV_MAXHOSTNAMESIZE - 1>(uv_os_gethostname);
+            return uvcxx::get_string<UV_MAXHOSTNAMESIZE - 1>(uv_os_gethostname);
         }
 
 #endif
 #if UVCXX_SATISFY_VERSION(1, 23, 0)
 
         inline int getpriority(uv_pid_t pid, int *priority) {
-            auto status = uv_os_getpriority(pid, priority);
-            if (status < 0) UVCXX_THROW_OR_RETURN(status, status, "get priority of pid=", pid);
-            return status;
+            UVCXX_PROXY(uv_os_getpriority(pid, priority), "get priority of pid=", pid);
         }
 
         inline int setpriority(uv_pid_t pid, int priority) {
-            auto status = uv_os_setpriority(pid, priority);
-            if (status < 0) UVCXX_THROW_OR_RETURN(status, status, "set priority of pid=", pid);
-            return status;
+            UVCXX_PROXY(uv_os_setpriority(pid, priority), "set priority of pid=", pid);
         }
 
         inline int getpriority(uv_pid_t pid) {
             int priority = 0;
-            auto status = uv_os_getpriority(pid, &priority);
-            if (status < 0) UVCXX_THROW_OR_RETURN(status, priority, "set priority of pid=", pid);
+            (void) getpriority(pid, &priority);
             return priority;
         }
 
@@ -267,9 +284,7 @@ namespace uv {
 #if UVCXX_SATISFY_VERSION(1, 25, 0)
 
         inline int uname(uv_utsname_t *buffer) {
-            auto status = uv_os_uname(buffer);
-            if (status < 0) UVCXX_THROW_OR_RETURN(status, status, "failed retrieve system information");
-            return status;
+            UVCXX_PROXY(uv_os_uname(buffer), "failed retrieve system information");
         }
 
 #endif
