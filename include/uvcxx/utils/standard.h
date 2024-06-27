@@ -7,7 +7,7 @@
 #define LIBUVCXX_STANDARD_H
 
 // noexcept
-#if __cpp_noexcept_function_type >= 201510L || _MSC_VER >= 1900
+#if __cpp_noexcept_function_type >= 201510L || __cplusplus >= 201103L || _MSC_VER >= 1900
 #define UVCXX_STD_NOEXCEPT 1
 #define UVCXX_NOEXCEPT noexcept
 #else
