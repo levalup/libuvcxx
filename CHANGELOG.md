@@ -4,13 +4,21 @@
 
 ## v0.0.4
 
-> Since: 2024-06-25
+> Date: 2024-06-27
 
 ### New features
 
-- Cover about `[99%]` APIs of `libuv`.
+- Cover about all APIs of `libuv`.
   - Add `uv::os` wrapper for `uv_os_xxx`.
   - Add most of miscellaneous utilities.
+- Downwards to C++11, while keep compatibility to C++14 and C++17.
+  - The minimum GCC version tested is 5.4.
+  - CMAKE_CXX_STANDARD in (11 14 17), have passed the tests on MSVC (19.34), GCC (11), and Clang (15).
+  - More compatibility tests are pending.
+
+### Bug fix
+
+- Fixed known issues that caused double free of resources when moving wrapper objects.
 
 ### Break changes
 
