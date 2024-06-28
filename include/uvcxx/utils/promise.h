@@ -219,9 +219,10 @@ namespace uvcxx {
         }
 
         template<typename E, typename std::enable_if<
-                std::is_base_of<std::exception, E>::value, int>::type = 0>
+                std::is_base_of<std::exception, E>::value,
+                int>::type = 0>
         self &except(std::function<void(const E &)> f) {
-            m_core->except([UVCXX_CAPTURE_MOVE(f)](const std::exception_ptr &p) -> bool {
+            return this->except([UVCXX_CAPTURE_MOVE(f)](const std::exception_ptr &p) -> bool {
                 try {
                     std::rethrow_exception(p);
                 } catch (const E &e) {
@@ -231,17 +232,23 @@ namespace uvcxx {
                     return false;
                 }
             });
-            return *this;
+        }
+
+        template<typename E, typename std::enable_if<
+                std::is_base_of<std::exception, E>::value,
+                int>::type = 0>
+        self &except(std::function<void()> f) {
+            return this->except<E>([UVCXX_CAPTURE_MOVE(f)](const E &) -> void { f(); });
         }
 
         self &except(std::function<void(const std::exception &)> f) {
             return this->except<std::exception>(std::move(f));
         }
 
-        template<typename E, typename std::enable_if<
-                std::is_base_of<std::exception, E>::value, int>::type = 0>
-        self &except(std::function<void()> f) {
-            return this->except<E>([UVCXX_CAPTURE_MOVE(f)](const E &) { f(); });
+        self &except(std::function<bool()> f) {
+            return this->except(on_except_t([UVCXX_CAPTURE_MOVE(f)](const std::exception_ptr &) -> bool {
+                return f();
+            }));
         }
 
         self &finally(std::nullptr_t) {
@@ -280,9 +287,10 @@ namespace uvcxx {
             }));
         }
 
-        template<typename FUNC, typename std::enable_if<std::is_same<
-                decltype(std::declval<FUNC>()(std::declval<const std::exception_ptr &>())),
-                void>::value, int>::type = 0>
+        template<typename FUNC, typename std::enable_if<
+                std::is_same<void, decltype(
+                std::declval<FUNC>()(std::declval<const std::exception_ptr &>()))>::value,
+                int>::type = 0>
         self &except(FUNC f) {
             return this->except(on_except_t([UVCXX_CAPTURE_MOVE(f)](const std::exception_ptr &p) -> bool {
                 f(p);
@@ -290,32 +298,9 @@ namespace uvcxx {
             }));
         }
 
-        template<typename E, typename FUNC, typename std::enable_if<std::is_same<
-                decltype(std::declval<FUNC>()(std::declval<const E &>())),
-                void>::value, int>::type = 0>
-        self &except(FUNC f) {
-            return this->except<E>(std::function<void(const E &)>(std::move(f)));
-        }
-
-        template<typename E, typename FUNC, typename std::enable_if<std::is_same<
-                decltype(std::declval<FUNC>()()),
-                void>::value, int>::type = 0>
-        self &except(FUNC f) {
-            return this->except<E>(std::function<void()>(std::move(f)));
-        }
-
-        template<typename FUNC, typename std::enable_if<std::is_same<
-                decltype(std::declval<FUNC>()()),
-                bool>::value, int>::type = 0>
-        self &except(FUNC f) {
-            return this->except(on_except_t([UVCXX_CAPTURE_MOVE(f)](const std::exception_ptr &) -> bool {
-                return f();
-            }));
-        }
-
-        template<typename FUNC, typename std::enable_if<std::is_same<
-                decltype(std::declval<FUNC>()()),
-                void>::value, int>::type = 0>
+        template<typename FUNC, typename std::enable_if<
+                std::is_same<void, decltype(std::declval<FUNC>()())>::value,
+                int>::type = 0>
         self &except(FUNC f) {
             return this->except(on_except_t([UVCXX_CAPTURE_MOVE(f)](const std::exception_ptr &) -> bool {
                 f();
@@ -323,29 +308,31 @@ namespace uvcxx {
             }));
         }
 
-        template<typename FUNC, typename std::enable_if<!std::is_same<
-                decltype(std::declval<FUNC>()(std::declval<std::exception>())),
-                void>::value, int>::type = 0>
+        template<typename E, typename FUNC, typename std::enable_if<
+                std::is_base_of<std::exception, E>::value &&
+                !std::is_same<void, decltype(std::declval<FUNC>()(std::declval<const E &>()))>::value,
+                int>::type = 0>
+        UVCXX_DEPRECATED("specific exception handling functions should return void")
+        self &except(FUNC f) {
+            return this->except<E>([UVCXX_CAPTURE_MOVE(f)](const E &e) -> void { (void) f(e); });
+        }
+
+        template<typename E, typename FUNC, typename std::enable_if<
+                std::is_base_of<std::exception, E>::value &&
+                !std::is_same<void, decltype(std::declval<FUNC>()())>::value,
+                int>::type = 0>
+        UVCXX_DEPRECATED("specific exception handling functions should return void")
+        self &except(FUNC f) {
+            return this->except<E>([UVCXX_CAPTURE_MOVE(f)](const E &) -> void { (void) f(); });
+        }
+
+        template<typename FUNC, typename std::enable_if<
+                !std::is_same<void, decltype(std::declval<FUNC>()(std::declval<const std::exception &>()))>::value,
+                int>::type = 0>
         UVCXX_DEPRECATED("specific exception handling functions should return void")
         self &except(FUNC f) {
             using E = std::exception;
-            return this->except<E>(std::function<void(const E &)>(std::move(f)));
-        }
-
-        template<typename E, typename FUNC, typename std::enable_if<!std::is_same<
-                decltype(std::declval<FUNC>()(std::declval<const E &>())),
-                void>::value, int>::type = 0>
-        UVCXX_DEPRECATED("specific exception handling functions should return void")
-        self &except(FUNC f) {
-            return this->except<E>(std::function<void(const E &)>(std::move(f)));
-        }
-
-        template<typename E, typename FUNC, typename std::enable_if<!std::is_same<
-                decltype(std::declval<FUNC>()()),
-                void>::value, int>::type = 0>
-        UVCXX_DEPRECATED("specific exception handling functions should return void")
-        self &except(FUNC f) {
-            return this->except<E>(std::function<void()>(std::move(f)));
+            return this->except<E>([UVCXX_CAPTURE_MOVE(f)](const E &e) -> void { (void) f(e); });
         }
 
         template<typename FUNC, typename std::enable_if<std::is_same<

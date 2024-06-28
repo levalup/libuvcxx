@@ -231,7 +231,7 @@ namespace uv {
         template<typename...ARGS>
         void watch(uvcxx::callback<ARGS...> &&callback) {
             auto handle = raw();
-            callback.template except<uvcxx::close_handle>([handle]() mutable {
+            callback.template except<uvcxx::close_handle>([handle]() {
                 auto data = (data_t *) handle->data;
                 data->close_for([handle](void (*cb)(raw_t *)) {
                     uv_close(handle, cb);
