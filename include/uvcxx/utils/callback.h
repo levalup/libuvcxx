@@ -310,6 +310,7 @@ namespace uvcxx {
 
         template<typename E, typename FUNC, typename std::enable_if<
                 std::is_base_of<std::exception, E>::value &&
+                !std::is_constructible<on_except_t, FUNC>::value &&
                 !std::is_same<void, decltype(std::declval<FUNC>()(std::declval<const E &>()))>::value,
                 int>::type = 0>
         UVCXX_DEPRECATED("specific exception handling functions should return void")
@@ -327,6 +328,7 @@ namespace uvcxx {
         }
 
         template<typename FUNC, typename std::enable_if<
+                !std::is_constructible<on_except_t, FUNC>::value &&
                 !std::is_same<void, decltype(std::declval<FUNC>()(std::declval<const std::exception &>()))>::value,
                 int>::type = 0>
         UVCXX_DEPRECATED("specific exception handling functions should return void")
