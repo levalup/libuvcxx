@@ -473,7 +473,7 @@ void test_queue() {
 
         auto queue = p.get_queue();
 
-        auto backend = std::async([&]() {
+        auto backend = std::async(std::launch::async, [&]() {
             callback_emitter<int> pe(p);
             pe.emit(1);
             pe.emit(2);

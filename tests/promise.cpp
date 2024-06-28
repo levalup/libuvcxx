@@ -471,7 +471,7 @@ void test_future() {
 
         auto future = p.get_future();
 
-        auto backend = std::async([&]() {
+        auto backend = std::async(std::launch::async, [&]() {
             promise_emitter<int>(p).resolve(1);
         });
 
