@@ -15,17 +15,25 @@
 #endif
 
 // [[noreturn]]
+#if defined(__has_cpp_attribute)
 #if __has_cpp_attribute(noreturn) || __cplusplus >= 201103L || _MSC_VER >= 1900
 #define UVCXX_STD_NORETURN 1
 #define UVCXX_NORETURN [[noreturn]]
 #else
 #define UVCXX_NORETURN
 #endif
+#else
+#define UVCXX_NORETURN
+#endif
 
 // [[nodiscard]]
+#if defined(__has_cpp_attribute)
 #if __has_cpp_attribute(nodiscard) || __cplusplus >= 201703L || _MSC_VER >= 1910
 #define UVCXX_STD_NODISCARD 1
 #define UVCXX_NODISCARD [[nodiscard]]
+#else
+#define UVCXX_NODISCARD
+#endif
 #else
 #define UVCXX_NODISCARD
 #endif
@@ -59,6 +67,14 @@
 // std::apply
 #if __cpp_lib_apply >= 201603L
 #define UVCXX_STD_APPLY 1
+#endif
+
+// 	explicit(bool)
+#if __cpp_conditional_explicit >= 201806L
+#define UVCXX_STD_CONDITIONAL_EXPLICIT 1
+#define UVCXX_EXPLICIT_FALSE explicit(false)
+#else
+#define UVCXX_EXPLICIT_FALSE
 #endif
 
 #endif //LIBUVCXX_STANDARD_H

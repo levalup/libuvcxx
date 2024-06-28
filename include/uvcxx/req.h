@@ -180,7 +180,7 @@ namespace uv {
             req->data = nullptr;
 
             uvcxx::defer delete_data(std::default_delete<self>(), data);
-            uvcxx::defer finalize_data([&]() { data->finalize(req, args...); });
+            // uvcxx::defer finalize_data([&]() { data->finalize(req, args...); }); //< done this in following codes
 
             auto &proxy = data->proxy();
             uvcxx::defer promise_finally([&]() { proxy.finalize(); });
@@ -197,6 +197,10 @@ namespace uv {
             } catch (...) {
                 proxy.reject(std::current_exception());
             }
+
+            // for gcc 4.8.x not support well about use variadic templates in lambda
+            // is ok not using defer, as proxy.reject will never throw exception
+            data->finalize(req, args...);
         }
     };
 }

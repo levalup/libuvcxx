@@ -12,6 +12,8 @@
 #include <mutex>
 #include <queue>
 
+#include "tuple.h"
+
 namespace uvcxx {
     template<typename... T>
     class queue_core {
@@ -28,9 +30,8 @@ namespace uvcxx {
             return !m_queue.empty();
         }
 
-
-        bool push(const T &...v) {
-            return this->push(value_t(std::make_tuple(v...)));
+        bool push(T ...v) {
+            return this->push(value_t(std::make_tuple(tuple_value<T>(v)...)));
         }
 
         bool push(value_t v) {
@@ -52,13 +53,13 @@ namespace uvcxx {
             std::unique_lock<decltype(m_mutex)> _lock(m_mutex);
             while (true) {
                 if (readable()) break;
-                if (m_closed) return {false, {}};
+                if (m_closed) return {false, value_t{}};
                 m_cond_readable.wait(_lock);
             }
-            auto v = m_queue.front();
+            auto v = std::move(m_queue.front());
             m_queue.pop();
             if (writable()) m_cond_writable.notify_one();
-            return {true, v};
+            return {true, std::move(v)};
         }
 
         void close() {
@@ -87,8 +88,8 @@ namespace uvcxx {
         std::condition_variable m_cond_writable;
         std::condition_variable m_cond_readable;
         std::queue<value_t> m_queue;
-        std::atomic<int64_t> m_limit{-1};
-        std::atomic<bool> m_closed{false};
+        std::atomic<int64_t> m_limit = {-1};
+        std::atomic<bool> m_closed = {false};
     };
 
     template<typename... T>
@@ -136,7 +137,7 @@ namespace uvcxx {
 
         queue() : m_core(std::make_shared<queue_core<T...>>()) {}
 
-        bool push(const T &...v) { return m_core->push(v...); }
+        bool push(T ...v) { return m_core->push(std::forward<T>(v)...); }
 
         bool push(value_t v) { return m_core->push(std::move(v)); }
 

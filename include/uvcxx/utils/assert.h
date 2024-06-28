@@ -14,7 +14,6 @@
 
 #include "pencil_box.h"
 #include "standard.h"
-#include "../cxx/string.h"
 
 namespace uvcxx {
     class assert_failed : public std::logic_error {
@@ -22,26 +21,25 @@ namespace uvcxx {
         using self = assert_failed;
         using supper = std::logic_error;
 
-
-        explicit assert_failed(const uvcxx::string_view &cond)
+        explicit assert_failed(const char *cond)
                 : supper(Message(cond)) {}
 
         template<typename... Args>
-        assert_failed(uvcxx::string_view cond,
-                      const std::string &file,
+        assert_failed(const char *cond,
+                      const char *file,
                       int line,
                       const Args &...args)
                 : supper(Message(cond, file, line, args...)) {}
 
     public:
-        static inline std::string Message(const uvcxx::string_view &cond) {
+        static inline std::string Message(const char *cond) {
             std::ostringstream oss;
             oss << "assert failed: (" << cond << ")";
             return oss.str();
         }
 
         template<typename... Args>
-        static inline std::string Message(uvcxx::string_view cond,
+        static inline std::string Message(const char *cond,
                                    const std::string &file,
                                    int line,
                                    const Args &...args) {

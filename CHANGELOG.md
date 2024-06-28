@@ -2,7 +2,29 @@
 
 --------------------------------
 
-## v0.0.4
+## v0.1.1
+
+> Since: 2024-06-28
+
+### New features
+
+- Tested and passed on gcc `4.8.5` with `libuv` `v1.44.2`.
+- Enhanced the capabilities of `promise/callback`.
+  - It can properly handle movable but non-copyable objects.
+  - It supports passing references.
+
+### Bug fix
+
+### Break changes
+
+- The release of associated resources, such as `uv_fs_req_cleanup`, will be called before the `finally` of the `promise`.
+  - This adjustment is necessary for compilation on gcc `4.8.x`.
+  - Except for the deprecated usage, this modification has no impact in most scenarios.
+  - Bote: do not save related resources in the `then` function and use in `finally`.
+
+--------------------------------
+
+## v0.1.0
 
 > Date: 2024-06-27
 

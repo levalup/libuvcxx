@@ -18,18 +18,10 @@
 namespace uvcxx {
     class close_handle : public std::exception {
     public:
-        using self = close_handle;
-        using supper = std::exception;
-
-        close_handle() = default;
-
         UVCXX_NODISCARD
         const char *what() const UVCXX_NOEXCEPT override  {
-            return m_what;
+            return "uvcxx::close_handle";
         }
-
-    private:
-        const char *m_what = "close_handle";
     };
 }
 
