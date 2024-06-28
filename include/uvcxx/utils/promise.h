@@ -222,7 +222,7 @@ namespace uvcxx {
                 std::is_base_of<std::exception, E>::value,
                 int>::type = 0>
         self &except(std::function<void(const E &)> f) {
-            return this->except([UVCXX_CAPTURE_MOVE(f)](const std::exception_ptr &p) -> bool {
+            return this->except(on_except_t([UVCXX_CAPTURE_MOVE(f)](const std::exception_ptr &p) -> bool {
                 try {
                     std::rethrow_exception(p);
                 } catch (const E &e) {
@@ -231,7 +231,7 @@ namespace uvcxx {
                 } catch (...) {
                     return false;
                 }
-            });
+            }));
         }
 
         template<typename E, typename std::enable_if<
