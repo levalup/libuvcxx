@@ -15,6 +15,9 @@
 
 ### Bug fix
 
+- Fix std::async UB with no policy in early C++ standard.
+  - Add `std::launch::async`.
+
 ### Break changes
 
 - The release of associated resources, such as `uv_fs_req_cleanup`, will be called before the `finally` of the `promise`.
