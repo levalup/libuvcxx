@@ -273,9 +273,9 @@ void test_except() {
         p.except([](const std::exception &) {});
         p.except<std::logic_error>([]() {});
         p.except<std::logic_error>([](const std::logic_error &) {});
-        // p.except([](const std::exception &) -> bool { return false; }); //< illegal
-        // p.except<std::logic_error>([]() -> bool { return false; });     //< illegal
-        // p.except<std::logic_error>([](const std::logic_error &) -> bool { return false; }); //< illegal
+        // p.except([](const std::exception &) -> bool { return false; }); //< deprecated
+        // p.except<std::logic_error>([]() -> bool { return false; });     //< deprecated
+        // p.except<std::logic_error>([](const std::logic_error &) -> bool { return false; }); //< deprecated
 
         promise_emitter<int> pe(p);
 

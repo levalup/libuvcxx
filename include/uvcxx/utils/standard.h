@@ -77,4 +77,16 @@
 #define UVCXX_EXPLICIT_FALSE
 #endif
 
+// [[deprecated]]
+#if defined(__has_cpp_attribute)
+#if __has_cpp_attribute(deprecated) || __cplusplus >= 201402L || _MSC_VER >= 1900
+#define UVCXX_STD_DEPRECATED 1
+#define UVCXX_DEPRECATED(msg) [[deprecated(msg)]]
+#else
+#define UVCXX_DEPRECATED(msg)
+#endif
+#else
+#define UVCXX_DEPRECATED(msg)
+#endif
+
 #endif //LIBUVCXX_STANDARD_H

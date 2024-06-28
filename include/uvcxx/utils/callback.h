@@ -326,22 +326,26 @@ namespace uvcxx {
         template<typename FUNC, typename std::enable_if<!std::is_same<
                 decltype(std::declval<FUNC>()(std::declval<std::exception>())),
                 void>::value, int>::type = 0>
-        self &except(FUNC) {
-            static_assert(false, "specific exception handling functions must return void");
+        UVCXX_DEPRECATED("specific exception handling functions should return void")
+        self &except(FUNC f) {
+            using E = std::exception;
+            return this->except<E>(std::function<void(const E &)>(std::move(f)));
         }
 
         template<typename E, typename FUNC, typename std::enable_if<!std::is_same<
                 decltype(std::declval<FUNC>()(std::declval<const E &>())),
                 void>::value, int>::type = 0>
+        UVCXX_DEPRECATED("specific exception handling functions should return void")
         self &except(FUNC f) {
-            static_assert(false, "specific exception handling functions must return void");
+            return this->except<E>(std::function<void(const E &)>(std::move(f)));
         }
 
         template<typename E, typename FUNC, typename std::enable_if<!std::is_same<
                 decltype(std::declval<FUNC>()()),
                 void>::value, int>::type = 0>
+        UVCXX_DEPRECATED("specific exception handling functions should return void")
         self &except(FUNC f) {
-            static_assert(false, "specific exception handling functions must return void");
+            return this->except<E>(std::function<void()>(std::move(f)));
         }
 
         template<typename FUNC, typename std::enable_if<std::is_same<
