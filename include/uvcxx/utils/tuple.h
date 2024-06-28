@@ -6,6 +6,7 @@
 #ifndef LIBUVCXX_TUPLE_H
 #define LIBUVCXX_TUPLE_H
 
+#include <functional>
 #include <type_traits>
 
 namespace uvcxx {
