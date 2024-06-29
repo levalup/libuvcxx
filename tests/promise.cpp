@@ -279,19 +279,21 @@ void test_except() {
 
         promise_emitter<int> pe(p);
 
-        pe.reject<std::logic_error>("test");
+        (void) pe.reject<std::logic_error>("test");
 
         try {
             throw std::logic_error("test");
         } catch (...) {
-            pe.reject(std::current_exception());
+            (void) pe.reject(std::current_exception());
         }
 
         try {
             throw std::logic_error("test");
         } catch (...) {
-            pe.reject();
+            (void) pe.reject();
         }
+
+        (void) pe.reject<std::logic_error>("test");
     }
     // features
     {
@@ -306,7 +308,7 @@ void test_except() {
                 ++chain1;
             });
 
-            promise_emitter<int>(p).reject<std::logic_error>("test");
+            (void) promise_emitter<int>(p).reject<std::logic_error>("test");
 
             uvcxx_assert(chain1 == 1);
 
@@ -318,7 +320,7 @@ void test_except() {
                 msg = "test";
             });
 
-            promise_emitter<int>(p).reject<std::logic_error>("test");
+            (void) promise_emitter<int>(p).reject<std::logic_error>("test");
 
             uvcxx_assert(chain1 == 2 && chain2 == 1);
             uvcxx_assert(msg == "test");
@@ -343,10 +345,10 @@ void test_except() {
                 ++catch_base;
             });
 
-            promise_emitter<int>(p).reject<std::logic_error>("test");
+            (void) promise_emitter<int>(p).reject<std::logic_error>("test");
             uvcxx_assert(catch_void == 1 && catch_logic == 1 && catch_base == 0);
 
-            promise_emitter<int>(p).reject<std::runtime_error>("test");
+            (void) promise_emitter<int>(p).reject<std::runtime_error>("test");
             uvcxx_assert(catch_void == 2 && catch_logic == 1 && catch_base == 1);
         }
 
@@ -368,7 +370,7 @@ void test_except() {
                 throw std::logic_error("rethrow");
             });
 
-            promise_emitter<int>(p).reject<std::runtime_error>("test");
+            (void) promise_emitter<int>(p).reject<std::runtime_error>("test");
             uvcxx_assert(catch_logic == max_rethrow && catch_void == 1);
         }
 
@@ -381,13 +383,37 @@ void test_except() {
                 ++count;
             });
 
-            promise_emitter<int>(p).reject<std::logic_error>("test");
+            (void) promise_emitter<int>(p).reject<std::logic_error>("test");
             uvcxx_assert(count == 1);
 
             p.except(nullptr);  //< clear handler chain
 
-            promise_emitter<int>(p).reject<std::logic_error>("test");
+            (void) promise_emitter<int>(p).reject<std::logic_error>("test");
             uvcxx_assert(count == 1);
+        }
+
+        // watch exception
+        {
+            int watch_count = 0;
+            int except_count = 0;
+            promise<int> p;
+
+            p.watch([&](const std::exception_ptr &) -> bool {
+                ++watch_count;
+                return false;
+            });
+
+            p.except([&]() {
+                ++except_count;
+            });
+
+            (void) promise_emitter<int>(p).reject<std::logic_error>("test");
+            uvcxx_assert(watch_count == 1 && except_count == 1);
+
+            p.except(nullptr);  //< clear handler chain, but keep watch
+
+            (void) promise_emitter<int>(p).reject<std::logic_error>("test");
+            uvcxx_assert(watch_count == 2 && except_count == 1);
         }
     }
 }

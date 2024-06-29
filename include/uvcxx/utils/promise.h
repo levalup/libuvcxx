@@ -35,23 +35,31 @@ namespace uvcxx {
             try {
                 if (m_on_then) m_on_then(p);
             } catch (...) {
-                reject(std::current_exception());
+                (void) reject(std::current_exception());
             }
         }
 
         /**
          * Allow MAX_RETRY times throw exception while processing `on_except`.
          * @param p exception pointer
+         * @return return whether this exception has been handled.
          */
-        void reject(const std::exception_ptr &p) const UVCXX_NOEXCEPT {
+        bool reject(const std::exception_ptr &p) const UVCXX_NOEXCEPT {
+            if (m_on_watch) {
+                try {
+                    auto caught = m_on_watch(p);
+                    if (caught) return true;
+                } catch (...) {
+                    default_on_except(std::current_exception());
+                }
+            }
             constexpr int MAX_RETRY = 1;
             auto current_exception = p;
             if (m_on_except) {
                 int caught = 0;
                 while (true) {
                     try {
-                        m_on_except(current_exception);
-                        return;
+                        return m_on_except(current_exception);
                     } catch (...) {
                         current_exception = std::current_exception();
                     }
@@ -59,6 +67,7 @@ namespace uvcxx {
                 }
             }
             default_on_except(current_exception);
+            return false;
         }
 
         void finalize() const UVCXX_NOEXCEPT {
@@ -92,6 +101,30 @@ namespace uvcxx {
 #endif
             } else {
                 m_on_then = std::move(f);
+            }
+            return *this;
+        }
+
+        self &watch(std::nullptr_t) {
+            m_on_watch = nullptr;
+            return *this;
+        }
+
+        self &watch(on_except_t f) {
+            if (!f) return *this;
+            if (m_on_watch) {
+#if UVCXX_STD_INIT_CAPTURES
+                m_on_watch = [f = std::move(f), pre = std::move(m_on_watch)](const std::exception_ptr &p) {
+                    return pre(p) ? true : f(p);
+                };
+#else
+                auto pre = std::move(m_on_watch);
+                m_on_watch = [f, pre](const std::exception_ptr &p) {
+                    return pre(p) ? true : f(p);
+                };
+#endif
+            } else {
+                m_on_watch = std::move(f);
             }
             return *this;
         }
@@ -167,6 +200,7 @@ namespace uvcxx {
     private:
         mutable std::atomic<bool> m_finalized{false};
         on_then_t m_on_then;
+        on_except_t m_on_watch;
         on_except_t m_on_except;
         on_finally_t m_on_finally;
     };
@@ -205,6 +239,16 @@ namespace uvcxx {
                 auto &pack = *(type *) (p);
                 proxy_apply(f, std::move(pack));
             });
+            return *this;
+        }
+
+        self &watch(std::nullptr_t) {
+            m_core->watch(nullptr);
+            return *this;
+        }
+
+        self &watch(std::function<bool(const std::exception_ptr &)> f) {
+            m_core->watch(std::move(f));
             return *this;
         }
 
@@ -379,7 +423,12 @@ namespace uvcxx {
 
         virtual void resolve(T ...v) const UVCXX_NOEXCEPT = 0;
 
-        virtual void reject(const std::exception_ptr &p) const UVCXX_NOEXCEPT = 0;
+        /**
+         * Throw exception, return whether this exception has ben handled.
+         * @param p
+         * @return whether this exception has ben handled.
+         */
+        virtual bool reject(const std::exception_ptr &p) const UVCXX_NOEXCEPT = 0;
 
         virtual void finalize() const UVCXX_NOEXCEPT = 0;
 
@@ -387,12 +436,12 @@ namespace uvcxx {
                 typename std::enable_if<
                         std::is_base_of<std::exception, E>::value &&
                         std::is_constructible<E, ARGS...>::value, int>::type = 0>
-        void reject(ARGS &&...args) const UVCXX_NOEXCEPT {
-            this->reject(std::make_exception_ptr(E(std::forward<ARGS>(args)...)));
+        bool reject(ARGS &&...args) const UVCXX_NOEXCEPT {
+            return this->reject(std::make_exception_ptr(E(std::forward<ARGS>(args)...)));
         }
 
-        void reject() const UVCXX_NOEXCEPT {
-            this->reject(std::current_exception());
+        bool reject() const UVCXX_NOEXCEPT {
+            return this->reject(std::current_exception());
         }
 
         void apply(std::tuple<T...> tuple) const UVCXX_NOEXCEPT {
@@ -428,8 +477,8 @@ namespace uvcxx {
 
         using supper::reject;
 
-        void reject(const std::exception_ptr &p) const UVCXX_NOEXCEPT final {
-            m_core->reject(p);
+        bool reject(const std::exception_ptr &p) const UVCXX_NOEXCEPT final {
+            return m_core->reject(p);
         }
 
         void finalize() const UVCXX_NOEXCEPT final {
@@ -508,15 +557,15 @@ namespace uvcxx {
             try {
                 m_emitter.apply(m_wrapper(std::forward<T>(v)...));
             } catch (...) {
-                self::reject(std::current_exception());
+                (void) self::reject(std::current_exception());
                 return;
             }
         }
 
         using supper::reject;
 
-        void reject(const std::exception_ptr &p) const UVCXX_NOEXCEPT final {
-            m_emitter.reject(p);
+        bool reject(const std::exception_ptr &p) const UVCXX_NOEXCEPT final {
+            return m_emitter.reject(p);
         }
 
         void finalize() const UVCXX_NOEXCEPT final {

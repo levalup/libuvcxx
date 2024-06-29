@@ -231,11 +231,18 @@ namespace uv {
         template<typename...ARGS>
         void watch(uvcxx::callback<ARGS...> &&callback) {
             auto handle = raw();
-            callback.template except<uvcxx::close_handle>([handle]() {
-                auto data = (data_t *) handle->data;
-                data->close_for([handle](void (*cb)(raw_t *)) {
-                    uv_close(handle, cb);
-                });
+            callback.watch([handle](const std::exception_ptr &p) -> bool {
+                try {
+                    std::rethrow_exception(p);
+                } catch (const uvcxx::close_handle &) {
+                    auto data = (data_t *) handle->data;
+                    data->close_for([handle](void (*cb)(raw_t *)) {
+                        uv_close(handle, cb);
+                    });
+                    return true;
+                } catch (...) {
+                    return false;
+                }
             });
         }
 

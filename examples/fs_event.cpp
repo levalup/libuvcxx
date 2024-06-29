@@ -16,8 +16,7 @@ int main() {
     { std::ofstream touch(target); }
 
     uv::fs_event_t fs_event;
-    fs_event.start(target, UV_FS_EVENT_RECURSIVE).call([](const char *filename, uv_fs_event events, int status) {
-        if (status < 0) throw uvcxx::errcode(status);
+    fs_event.start(target, UV_FS_EVENT_RECURSIVE).call([](const char *filename, uv_fs_event events) {
         std::cout << filename << " " << uvcxx::to_string(events) << std::endl;
     });
     uv::timer_t().start(1 * 1000, 1).call([&]() {

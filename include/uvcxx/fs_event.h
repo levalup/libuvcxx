@@ -29,7 +29,7 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
-        uvcxx::callback<const char *, uv_fs_event, int> start(uvcxx::string path, int flags) {
+        uvcxx::callback<const char *, uv_fs_event> start(uvcxx::string path, int flags) {
             UVCXX_APPLY(uv_fs_event_start(*this, raw_callback, path, flags), nullptr);
             _detach_();
             return get_data<data_t>()->start_cb.callback();
@@ -47,12 +47,16 @@ namespace uv {
     private:
         static void raw_callback(raw_t *handle, const char *filename, int events, int status) {
             auto data = (data_t *) (handle->data);
-            data->start_cb.emit(filename, uv_fs_event(events), status);
+            if (status < 0) {
+                (void) data->start_cb.raise<uvcxx::errcode>(status);
+            } else {
+                data->start_cb.emit(filename, uv_fs_event(events));
+            }
         }
 
         class data_t : supper::data_t {
         public:
-            uvcxx::callback_emitter<const char *, uv_fs_event, int> start_cb;
+            uvcxx::callback_emitter<const char *, uv_fs_event> start_cb;
 
             explicit data_t(fs_event_t &handle)
                     : supper::data_t(handle) {

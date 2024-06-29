@@ -281,19 +281,21 @@ void test_except() {
 
         callback_emitter<int> pe(p);
 
-        pe.raise<std::logic_error>("test");
+        (void) pe.raise<std::logic_error>("test");
 
         try {
             throw std::logic_error("test");
         } catch (...) {
-            pe.raise(std::current_exception());
+            (void) pe.raise(std::current_exception());
         }
 
         try {
             throw std::logic_error("test");
         } catch (...) {
-            pe.raise();
+            (void) pe.raise();
         }
+
+        (void) pe.raise<std::logic_error>("test");
     }
     // features
     {
@@ -308,7 +310,7 @@ void test_except() {
                 ++chain1;
             });
 
-            callback_emitter<int>(p).raise<std::logic_error>("test");
+            (void) callback_emitter<int>(p).raise<std::logic_error>("test");
 
             uvcxx_assert(chain1 == 1);
 
@@ -320,7 +322,7 @@ void test_except() {
                 msg = "test";
             });
 
-            callback_emitter<int>(p).raise<std::logic_error>("test");
+            (void) callback_emitter<int>(p).raise<std::logic_error>("test");
 
             uvcxx_assert(chain1 == 2 && chain2 == 1);
             uvcxx_assert(msg == "test");
@@ -345,10 +347,10 @@ void test_except() {
                 ++catch_base;
             });
 
-            callback_emitter<int>(p).raise<std::logic_error>("test");
+            (void) callback_emitter<int>(p).raise<std::logic_error>("test");
             uvcxx_assert(catch_void == 1 && catch_logic == 1 && catch_base == 0);
 
-            callback_emitter<int>(p).raise<std::runtime_error>("test");
+            (void) callback_emitter<int>(p).raise<std::runtime_error>("test");
             uvcxx_assert(catch_void == 2 && catch_logic == 1 && catch_base == 1);
         }
 
@@ -370,7 +372,7 @@ void test_except() {
                 throw std::logic_error("rethrow");
             });
 
-            callback_emitter<int>(p).raise<std::runtime_error>("test");
+            (void) callback_emitter<int>(p).raise<std::runtime_error>("test");
             uvcxx_assert(catch_logic == max_rethrow && catch_void == 1);
         }
 
@@ -383,13 +385,37 @@ void test_except() {
                 ++count;
             });
 
-            callback_emitter<int>(p).raise<std::logic_error>("test");
+            (void) callback_emitter<int>(p).raise<std::logic_error>("test");
             uvcxx_assert(count == 1);
 
             p.except(nullptr);  //< clear handler chain
 
-            callback_emitter<int>(p).raise<std::logic_error>("test");
+            (void) callback_emitter<int>(p).raise<std::logic_error>("test");
             uvcxx_assert(count == 1);
+        }
+
+        // watch exception
+        {
+            int watch_count = 0;
+            int except_count = 0;
+            callback<int> p;
+
+            p.watch([&](const std::exception_ptr &) -> bool {
+                ++watch_count;
+                return false;
+            });
+
+            p.except([&]() {
+                ++except_count;
+            });
+
+            (void) callback_emitter<int>(p).raise<std::logic_error>("test");
+            uvcxx_assert(watch_count == 1 && except_count == 1);
+
+            p.except(nullptr);  //< clear handler chain, but keep watch
+
+            (void) callback_emitter<int>(p).raise<std::logic_error>("test");
+            uvcxx_assert(watch_count == 2 && except_count == 1);
         }
     }
 }

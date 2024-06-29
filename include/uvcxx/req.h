@@ -190,12 +190,12 @@ namespace uv {
                 // cancel request will not do anything
                 if (status == UV_ECANCELED) return;
                 if (status < 0) {
-                    proxy.template reject<uvcxx::errcode>(status);
+                    (void) proxy.template reject<uvcxx::errcode>(status);
                 } else {
                     proxy.resolve(req, args...);
                 }
             } catch (...) {
-                proxy.reject(std::current_exception());
+                (void) proxy.reject(std::current_exception());
             }
 
             // for gcc 4.8.x not support well about use variadic templates in lambda

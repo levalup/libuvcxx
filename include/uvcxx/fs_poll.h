@@ -26,7 +26,7 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
-        uvcxx::callback<int, const uv_stat_t *, const uv_stat_t *> start(uvcxx::string path, unsigned int interval) {
+        uvcxx::callback<const uv_stat_t *, const uv_stat_t *> start(uvcxx::string path, unsigned int interval) {
             UVCXX_APPLY(uv_fs_poll_start(*this, raw_callback, path, interval), nullptr);
             _detach_();
             return get_data<data_t>()->start_cb.callback();
@@ -52,12 +52,16 @@ namespace uv {
     private:
         static void raw_callback(raw_t *handle, int status, const uv_stat_t *prev, const uv_stat_t *curr) {
             auto data = (data_t *) (handle->data);
-            data->start_cb.emit(status, prev, curr);
+            if (status < 0) {
+                (void) data->start_cb.raise<uvcxx::errcode>(status);
+            } else {
+                data->start_cb.emit(prev, curr);
+            }
         }
 
         class data_t : supper::data_t {
         public:
-            uvcxx::callback_emitter<int, const uv_stat_t *, const uv_stat_t *> start_cb;
+            uvcxx::callback_emitter<const uv_stat_t *, const uv_stat_t *> start_cb;
 
             explicit data_t(fs_poll_t &handle)
                     : supper::data_t(handle) {

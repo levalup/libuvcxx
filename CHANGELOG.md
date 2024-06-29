@@ -25,6 +25,13 @@
   - Except for the deprecated usage, this modification has no impact in most scenarios.
   - Bote: do not save related resources in the `then` function and use in `finally`.
 
+- Add `status` check on `handle` callback and change callback type.
+  - `fs_event` start return `callback<const char *, uv_fs_event>`. 
+  - `fs_poll` start return `callback<const uv_stat_t *, const uv_stat_t *>`. 
+  - `poll` start return `callback<int>`. 
+  - `stream` listen return `callback<int>`. 
+  - Handle status issue with `except<uvcxx::errcode>(...)`.
+
 --------------------------------
 
 ## v0.1.0

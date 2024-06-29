@@ -46,7 +46,7 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
-        uvcxx::callback<int, int> start(int events) {
+        uvcxx::callback<int> start(int events) {
             auto data = get_data<data_t>();
 
             if (!data->initialized) {
@@ -67,13 +67,17 @@ namespace uv {
     private:
         static void raw_callback(raw_t *handle, int status, int events) {
             auto data = (data_t *) (handle->data);
-            data->start_cb.emit(status, events);
+            if (status < 0) {
+                (void) data->start_cb.raise<uvcxx::errcode>(status);
+            } else {
+                data->start_cb.emit(events);
+            }
         }
 
         class data_t : supper::data_t {
         public:
             bool initialized{false};
-            uvcxx::callback_emitter<int, int> start_cb;
+            uvcxx::callback_emitter<int> start_cb;
 
             explicit data_t(poll_t &handle)
                     : supper::data_t(handle) {

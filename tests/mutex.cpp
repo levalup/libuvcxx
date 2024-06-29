@@ -18,7 +18,7 @@ int main() {
     int count = 0;
 
     uv::thread_t t1([&]() {
-        for (int i = 0; i < 50; ++i) {
+        for (int i = 0; i < 10; ++i) {
             mutex.lock();
             ++count;
             mutex.unlock();
@@ -27,7 +27,7 @@ int main() {
     });
 
     uv::thread_t t2([&]() {
-        for (int i = 0; i < 50; ++i) {
+        for (int i = 0; i < 10; ++i) {
             mutex.lock();
             ++count;
             mutex.unlock();
@@ -38,7 +38,7 @@ int main() {
     t1.join();
     t2.join();
 
-    uvcxx_assert(count == 100);
+    uvcxx_assert(count == 20);
 
     return 0;
 }

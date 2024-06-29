@@ -35,7 +35,7 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
-        uvcxx::callback<int> listen(int backlog) {
+        uvcxx::callback<> listen(int backlog) {
             auto data = get_data<data_t>();
             if (data->work_mode == WorkMode::Read) {
                 UVCXX_THROW_OR_RETURN(UV_EPERM, nullptr, "can not listen reading stream");
@@ -236,7 +236,11 @@ namespace uv {
 
         static void raw_listen_callback(raw_t *handle, int status) {
             auto data = (data_t * )(handle->data);
-            data->listen_cb.emit(status);
+            if (status < 0) {
+                (void) data->listen_cb.raise<uvcxx::errcode>(status);
+            } else {
+                data->listen_cb.emit();
+            }
         }
 
     protected:
@@ -248,7 +252,7 @@ namespace uv {
 
         class data_t : supper::data_t {
         public:
-            uvcxx::callback_emitter<int> listen_cb;
+            uvcxx::callback_emitter<> listen_cb;
             uvcxx::callback_emitter<ssize_t, const uv_buf_t *> read_cb;
             uvcxx::callback_emitter<size_t, uv_buf_t *> alloc_cb;
 
@@ -280,15 +284,15 @@ namespace uv {
 
         UVCXX_NODISCARD
         uvcxx::callback<stream_t> listen_accept(int backlog) {
-            this->listen(backlog).call(nullptr).call([this](int status) {
-                auto data = this->data<data_t>();
-                if (status < 0) {
-                    data->accept_cb.raise<uvcxx::errcode>(status);
-                } else {
-                    data->accept_cb.emit(this->accept());
-                }
-            });
             auto data = this->data<data_t>();
+            this->listen(backlog).call(nullptr).call([data, this]() {
+                data->accept_cb.emit(this->accept());
+            }).except(nullptr).except([data](const std::exception_ptr &p) -> bool {
+                return data->accept_cb.raise(p);
+            }).finally(nullptr).finally([data](){
+                data->accept_cb.finalize();
+            });
+
             return data->accept_cb.callback();
         }
 
