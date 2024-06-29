@@ -11,6 +11,8 @@
 /libuv/build/
 /libuv/watch_dir/
 
+/include/uvcxx-single.h
+
 *.a
 *.so
 

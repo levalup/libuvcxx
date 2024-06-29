@@ -15,6 +15,10 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Make single header
+        if: success()
+        run: python3 scripts/merge.py
+
       - name: Package project files
         if: success()
         run: >
