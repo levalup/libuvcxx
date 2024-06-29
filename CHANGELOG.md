@@ -4,7 +4,7 @@
 
 ## v0.1.1
 
-> Since: 2024-06-28
+> Date: 2024-06-28
 
 ### New features
 
@@ -12,6 +12,8 @@
 - Enhanced the capabilities of `promise/callback`.
   - It can properly handle movable but non-copyable objects.
   - It supports passing references.
+- Add `merge.py` to merge the code of uvcxx into a single header file.
+  - You can find `uvcxx-single.h` in the release package.
 
 ### Bug fix
 

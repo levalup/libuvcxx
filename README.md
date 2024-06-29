@@ -22,6 +22,9 @@ Copy `include` into your project.
 Of course, you also need to configure `libuv` properly.  
 Enjoy using it.  
 
+`libuvcxx` supports single header file usage.
+You can find `uvcxx-single.h` in the [release packages](https://github.com/levalup/libuvcxx/releases).
+
 ```cpp
 #include <uvcxx.h>
 
@@ -34,17 +37,19 @@ int main() {
 }
 ```
 
-Note that all the `handle` and `request` `data` members are used to store data related to C++ operations, so please do not use them.
+The `data` field for context has already been occupied.
+Please note that this field should not be used anymore.
 
-If you need to use context, use the capture list of `lambda`.
-
-The `handle`'s `data` will be recycled after `close`, so be sure to call `close` after the `handle` is confirmed to not be used anymore.
-
-The `request`'s `data` will be recycled after the callback is completed, so most of the time there is no need to consider resource recycling issues.
+No explicit `close` operation is required, except when the `handle` is `running`.
+The `handle` can continue to work without any external references, so that explicit `close' is needed at this time.
 
 See [lifecycle.md](docs/lifecycle.md) for more details.
 
 ## 2. Compatibility
+
+`libuvcxx` requires at least `C++11` and is also compatible with the new features in `C++14` and `C++17`.
+
+> Tested and passed in gcc `4.8.5` with `libuv` `v1.44.2` on `CentOS7`.
 
 `libuvcxx` can be compatible with libuv: `>= 1.0.0, <= 1.48.0`.
 Provided by [test_libuv.sh](scripts/test_libuv.sh).
@@ -58,7 +63,8 @@ See [coverage.md](docs/coverage.md) for more details.
 
 ## 3. Schedule
 
-Adjust the C++ standard downwards to be compatible with C++11 and later versions.
+More examples and documentation are pending to be added.  
+As well as higher-level encapsulations for some common usage scenarios.
 
 ## 4. Exception
 
