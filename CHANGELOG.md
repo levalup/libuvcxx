@@ -31,7 +31,7 @@
   - `fs_event` start return `callback<const char *, uv_fs_event>`. 
   - `fs_poll` start return `callback<const uv_stat_t *, const uv_stat_t *>`. 
   - `poll` start return `callback<int>`. 
-  - `stream` listen return `callback<int>`. 
+  - `stream` listen return `callback<>`. 
   - Handle status issue with `except<uvcxx::errcode>(...)`.
 
 --------------------------------

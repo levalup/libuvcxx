@@ -282,6 +282,7 @@ sign = """
  */
 """
 
+
 def merge_header() -> str:
     macro_control = 'UVCXX_H'
     version_control_header = 'uvcxx/cxx/version.h'
