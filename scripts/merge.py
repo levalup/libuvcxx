@@ -177,6 +177,7 @@ def list_header_files():
 
 
 def cache_read_header(cache: Dict[str, HeaderSource], path: str) -> HeaderSource:
+    path = path.replace('\\', '/')
     if path in cache:
         return cache.get(path)
     src = read_header(path)
@@ -188,6 +189,7 @@ def store_header_sources(
         store: Dict[str, HeaderSource],
         cache: Dict[str, HeaderSource],
         path: str):
+    path = path.replace('\\', '/')
     if path in cache:
         return
     src = cache_read_header(cache, path)
