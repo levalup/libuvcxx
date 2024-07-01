@@ -1,0 +1,82 @@
+name: Build Classic
+
+on:
+  push:
+    branches:
+      - master
+
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build-classic:
+    if: >-
+      ! contains(toJSON(github.event.commits.*.message), '[skip ci]') &&
+      ! contains(toJSON(github.event.commits.*.message), '[skip github]')
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        gcc_version: [ '4.8.5' ]
+        cmake_version: [ '3.9.6' ]
+        build_type: [ Release ]
+        include:
+          - gcc_version: '4.8.5'
+            libuv_version: '1.44.2'
+
+    name: "In Container GCC ${{matrix.gcc_version}} ${{matrix.build_type}}"
+
+    container:
+      image: gcc:${{matrix.gcc_version}}
+
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          submodules: recursive
+
+      - name: Set output
+        id: strings
+        shell: bash
+        run: |
+          echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+
+      - name: Download CMake
+        run: >-
+          wget --no-check-certificate
+          https://github.com/Kitware/CMake/releases/download/v${{matrix.cmake_version}}/cmake-${{matrix.cmake_version}}-linux-x86_64.tar.gz
+
+      - name: Install CMake
+        run: |
+          tar -xvf cmake-${{matrix.cmake_version}}-linux-x86_64.tar.gz
+          echo "`pwd`/cmake-${{matrix.cmake_version}}-Linux-x86_64/bin" >> $GITHUB_PATH
+
+      - name: CMake & GCC Information
+        run: |
+          cmake --version
+          gcc --version
+          g++ --version
+
+      - name: Checkout libuv
+        run: |
+          cd libuv
+          git checkout "v${{matrix.libuv_version}}"
+          cd ..
+
+      - name: Configure
+        run: |
+          mkdir -p build
+          cd build
+          cmake -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DSTD=11 ..
+          cd ..
+
+      - name: Build
+        run: |
+          cmake --build build --config ${{ matrix.build_type }}
+
+      - name: Test
+        working-directory: build
+        run: ctest --output-on-failure --build-config ${{ matrix.build_type }}

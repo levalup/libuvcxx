@@ -168,6 +168,7 @@ def list_header_files():
     headers = ['uvcxx/utils/standard.h']  # < first header should be standard
     for d in dirs:
         files = os.listdir(os.path.join(uvcxx, d))
+        files.sort()
         for file in files:
             ext = os.path.splitext(file)[-1]
             if ext.lower() != '.h':

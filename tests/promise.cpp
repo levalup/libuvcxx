@@ -7,8 +7,7 @@
 #pragma warning(disable: 4702)
 #endif
 
-#include "uvcxx/utils/assert.h"
-#include "uvcxx/utils/promise.h"
+#include "uvcxx.h"
 
 
 class Copyable {

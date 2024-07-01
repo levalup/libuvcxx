@@ -5,9 +5,7 @@
 
 #include <iostream>
 
-#include "uvcxx/cxx/buffer.h"
-#include "uvcxx/utils/assert.h"
-#include "uvcxx/buf.h"
+#include "uvcxx.h"
 
 void init_buffer(void *data, size_t size) {
     int c = 0;

@@ -3,8 +3,7 @@
 // L.eval: Let programmer get rid of only work jobs.
 //
 
-#include "uvcxx/idle.h"
-#include "uvcxx/utils/assert.h"
+#include "uvcxx.h"
 
 int main() {
     int v = 0;

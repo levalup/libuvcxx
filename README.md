@@ -4,13 +4,32 @@
     LICENSE)
 [![libuv](https://img.shields.io/badge/libuv-v1.48.0-green?logo=libuv&logoColor=green)](
     https://github.com/libuv/libuv)
-[![C++](https://img.shields.io/badge/C++-11-%23512BD4.svg?logo=C%2B%2B&logoColor=%23512BD4)](
-    https://en.cppreference.com/w/cpp/17)
 [![CMake](https://img.shields.io/badge/CMake-v3.9-%23064F8C?logo=cmake&logoColor=%23064F8C)](
     https://cmake.org)
+[![C++](https://img.shields.io/badge/C++-11-%23512BD4.svg?logo=C%2B%2B&logoColor=%23512BD4)](
+    https://en.cppreference.com/w/cpp/11)
+[![C++](https://img.shields.io/badge/C++-14-%23512BD4.svg?logo=C%2B%2B&logoColor=%23512BD4)](
+    https://en.cppreference.com/w/cpp/14)
+[![C++](https://img.shields.io/badge/C++-17-%23512BD4.svg?logo=C%2B%2B&logoColor=%23512BD4)](
+    https://en.cppreference.com/w/cpp/17)
 
 [![Build](https://github.com/levalup/libuvcxx/actions/workflows/build.yml/badge.svg)](
     https://github.com/levalup/libuvcxx/actions/workflows/build.yml)
+[![Build Classic](https://github.com/levalup/libuvcxx/actions/workflows/build-classic.yml/badge.svg)](
+    https://github.com/levalup/libuvcxx/actions/workflows/build-classic.yml)
+[![Build Multi-GCC](https://github.com/levalup/libuvcxx/actions/workflows/build-gcc.yml/badge.svg)](
+    https://github.com/levalup/libuvcxx/actions/workflows/build-gcc.yml)
+[![Build GCC-std](https://github.com/levalup/libuvcxx/actions/workflows/build-gcc-std.yml/badge.svg)](
+    https://github.com/levalup/libuvcxx/actions/workflows/build-gcc-std.yml)
+[![Build MacOS](https://github.com/levalup/libuvcxx/actions/workflows/build-macos.yml/badge.svg)](
+    https://github.com/levalup/libuvcxx/actions/workflows/build-macos.yml)
+[![Build MinGW](https://github.com/levalup/libuvcxx/actions/workflows/build-mingw.yml/badge.svg)](
+    https://github.com/levalup/libuvcxx/actions/workflows/build-mingw.yml)
+[![Build MSVC-std](https://github.com/levalup/libuvcxx/actions/workflows/build-msvc-std.yml/badge.svg)](
+    https://github.com/levalup/libuvcxx/actions/workflows/build-msvc-std.yml)
+
+[![Single Header](https://github.com/levalup/libuvcxx/actions/workflows/single-header.yml/badge.svg)](
+    https://github.com/levalup/libuvcxx/actions/workflows/single-header.yml)
 [![Release](https://github.com/levalup/libuvcxx/actions/workflows/release.yml/badge.svg)](
     https://github.com/levalup/libuvcxx/actions/workflows/release.yml)
 

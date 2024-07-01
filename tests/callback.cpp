@@ -9,9 +9,7 @@
 
 #include <future>
 
-#include "uvcxx/utils/assert.h"
-#include "uvcxx/utils/callback.h"
-
+#include "uvcxx.h"
 
 class Copyable {
 public:

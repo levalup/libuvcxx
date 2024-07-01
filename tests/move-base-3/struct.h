@@ -8,8 +8,7 @@
 
 #include <iostream>
 
-#include "uvcxx/inner/base.h"
-#include "uvcxx/utils/assert.h"
+#include "uvcxx.h"
 
 struct V {
     static int count;

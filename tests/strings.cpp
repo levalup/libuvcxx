@@ -5,8 +5,7 @@
 
 #include <iostream>
 
-#include "uvcxx/cxx/string.h"
-#include "uvcxx/utils/assert.h"
+#include "uvcxx.h"
 
 std::string fs(uvcxx::string s) {
     std::cout << "|" << s.c_str << "|" << std::endl;

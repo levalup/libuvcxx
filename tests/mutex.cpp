@@ -5,11 +5,7 @@
 
 #include <cstdlib>
 
-#include "uvcxx/mutex.h"
-#include "uvcxx/thread.h"
-#include "uvcxx/utilities.h"
-
-#include "uvcxx/utils/assert.h"
+#include "uvcxx.h"
 
 int main() {
     uv::mutex_t mutex = nullptr;

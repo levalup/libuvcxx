@@ -1,0 +1,70 @@
+name: Build Multi-GCC
+
+on:
+  push:
+    branches:
+      - master
+
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build-gcc:
+    if: >-
+      ! contains(toJSON(github.event.commits.*.message), '[skip ci]') &&
+      ! contains(toJSON(github.event.commits.*.message), '[skip github]')
+
+    runs-on: ubuntu-20.04
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        gcc_version: [ 'latest', '12', '11', '10', '9', '8', '7', '6', '5' ]
+        build_type: [ Release ]
+
+    name: "In Container GCC ${{matrix.gcc_version}} ${{matrix.build_type}}"
+
+    container:
+      image: gcc:${{matrix.gcc_version}}
+      options: -v /usr/local:/host_usr_local
+
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          submodules: recursive
+
+      - uses: friendlyanon/fetch-core-count@v1
+        id: cores
+
+      - name: Set output
+        id: strings
+        shell: bash
+        run: |
+          echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+
+      - name: Mount CMake
+        run: echo "/host_usr_local/bin" >> $GITHUB_PATH
+
+      - name: CMake & GCC Information
+        run: |
+          cmake --version
+          gcc --version
+          g++ --version
+
+      - name: Configure
+        run: >-
+          cmake -B build
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          -S .
+
+      - name: Build
+        run: >-
+          cmake --build build
+          --config ${{ matrix.build_type }}
+          -- -j ${{steps.cores.outputs.count}}
+
+      - name: Test
+        working-directory: build
+        run: ctest --output-on-failure --build-config ${{ matrix.build_type }}
