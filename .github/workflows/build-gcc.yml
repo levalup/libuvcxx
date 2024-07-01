@@ -17,7 +17,7 @@ jobs:
       ! contains(toJSON(github.event.commits.*.message), '[skip ci]') &&
       ! contains(toJSON(github.event.commits.*.message), '[skip github]')
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-18.04
 
     strategy:
       fail-fast: false
@@ -47,8 +47,12 @@ jobs:
         run: |
           echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
-      - name: CMake
-        run: echo "/host_usr_local/bin" >> $GITHUB_PATH
+      - name: CMake & GCC
+        run: |
+          echo "/host_usr_local/bin" >> $GITHUB_PATH
+          cmake --version
+          gcc --version
+          g++ --version
 
       - name: Configure
         run: >-
