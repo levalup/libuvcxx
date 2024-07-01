@@ -2,7 +2,30 @@
 
 --------------------------------
 
-## v0.1.1
+## v0.1.2
+
+> Date: 2024-07-01
+
+### New features
+
+- Add CI workflows.
+  - Test latest ubuntu/windows gcc, clang and cl.
+  - Test classic GCC 4.8.5 with libuv 1.44.2.
+  - Test GCC 5, 6, 7, 8, 9, 10, 11, 12, latest.
+  - Test GCC with -std=11, 14, 17.
+  - Test MacOS with Xcode(Clang).
+  - Test MinGW.
+  - Test MSVC with /std:11, 14, 17.
+  - Test single header.
+
+### Bug fix
+
+- Fix the issue that the generated single header file may vary in different environments,
+  - which leads to compilation errors.
+
+--------------------------------
+
+## v0.1.2
 
 > Date: 2024-06-28
 
