@@ -33,6 +33,7 @@ jobs:
       options: >-
         -v /usr/local:/host_usr_local
         -v "${{ github.workspace }}":/workspace
+        --workdir /workspace
 
     steps:
       - uses: actions/checkout@v1
@@ -41,6 +42,7 @@ jobs:
 
       - uses: friendlyanon/fetch-core-count@v1
         id: cores
+        if: matrix.gcc_version != '4.8.5'
 
       - name: Set output
         id: strings
