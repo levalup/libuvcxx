@@ -1,4 +1,4 @@
-name: Build Multi-GCC
+name: Build Classic GCC 4.8.5
 
 on:
   push:
@@ -12,25 +12,22 @@ on:
       - develop
 
 jobs:
-  build-gcc:
+  build-classic:
     if: >-
       ! contains(toJSON(github.event.commits.*.message), '[skip ci]') &&
       ! contains(toJSON(github.event.commits.*.message), '[skip github]')
 
-    runs-on: ubuntu-20.04
+    runs-on: ${{matrix.os}}
 
     strategy:
       fail-fast: false
 
       matrix:
-        gcc_version: ['latest', '12', '11', '10', '9', '8', '7', '6', '5']
-        build_type: [Release]
+        os: [ 'centos-7' ]
+        gcc_version: [ '4.8.5' ]
+        build_type: [ Release ]
 
-    name: "In Container GCC ${{matrix.gcc_version}} ${{matrix.build_type}}"
-
-    container:
-      image: gcc:${{matrix.gcc_version}}
-      options: -v /usr/local:/host_usr_local
+    name: "On ${{matrix.os}} gcc-${{matrix.gcc_version}} ${{matrix.build_type}}"
 
     steps:
       - uses: actions/checkout@v1
@@ -48,23 +45,21 @@ jobs:
 
       - name: CMake & GCC
         run: |
-          echo "/host_usr_local/bin" >> $GITHUB_PATH
           cmake --version
           gcc --version
           g++ --version
 
       - name: Configure
         run: >-
-          cmake -B build
+          cmake -B "${{ steps.strings.outputs.build-output-dir }}"
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-          -S .
+          -S "${{ github.workspace }}"
 
       - name: Build
         run: >-
-          cmake --build build
+          cmake --build "${{ steps.strings.outputs.build-output-dir }}"
           --config ${{ matrix.build_type }}
-          -- -j ${{steps.cores.outputs.count}}
 
       - name: Test
-        working-directory: build
-        run: ctest --output-on-failure --build-config ${{ matrix.build_type }}
+        working-directory: "${{ steps.strings.outputs.build-output-dir }}"
+        run: ctest  --output-on-failure --build-config ${{ matrix.build_type }}
