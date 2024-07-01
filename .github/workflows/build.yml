@@ -85,7 +85,6 @@ jobs:
         run: >-
           cmake --build ${{ steps.strings.outputs.build-output-dir }}
           --config ${{ matrix.build_type }}
-          -- -j ${{steps.cores.outputs.count}}
 
       - name: Test
         working-directory: ${{ steps.strings.outputs.build-output-dir }}

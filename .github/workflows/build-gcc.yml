@@ -30,6 +30,7 @@ jobs:
 
     container:
       image: gcc:${{matrix.gcc_version}}
+      options: -v /usr/local:/host_usr_local
 
     steps:
       - uses: actions/checkout@v4
@@ -44,6 +45,9 @@ jobs:
         shell: bash
         run: |
           echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+
+      - name: CMake
+        run: echo "/host_usr_local/bin" >> $GITHUB_PATH
 
       - name: Configure
         run: >-

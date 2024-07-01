@@ -21,8 +21,8 @@ jobs:
 
     strategy:
       matrix:
-        os: [ 'macos-14.5' ]
-        xcode: [ '15.4' ]
+        os: [ 'macos-12' ]
+        xcode: [ '14.1' ]
         build_type: [ Release ]
 
     env:
