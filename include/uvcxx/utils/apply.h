@@ -6,6 +6,7 @@
 #ifndef LIBUVCXX_APPLY_H
 #define LIBUVCXX_APPLY_H
 
+#include <cstddef>
 #include <tuple>
 
 #include "standard.h"
