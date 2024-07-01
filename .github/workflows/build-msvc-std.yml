@@ -4,12 +4,10 @@ on:
   push:
     branches:
       - master
-      - develop
 
   pull_request:
     branches:
       - master
-      - develop
 
 jobs:
   build-msvc-std:
@@ -48,12 +46,12 @@ jobs:
         run: >
           cmake -B "${{ steps.strings.outputs.build-output-dir }}"
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          -DSTD=${{ matrix.std }}
           -S "${{ github.workspace }}"
 
       - name: Build
         run: >-
           cmake --build "${{ steps.strings.outputs.build-output-dir }}"
-          -DSTD=${{ matrix.std }}
           -DCMAKE_CXX_COMPILER=${{ matrix.cl }}
           -DCMAKE_C_COMPILER=${{ matrix.cl }}
           --config ${{ matrix.build_type }}

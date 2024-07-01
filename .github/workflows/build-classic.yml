@@ -4,12 +4,10 @@ on:
   push:
     branches:
       - master
-      - develop
 
   pull_request:
     branches:
       - master
-      - develop
 
 jobs:
   build-classic:
@@ -62,9 +60,9 @@ jobs:
       - name: Configure
         run: |
           mkdir -p build
-          pushd build
+          cd build
           cmake -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DSTD=11 ..
-          popd
+          cd ..
 
       - name: Build
         run: |

@@ -4,12 +4,10 @@ on:
   push:
     branches:
       - master
-      - develop
 
   pull_request:
     branches:
       - master
-      - develop
 
 jobs:
   build-gcc-std:
@@ -47,12 +45,12 @@ jobs:
         run: >
           cmake -B "${{ steps.strings.outputs.build-output-dir }}"
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          -DSTD=${{ matrix.std }}
           -S "${{ github.workspace }}"
 
       - name: Build
         run: >-
           cmake --build "${{ steps.strings.outputs.build-output-dir }}"
-          -DSTD=${{ matrix.std }}
           --config ${{ matrix.build_type }}
 
       - name: Test
