@@ -45,6 +45,8 @@ jobs:
       - name: Configure
         run: >
           cmake -B "${{ steps.strings.outputs.build-output-dir }}"
+          -DCMAKE_CXX_COMPILER=${{ matrix.cl }}
+          -DCMAKE_C_COMPILER=${{ matrix.cl }}
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           -DSTD=${{ matrix.std }}
           -S "${{ github.workspace }}"
@@ -52,8 +54,6 @@ jobs:
       - name: Build
         run: >-
           cmake --build "${{ steps.strings.outputs.build-output-dir }}"
-          -DCMAKE_CXX_COMPILER=${{ matrix.cl }}
-          -DCMAKE_C_COMPILER=${{ matrix.cl }}
           --config ${{ matrix.build_type }}
 
       - name: Test

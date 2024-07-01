@@ -24,6 +24,9 @@ jobs:
         gcc_version: [ '4.8.5' ]
         cmake_version: [ '3.9.6' ]
         build_type: [ Release ]
+        include:
+          - gcc_version: '4.8.5'
+            libuv_version: '1.44.2'
 
     name: "In Container GCC ${{matrix.gcc_version}} ${{matrix.build_type}}"
 
@@ -56,6 +59,12 @@ jobs:
           cmake --version
           gcc --version
           g++ --version
+
+      - name: Checkout libuv
+        run: |
+          cd libuv
+          git checkout "v${{matrix.libuv_version}}"
+          cd ..
 
       - name: Configure
         run: |

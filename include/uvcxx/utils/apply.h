@@ -12,10 +12,12 @@
 
 namespace uvcxx {
 #if UVCXX_STD_APPLY
-    template <typename F, typename T>
+
+    template<typename F, typename T>
     inline decltype(auto) proxy_apply(F &&f, T &&t) {
         return std::apply(std::forward<F>(f), std::forward<T>(t));
     }
+
 #else
     namespace inner {
         template<typename F, typename Tuple>
@@ -25,11 +27,6 @@ namespace uvcxx {
         class Apply<FUNC, std::tuple<Args...>> {
         public:
             using Ret = decltype(std::declval<FUNC>()(std::declval<Args>()...));
-
-            template<typename F, typename T>
-            Ret operator()(F &&f, T &&t) {
-                return apply<sizeof...(Args)>(std::forward<F>(f), std::forward<T>(t));
-            }
 
             template<size_t I, typename F, typename T, typename std::enable_if<I == 0, int>::type = 0>
             Ret apply(F &&f, T &&) {
@@ -129,6 +126,11 @@ namespace uvcxx {
                          std::get<7>(std::forward<T>(t)),
                          std::get<8>(std::forward<T>(t)),
                          std::get<9>(std::forward<T>(t)));
+            }
+
+            template<typename F, typename T>
+            Ret operator()(F &&f, T &&t) {
+                return this->apply<sizeof...(Args)>(std::forward<F>(f), std::forward<T>(t));
             }
         };
     }
