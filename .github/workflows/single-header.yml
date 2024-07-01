@@ -23,8 +23,8 @@ jobs:
       fail-fast: false
 
       matrix:
-        os: [ubuntu-latest]
-        build_type: [Release]
+        os: [ ubuntu-latest ]
+        build_type: [ Release ]
 
     name: "Generate Single Header ${{matrix.build_type}}"
 

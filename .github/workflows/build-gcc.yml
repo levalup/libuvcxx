@@ -23,8 +23,8 @@ jobs:
       fail-fast: false
 
       matrix:
-        gcc_version: ['latest', '12', '11', '10', '9', '8', '7', '6', '5']
-        build_type: [Release]
+        gcc_version: [ 'latest', '12', '11', '10', '9', '8', '7', '6', '5' ]
+        build_type: [ Release ]
 
     name: "In Container GCC ${{matrix.gcc_version}} ${{matrix.build_type}}"
 
@@ -46,9 +46,11 @@ jobs:
         run: |
           echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
-      - name: CMake & GCC
+      - name: Mount CMake
+        run: echo "/host_usr_local/bin" >> $GITHUB_PATH
+
+      - name: CMake & GCC Information
         run: |
-          echo "/host_usr_local/bin" >> $GITHUB_PATH
           cmake --version
           gcc --version
           g++ --version
