@@ -30,10 +30,12 @@ jobs:
 
     container:
       image: gcc:${{matrix.gcc_version}}
-      options: -v /usr/local:/host_usr_local
+      options: >-
+        -v /usr/local:/host_usr_local
+        -v "${{ github.workspace }}":/workspace
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v1
         with:
           submodules: recursive
 
@@ -51,16 +53,16 @@ jobs:
 
       - name: Configure
         run: >-
-          cmake -B ${{ steps.strings.outputs.build-output-dir }}
+          cmake -B /workspace/build
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-          -S ${{ github.workspace }}
+          -S /workspace
 
       - name: Build
         run: >-
-          cmake --build ${{ steps.strings.outputs.build-output-dir }}
+          cmake --build /workspace/build
           --config ${{ matrix.build_type }}
           -- -j ${{steps.cores.outputs.count}}
 
       - name: Test
-        working-directory: ${{ steps.strings.outputs.build-output-dir }}
+        working-directory: /workspace/build
         run: ctest --output-on-failure --build-config ${{ matrix.build_type }}
