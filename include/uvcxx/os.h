@@ -247,11 +247,11 @@ namespace uv {
             });
         }
 
-        int setenv(uvcxx::string name, uvcxx::string value) {
+        inline int setenv(uvcxx::string name, uvcxx::string value) {
             UVCXX_PROXY(uv_os_setenv(name, value), "can not setenv['", name.c_str, "']='", value.c_str, "'");
         }
 
-        int unsetenv(uvcxx::string name) {
+        inline int unsetenv(uvcxx::string name) {
             UVCXX_PROXY(uv_os_unsetenv(name), "can not unsetenv['", name.c_str, "']");
         }
 

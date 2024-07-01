@@ -1,0 +1,62 @@
+name: Build Multi-GCC
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+
+  pull_request:
+    branches:
+      - master
+      - develop
+
+jobs:
+  build-gcc:
+    if: >-
+      ! contains(toJSON(github.event.commits.*.message), '[skip ci]') &&
+      ! contains(toJSON(github.event.commits.*.message), '[skip github]')
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        gcc_version: ['latest', '12', '11', '10', '9', '8', '7', '6', '5', '4.8.5']
+        build_type: [Release]
+
+    name: "In Container GCC ${{matrix.gcc_version}} ${{matrix.build_type}}"
+
+    container:
+      image: gcc:${{matrix.gcc_version}}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: friendlyanon/fetch-core-count@v1
+        id: cores
+
+      - name: Set output
+        id: strings
+        shell: bash
+        run: |
+          echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+
+      - name: Configure
+        run: >-
+          cmake -B ${{ steps.strings.outputs.build-output-dir }}
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          -S ${{ github.workspace }}
+
+      - name: Build
+        run: >-
+          cmake --build ${{ steps.strings.outputs.build-output-dir }}
+          --config ${{ matrix.build_type }}
+          -- -j ${{steps.cores.outputs.count}}
+
+      - name: Test
+        working-directory: ${{ steps.strings.outputs.build-output-dir }}
+        run: ctest --output-on-failure --build-config ${{ matrix.build_type }}

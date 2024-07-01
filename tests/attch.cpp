@@ -3,9 +3,7 @@
 // L.eval: Let programmer get rid of only work jobs.
 //
 
-#include "uvcxx/idle.h"
-#include "uvcxx/cxx/to_string.h"
-#include "uvcxx/utils/assert.h"
+#include "uvcxx.h"
 
 int loop_handle_count(uv::loop_t &loop) {
     int count = 0;

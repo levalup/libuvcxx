@@ -11,6 +11,15 @@
 
 [![Build](https://github.com/levalup/libuvcxx/actions/workflows/build.yml/badge.svg)](
     https://github.com/levalup/libuvcxx/actions/workflows/build.yml)
+[![Build Multi-GCC](https://github.com/levalup/libuvcxx/actions/workflows/build-gcc.yml/badge.svg)](
+    https://github.com/levalup/libuvcxx/actions/workflows/build-gcc.yml)
+[![Build MacOS](https://github.com/levalup/libuvcxx/actions/workflows/build-macos.yml/badge.svg)](
+    https://github.com/levalup/libuvcxx/actions/workflows/build-macos.yml)
+[![Build MinGW](https://github.com/levalup/libuvcxx/actions/workflows/build-mingw.yml/badge.svg)](
+    https://github.com/levalup/libuvcxx/actions/workflows/build-mingw.yml)
+[![Single Header](https://github.com/levalup/libuvcxx/actions/workflows/single-header.yml/badge.svg)](
+    https://github.com/levalup/libuvcxx/actions/workflows/single-header.yml)
+
 [![Release](https://github.com/levalup/libuvcxx/actions/workflows/release.yml/badge.svg)](
     https://github.com/levalup/libuvcxx/actions/workflows/release.yml)
 

@@ -1,0 +1,62 @@
+name: Single Header
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+
+  pull_request:
+    branches:
+      - master
+      - develop
+
+jobs:
+  single-header:
+    if: >-
+      ! contains(toJSON(github.event.commits.*.message), '[skip ci]') &&
+      ! contains(toJSON(github.event.commits.*.message), '[skip github]')
+
+    runs-on: ${{matrix.os}}
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        os: [ubuntu-latest]
+        build_type: [Release]
+
+    name: "Generate Single Header ${{matrix.build_type}}"
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: friendlyanon/fetch-core-count@v1
+        id: cores
+
+      - name: Set output
+        id: strings
+        shell: bash
+        run: |
+          echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+
+      - name: Generate single header
+        run: python3 scripts/merge.py include/uvcxx.h
+
+      - name: Configure
+        run: >
+          cmake -B ${{ steps.strings.outputs.build-output-dir }}
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          -S ${{ github.workspace }}
+
+      - name: Build
+        run: >-
+          cmake --build ${{ steps.strings.outputs.build-output-dir }}
+          --config ${{ matrix.build_type }}
+          -- -j ${{steps.cores.outputs.count}}
+
+      - name: Test
+        working-directory: ${{ steps.strings.outputs.build-output-dir }}
+        run: ctest --output-on-failure --build-config ${{ matrix.build_type }}

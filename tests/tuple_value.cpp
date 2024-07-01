@@ -5,8 +5,7 @@
 
 #include <iostream>
 
-#include "uvcxx/utils/tuple.h"
-#include "uvcxx/utils/assert.h"
+#include "uvcxx.h"
 
 class Moveable {
 public:

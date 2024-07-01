@@ -5,8 +5,7 @@
 
 #include <iostream>
 
-#include "uvcxx/inner//base.h"
-#include "uvcxx/utils/assert.h"
+#include "uvcxx.h"
 
 static int count = 0;
 static int copy = 0;
