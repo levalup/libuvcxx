@@ -20,15 +20,20 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
-        uvcxx::callback<> init() {
-            return init(default_loop());
+        uvcxx::callback<> callback() {
+            return get_data<data_t>()->send_cb.callback();;
         }
 
         UVCXX_NODISCARD
         uvcxx::callback<> init(const loop_t &loop) {
             UVCXX_APPLY(uv_async_init(loop, *this, raw_callback), nullptr);
             _detach_();
-            return get_data<data_t>()->send_cb.callback();
+            return callback();
+        }
+
+        UVCXX_NODISCARD
+        uvcxx::callback<> init() {
+            return init(default_loop());
         }
 
         int send() {

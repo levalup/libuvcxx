@@ -29,10 +29,15 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
+        uvcxx::callback<const char *, uv_fs_event> callback() {
+            return get_data<data_t>()->start_cb.callback();
+        }
+
+        UVCXX_NODISCARD
         uvcxx::callback<const char *, uv_fs_event> start(uvcxx::string path, int flags) {
             UVCXX_APPLY(uv_fs_event_start(*this, raw_callback, path, flags), nullptr);
             _detach_();
-            return get_data<data_t>()->start_cb.callback();
+            return callback();
         }
 
         void stop() {

@@ -15,6 +15,7 @@
 #include "cxx/string.h"
 #include "cxx/wrapper.h"
 #include "inner/base.h"
+#include "utils/defer.h"
 
 namespace uv {
     /**
@@ -47,7 +48,7 @@ namespace uv {
             auto lib = new uv_lib_t;
             uvcxx::defer_delete<uv_lib_t> delete_lib(lib);
 
-            UVCXX_APPLY(uv_dlopen(filename, *this), status, "can not open `", filename, "`");
+            UVCXX_APPLY(uv_dlopen(filename, lib), status, "can not open `", filename, "`");
 
             delete_lib.release();
             (void) reset_raw(lib, [](uv_lib_t *pre) {

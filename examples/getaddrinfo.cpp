@@ -5,6 +5,7 @@
 
 #include "uvcxx/getaddrinfo.h"
 #include "uvcxx/getnameinfo.h"
+#include "uvcxx/utilities.h"
 
 int main() {
     addrinfo hints = {};
@@ -16,10 +17,8 @@ int main() {
     uv::getaddrinfo(
             "baidu.com", nullptr, &hints
     ).then([](addrinfo *ai) {
-        char addr[INET6_ADDRSTRLEN];
         for (addrinfo *info = ai; info != nullptr; info = info->ai_next) {
-            uv_ip4_name((struct sockaddr_in *) info->ai_addr, addr, sizeof(addr));
-            std::cout << "Found address: " << addr << std::endl;
+            std::cout << "Found address: " << uv::ip4_name((struct sockaddr_in *) info->ai_addr) << std::endl;
             uv::getnameinfo(info->ai_addr, 0).then([](const char *hostname, const char *service) {
                 std::cout << "Name: " << hostname << " " << service << std::endl;
             });

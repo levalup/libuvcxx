@@ -172,10 +172,26 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
+        uvcxx::callback<size_t, uv_buf_t *> alloc_callback() {
+            return get_data<data_t>()->alloc_cb.callback();
+        }
+
+        /**
+         * Different from `alloc_callback` which only acquires the callback function,
+         *     this method will clear the previously registered callback to avoid repeatedly `allocate`.
+         * @return
+         */
+        UVCXX_NODISCARD
         uvcxx::callback<size_t, uv_buf_t *> alloc() {
             // this alloc is not under Running state, so no `_detach_` applied.
             // memory alloc can not register multi-times callback
+            // use call(nullptr) to avoid call alloc multi times.
             return get_data<data_t>()->alloc_cb.callback().call(nullptr);
+        }
+
+        UVCXX_NODISCARD
+        uvcxx::callback<ssize_t, const uv_buf_t *, const sockaddr *, unsigned> recv_callback() {
+            return get_data<data_t>()->recv_cb.callback();
         }
 
         UVCXX_NODISCARD
@@ -183,7 +199,7 @@ namespace uv {
         recv_start() {
             UVCXX_APPLY(uv_udp_recv_start(*this, raw_alloc_callback, raw_recv_callback), nullptr);
             _detach_();
-            return get_data<data_t>()->recv_cb.callback();
+            return recv_callback();
         }
 
 #if UVCXX_SATISFY_VERSION(1, 39, 0)

@@ -26,10 +26,15 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
+        uvcxx::callback<const uv_stat_t *, const uv_stat_t *> callback() {
+            return get_data<data_t>()->start_cb.callback();
+        }
+
+        UVCXX_NODISCARD
         uvcxx::callback<const uv_stat_t *, const uv_stat_t *> start(uvcxx::string path, unsigned int interval) {
             UVCXX_APPLY(uv_fs_poll_start(*this, raw_callback, path, interval), nullptr);
             _detach_();
-            return get_data<data_t>()->start_cb.callback();
+            return callback();
         }
 
         void stop() {

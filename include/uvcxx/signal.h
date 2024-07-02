@@ -28,25 +28,29 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
+        uvcxx::callback<int> callback() {
+            return get_data<data_t>()->start_cb.callback();
+        }
+
+        UVCXX_NODISCARD
         uvcxx::callback<int> start(int signum) {
             UVCXX_APPLY(uv_signal_start(*this, raw_callback, signum), nullptr);
             _detach_();
-            return get_data<data_t>()->start_cb.callback();
+            return callback();
         }
 
 #if UVCXX_SATISFY_VERSION(1, 12, 0)
 
         UVCXX_NODISCARD
-        uvcxx::callback<int> start_oneshot(int signum) {
-            UVCXX_APPLY(uv_signal_start_oneshot(*this, raw_callback, signum), nullptr);
+        uvcxx::promise<int> start_oneshot(int signum) {
+            UVCXX_APPLY(uv_signal_start_oneshot(*this, raw_oneshot_callback, signum), nullptr);
 
             _detach_();
 
             auto attachment = *this;
-            return get_data<data_t>()->start_cb.callback().finally(nullptr)
-                    .finally([attachment]() mutable {
-                        finally_recycle_oneshot(attachment);
-                    });
+            return get_data<data_t>()->start_oneshot_cb.promise().finally([attachment]() mutable {
+                finally_recycle_oneshot(attachment);
+            });
         }
 
 #endif
@@ -82,10 +86,17 @@ namespace uv {
             auto data = (data_t *) (handle->data);
             data->start_cb.emit(signum);
         }
+        static void raw_oneshot_callback(raw_t *handle, int signum) {
+            auto data = (data_t *) (handle->data);
+            data->start_oneshot_cb.resolve(signum);
+            data->start_oneshot_cb.finalize();
+            data->start_oneshot_cb.promise().then(nullptr).except(nullptr).finally(nullptr);
+        }
 
         class data_t : supper::data_t {
         public:
             uvcxx::callback_emitter<int> start_cb;
+            uvcxx::promise_emitter<int> start_oneshot_cb;
 
             explicit data_t(signal_t &handle)
                     : supper::data_t(handle) {

@@ -46,6 +46,11 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
+        uvcxx::callback<int> callback() {
+            return get_data<data_t>()->start_cb.callback();
+        }
+
+        UVCXX_NODISCARD
         uvcxx::callback<int> start(int events) {
             auto data = get_data<data_t>();
 

@@ -221,14 +221,32 @@ namespace uv {
         UVCXX_PROXY(uv_ip4_name(src, dst, size));
     }
 
+    inline std::string ip4_name(const sockaddr_in *src) {
+        char dst[UV_IF_NAMESIZE] = {0};
+        (void) ip4_name(src, dst, sizeof(dst));
+        return dst;
+    }
+
     inline int ip6_name(const sockaddr_in6 *src, char *dst, size_t size) {
         UVCXX_PROXY(uv_ip6_name(src, dst, size));
+    }
+
+    inline std::string ip6_name(const sockaddr_in6 *src) {
+        char dst[UV_IF_NAMESIZE] = {0};
+        (void) ip6_name(src, dst, sizeof(dst));
+        return dst;
     }
 
 #if UVCXX_SATISFY_VERSION(1, 43, 0)
 
     inline int ip_name(const sockaddr *src, char *dst, size_t size) {
         UVCXX_PROXY(uv_ip_name(src, dst, size));
+    }
+
+    inline std::string ip_name(const sockaddr *src) {
+        char dst[UV_IF_NAMESIZE] = {0};
+        (void) ip_name(src, dst, sizeof(dst));
+        return dst;
     }
 
 #endif

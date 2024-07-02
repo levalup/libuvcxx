@@ -35,6 +35,11 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
+        uvcxx::callback<> listen_callback() {
+            return get_data<data_t>()->listen_cb.callback();
+        }
+
+        UVCXX_NODISCARD
         uvcxx::callback<> listen(int backlog) {
             auto data = get_data<data_t>();
             if (data->work_mode == WorkMode::Read) {
@@ -53,10 +58,26 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
+        uvcxx::callback<size_t, uv_buf_t *> alloc_callback() {
+            return get_data<data_t>()->alloc_cb.callback();
+        }
+
+        /**
+         * Different from `alloc_callback` which only acquires the callback function,
+         *     this method will clear the previously registered callback to avoid repeatedly `allocate`.
+         * @return
+         */
+        UVCXX_NODISCARD
         uvcxx::callback<size_t, uv_buf_t *> alloc() {
             // this alloc is not under Running state, so no `_detach_` applied.
             // memory alloc can not register multi-times callback
+            // use call(nullptr) to avoid call alloc multi times.
             return get_data<data_t>()->alloc_cb.callback().call(nullptr);
+        }
+
+        UVCXX_NODISCARD
+        uvcxx::callback<ssize_t, const uv_buf_t *> read_callback() {
+            return get_data<data_t>()->read_cb.callback();
         }
 
         UVCXX_NODISCARD
@@ -283,8 +304,14 @@ namespace uv {
         virtual stream_t accept() = 0;
 
         UVCXX_NODISCARD
+        uvcxx::callback<stream_t> accept_callback() {
+            return data<data_t>()->accept_cb.callback();
+        }
+
+        UVCXX_NODISCARD
         uvcxx::callback<stream_t> listen_accept(int backlog) {
             auto data = this->data<data_t>();
+
             this->listen(backlog).call(nullptr).call([data, this]() {
                 data->accept_cb.emit(this->accept());
             }).except(nullptr).except([data](const std::exception_ptr &p) -> bool {

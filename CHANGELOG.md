@@ -2,6 +2,30 @@
 
 --------------------------------
 
+## v0.1.3
+
+> Since: 2024-07-02
+
+### New features
+
+- Add `callback` method on handles.
+  - Use `callback` method to directly obtain callback for such as `async`, `check` or `timer`.
+  - Use `listen_callback` method to obtain the callback for stream's `listen`.
+  - You can set up handling functions independently before performing any work.
+  - This can be very useful when operations may involve multiple starts and stops.
+- Add examples.
+
+## Bug fix
+
+- Fix the variable usage error in the `lib_t::open(string)` method.
+
+## Break changes
+
+- Change return value of `signal_t::start_oneshot`.
+  - `callback<int>` -> `promise<int>`
+
+--------------------------------
+
 ## v0.1.2
 
 > Date: 2024-07-01
@@ -25,7 +49,7 @@
 
 --------------------------------
 
-## v0.1.2
+## v0.1.1
 
 > Date: 2024-06-28
 

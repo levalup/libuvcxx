@@ -105,6 +105,11 @@ namespace uv {
 
 #endif
 
+        UVCXX_NODISCARD
+        uvcxx::promise<> close_callback() {
+            return get_data<data_t>()->close_cb.promise();
+        }
+
         void close(std::nullptr_t) {
             (void) close_for([&](void (*cb)(raw_t *)) {
                 uv_close(*this, cb);

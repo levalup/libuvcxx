@@ -45,6 +45,11 @@ foreach (path ${FILES})
         endif ()
         string(REGEX MATCH "^[^.]*" file "${file_ext}")
 
+        # skip single header if there is no that target
+        if (NOT TARGET single-header AND "${PREFIX}-${file}" STREQUAL "test-single-header")
+            continue()
+        endif ()
+
         # check if target exists
         list(FIND TARGETS "${PREFIX}-${file}" TARGET_INDEX)
         if (TARGET_INDEX GREATER -1)
@@ -58,6 +63,11 @@ foreach (path ${FILES})
         message(STATUS "==[ Add ${PREFIX}: ${file}")
     endif ()
 endforeach ()
+
+# explicitly add test-single-header target dependencies
+if (TARGET single-header)
+    add_dependencies(test-single-header single-header)
+endif ()
 
 if (WALL)
     if (CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")

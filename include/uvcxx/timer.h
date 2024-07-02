@@ -23,10 +23,15 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
+        uvcxx::callback<> callback() {
+            return get_data<data_t>()->start_cb.callback();
+        }
+
+        UVCXX_NODISCARD
         uvcxx::callback<> start(uint64_t timeout, uint64_t repeat) {
             UVCXX_APPLY(uv_timer_start(*this, raw_callback, timeout, repeat), nullptr);
             _detach_();
-            return get_data<data_t>()->start_cb.callback();
+            return callback();
         }
 
         int stop() {

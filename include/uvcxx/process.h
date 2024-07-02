@@ -242,6 +242,7 @@ namespace uv {
             return raw<raw_t>()->pid;
         }
 
+        UVCXX_NODISCARD
         uvcxx::promise<int64_t, int> spawn(const loop_t &loop, const uv_process_options_t *options) {
             auto fix_options = *options;
             fix_options.exit_cb = raw_exit_callback;
@@ -252,6 +253,7 @@ namespace uv {
             return get_data<data_t>()->exit_cb.promise();
         }
 
+        UVCXX_NODISCARD
         uvcxx::promise<int64_t, int> spawn(const uv_process_options_t *options) {
             return this->spawn(default_loop(), options);
         }

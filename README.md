@@ -64,6 +64,8 @@ The `handle` can continue to work without any external references, so that expli
 
 See [lifecycle.md](docs/lifecycle.md) for more details.
 
+**Be careful** not to capture the handle itself by value in the lambda of the callback function, unless you are very clear about the lifecycle of the handle.
+
 ## 2. Compatibility
 
 `libuvcxx` requires at least `C++11` and is also compatible with the new features in `C++14` and `C++17`.
