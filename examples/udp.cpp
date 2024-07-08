@@ -60,7 +60,8 @@ int main() {
                     std::cout << "server read: " << std::string(buf->base, nread) << " with "
                               << uvcxx::to_string(uv_udp_flags(flags)) << " from " << uvcxx::any_address_t(addr)
                               << std::endl;
-                }).except([=](const std::exception &e) {
+                }
+        ).except([=](const std::exception &e) {
             std::cout << "[ERROR] recv " << addr << " failed. " << e.what() << std::endl;
             throw uvcxx::close_handle();
         });

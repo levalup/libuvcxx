@@ -4,7 +4,7 @@
 
 ## v0.1.3
 
-> Since: 2024-07-02
+> Date: 2024-07-02
 
 ### New features
 
@@ -16,11 +16,13 @@
 - Add examples.
 - `pipe`, `tcp` change state to `detached` after `connected`.
     - This is an experimental feature and may be adjusted before the official release.
+- Add `uvcxx/cxx/sockaddr.h` to load/dump `sockaddr_*`.
 
 ## Bug fix
 
 - Fix the variable usage error in the `lib_t::open(string)` method.
 - Fix `pipe_connect` forgot set data field.
+- Fix some cases where header files are not included.
 
 ## Break changes
 
@@ -31,6 +33,7 @@
       but also introduces some unnecessary complexity.
 - Remove `stream_t::accept`.
     - Overload the function in specific subtypes to avoid ambiguous semantics inherent in it.
+- Remove meaningless `accpt` implementations in some stream subclasses.
 
 --------------------------------
 
