@@ -64,6 +64,7 @@ namespace uv {
         uv_pipe_connect(req, handle, name, connect_t::callback_t::raw_callback);
 
         delete_data.release();
+        ((uv_connect_t *) req)->data = data;
         return data->promise.promise();
     }
 

@@ -145,6 +145,7 @@ namespace uv {
             if (size > m_cxx.stdio.size()) {
                 uv_stdio_container_t ignore{};
                 ignore.flags = UV_IGNORE;
+                ignore.data.fd = -1;
                 m_cxx.stdio.resize(size, ignore);
             }
             m_cxx.stdio[i] = *io;

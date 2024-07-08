@@ -12,10 +12,10 @@
 #include "stream.h"
 
 namespace uv {
-    class pipe_t : public inherit_handle_t<uv_pipe_t, acceptable_stream_t> {
+    class pipe_t : public inherit_handle_t<uv_pipe_t, stream_t> {
     public:
         using self = pipe_t;
-        using supper = inherit_handle_t<uv_pipe_t, acceptable_stream_t>;
+        using supper = inherit_handle_t<uv_pipe_t, stream_t>;
 
         using raw_t = uv_pipe_t;
 
@@ -44,8 +44,8 @@ namespace uv {
             UVCXX_PROXY(uv_fileno(*this, fd));
         }
 
-        stream_t accept() override {
-            self client(this->loop());
+        self accept(bool ipc) {
+            self client(this->loop(), ipc);
 
             UVCXX_APPLY(uv_accept(*this, client), nullptr);
 
@@ -70,52 +70,44 @@ namespace uv {
             return bind2(name.data, name.size, flags);
         }
 
-        int bind(uvcxx::string_view name, unsigned int flags) {
-            return bind2(name.data, name.size, flags);
-        }
-
 #endif
 
         UVCXX_NODISCARD
         uvcxx::promise<> connect(const connect_t &req, uvcxx::string name) {
-            return pipe_connect(req, *this, name);
+            auto p = pipe_connect(req, *this, name);
+            return p ? (_detach_(), p) : nullptr;
         }
 
         UVCXX_NODISCARD
         uvcxx::promise<> connect(uvcxx::string name) {
-            return pipe_connect(*this, name);
+            auto p = pipe_connect(*this, name);
+            return p ? (_detach_(), p) : nullptr;
         }
 
 #if UVCXX_SATISFY_VERSION(1, 46, 0)
 
         UVCXX_NODISCARD
         uvcxx::promise<> connect2(const connect_t &req, const char *name, size_t namelen, unsigned int flags) {
-            return pipe_connect2(req, *this, name, namelen, flags);
+            auto p = pipe_connect2(req, *this, name, namelen, flags);
+            return p ? (_detach_(), p) : nullptr;
         }
 
         UVCXX_NODISCARD
         uvcxx::promise<> connect2(const char *name, size_t namelen, unsigned int flags) {
-            return pipe_connect2(*this, name, namelen, flags);
+            auto p = pipe_connect2(*this, name, namelen, flags);
+            return p ? (_detach_(), p) : nullptr;
         }
 
         UVCXX_NODISCARD
         uvcxx::promise<> connect2(const connect_t &req, uvcxx::string_view name, unsigned int flags) {
-            return pipe_connect2(req, *this, name.data, name.size, flags);
+            auto p = pipe_connect2(req, *this, name.data, name.size, flags);
+            return p ? (_detach_(), p) : nullptr;
         }
 
         UVCXX_NODISCARD
         uvcxx::promise<> connect2(uvcxx::string_view name, unsigned int flags) {
-            return pipe_connect2(*this, name.data, name.size, flags);
-        }
-
-        UVCXX_NODISCARD
-        uvcxx::promise<> connect(const connect_t &req, uvcxx::string_view name, unsigned int flags) {
-            return pipe_connect2(req, *this, name.data, name.size, flags);
-        }
-
-        UVCXX_NODISCARD
-        uvcxx::promise<> connect(uvcxx::string_view name, unsigned int flags) {
-            return pipe_connect2(*this, name.data, name.size, flags);
+            auto p = pipe_connect2(*this, name.data, name.size, flags);
+            return p ? (_detach_(), p) : nullptr;
         }
 
 #endif

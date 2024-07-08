@@ -6,6 +6,8 @@
 #ifndef LIBUVCXX_STREAM_H
 #define LIBUVCXX_STREAM_H
 
+#include "cxx/buffer.h"
+#include "connect.h"
 #include "handle.h"
 #include "shutdown.h"
 #include "write.h"
@@ -34,11 +36,21 @@ namespace uv {
             return ::uv::shutdown(*this);
         }
 
+        /**
+         * @return uvcxx::callback<>
+         * @throws E_EADDRINUSE, E_EBADF, E_ENOTSOCK
+         */
         UVCXX_NODISCARD
         uvcxx::callback<> listen_callback() {
             return get_data<data_t>()->listen_cb.callback();
         }
 
+        /**
+         * Start listening for incoming connections. backlog indicates the number of connections the kernel might queue, same as listen(2).
+         * @param backlog the number of connections the kernel might queue
+         * @return uvcxx::callback<>
+         * @throws E_EADDRINUSE, E_EBADF, E_ENOTSOCK
+         */
         UVCXX_NODISCARD
         uvcxx::callback<> listen(int backlog) {
             auto data = get_data<data_t>();
@@ -51,10 +63,6 @@ namespace uv {
 
             _detach_();
             return data->listen_cb.callback();
-        }
-
-        int accept(stream_t &client) {
-            UVCXX_PROXY(uv_accept(*this, client));
         }
 
         UVCXX_NODISCARD
@@ -75,11 +83,20 @@ namespace uv {
             return get_data<data_t>()->alloc_cb.callback().call(nullptr);
         }
 
+        /**
+         * @return uvcxx::callback<ssize_t, const uv_buf_t *>
+         * @throws E_EOF, E_EAGAIN
+         */
         UVCXX_NODISCARD
         uvcxx::callback<ssize_t, const uv_buf_t *> read_callback() {
             return get_data<data_t>()->read_cb.callback();
         }
 
+        /**
+         * Read data from an incoming stream.
+         * @return uvcxx::callback<ssize_t, const uv_buf_t *>
+         * @throws E_EOF, E_EAGAIN
+         */
         UVCXX_NODISCARD
         uvcxx::callback<ssize_t, const uv_buf_t *> read_start() {
             auto data = get_data<data_t>();
@@ -122,6 +139,7 @@ namespace uv {
         UVCXX_NODISCARD
         uvcxx::promise<> write(const write_t &req, std::initializer_list<uvcxx::buffer> bufs) {
             std::vector<uv_buf_t> buffers;
+            buffers.reserve(bufs.size());
             for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
             return this->write(req, buffers.data(), (unsigned int) buffers.size());
         }
@@ -139,6 +157,7 @@ namespace uv {
         UVCXX_NODISCARD
         uvcxx::promise<> write(std::initializer_list<uvcxx::buffer> bufs) {
             std::vector<uv_buf_t> buffers;
+            buffers.reserve(bufs.size());
             for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
             return this->write(buffers.data(), (unsigned int) buffers.size());
         }
@@ -159,6 +178,7 @@ namespace uv {
         uvcxx::promise<> write2(const write_t &req,
                                 std::initializer_list<uvcxx::mutable_buffer> bufs, const stream_t &send_handle) {
             std::vector<uv_buf_t> buffers;
+            buffers.reserve(bufs.size());
             for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
             return this->write2(req, buffers.data(), (unsigned int) buffers.size(), send_handle);
         }
@@ -176,6 +196,7 @@ namespace uv {
         UVCXX_NODISCARD
         uvcxx::promise<> write2(std::initializer_list<uvcxx::mutable_buffer> bufs, const stream_t &send_handle) {
             std::vector<uv_buf_t> buffers;
+            buffers.reserve(bufs.size());
             for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
             return this->write2(buffers.data(), (unsigned int) buffers.size(), send_handle);
         }
@@ -184,12 +205,13 @@ namespace uv {
             return uv_try_write(*this, bufs, nbufs);
         }
 
-        int try_write(uvcxx::mutable_buffer buf) {
+        int try_write(uvcxx::buffer buf) {
             return try_write(&buf.buf, 1);
         }
 
-        int try_write(std::initializer_list<uvcxx::mutable_buffer> bufs) {
+        int try_write(std::initializer_list<uvcxx::buffer> bufs) {
             std::vector<uv_buf_t> buffers;
+            buffers.reserve(bufs.size());
             for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
             return try_write(buffers.data(), (unsigned int) buffers.size());
         }
@@ -206,6 +228,7 @@ namespace uv {
 
         int try_write2(std::initializer_list<uvcxx::mutable_buffer> bufs, const stream_t &send_handle) {
             std::vector<uv_buf_t> buffers;
+            buffers.reserve(bufs.size());
             for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
             return try_write2(buffers.data(), (unsigned int) buffers.size(), send_handle);
         }
@@ -252,15 +275,44 @@ namespace uv {
 
         static void raw_read_callback(raw_t *handle, ssize_t nread, const uv_buf_t *buf) {
             auto data = (data_t * )(handle->data);
-            data->read_cb.emit(nread, buf);
+            if (nread > 0) {
+                data->read_cb.emit(nread, buf);
+                return;
+            }
+            switch (nread) {
+                case 0:
+                    break;
+                case UV_EAGAIN:
+                    data->read_cb.raise<uvcxx::E_EAGAIN>();
+                    break;
+                case UV_EOF:
+                    data->read_cb.raise<uvcxx::E_EOF>();
+                    break;
+                default:
+                    data->read_cb.raise<uvcxx::errcode>(nread);
+                    break;
+            }
         }
 
         static void raw_listen_callback(raw_t *handle, int status) {
             auto data = (data_t * )(handle->data);
-            if (status < 0) {
-                (void) data->listen_cb.raise<uvcxx::errcode>(status);
-            } else {
+            if (status >= 0) {
                 data->listen_cb.emit();
+                return;
+            }
+            switch (status) {
+                case UV_EADDRINUSE:
+                    data->listen_cb.raise<uvcxx::E_EADDRINUSE>();
+                    break;
+                case UV_EBADF:
+                    data->listen_cb.raise<uvcxx::E_EBADF>();
+                    break;
+                case UV_ENOTSOCK:
+                    data->listen_cb.raise<uvcxx::E_ENOTSOCK>();
+                    break;
+                default:
+                    data->listen_cb.raise<uvcxx::errcode>(status);
+                    break;
             }
         }
 
@@ -290,51 +342,6 @@ namespace uv {
                 alloc_cb.finalize();
                 read_cb.finalize();
                 listen_cb.finalize();
-            }
-        };
-    };
-
-    class acceptable_stream_t : public stream_t {
-    public:
-        using self = stream_t;
-        using supper = stream_t;
-
-        using supper::supper;
-
-        virtual stream_t accept() = 0;
-
-        UVCXX_NODISCARD
-        uvcxx::callback<stream_t> accept_callback() {
-            return data<data_t>()->accept_cb.callback();
-        }
-
-        UVCXX_NODISCARD
-        uvcxx::callback<stream_t> listen_accept(int backlog) {
-            auto data = this->data<data_t>();
-
-            this->listen(backlog).call(nullptr).call([data, this]() {
-                data->accept_cb.emit(this->accept());
-            }).except(nullptr).except([data](const std::exception_ptr &p) -> bool {
-                return data->accept_cb.raise(p);
-            }).finally(nullptr).finally([data](){
-                data->accept_cb.finalize();
-            });
-
-            return data->accept_cb.callback();
-        }
-
-    protected:
-        class data_t : supper::data_t {
-        public:
-            uvcxx::callback_emitter<stream_t> accept_cb;
-
-            explicit data_t(acceptable_stream_t &handle)
-                    : supper::data_t(handle) {
-                handle.watch(accept_cb);
-            }
-
-            ~data_t() override {
-                accept_cb.finalize();
             }
         };
     };

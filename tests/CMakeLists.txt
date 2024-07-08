@@ -69,6 +69,12 @@ if (TARGET single-header)
     add_dependencies(test-single-header single-header)
 endif ()
 
+if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+    foreach (target ${TARGETS})
+        set_target_properties(${target} PROPERTIES OUTPUT_NAME "debug-${target}")
+    endforeach ()
+endif ()
+
 if (WALL)
     if (CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         foreach (target ${TARGETS})

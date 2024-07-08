@@ -6,6 +6,7 @@
 #ifndef LIBUVCXX_UDP_H
 #define LIBUVCXX_UDP_H
 
+#include "cxx/buffer.h"
 #include "cxx/string.h"
 
 #include "handle.h"
@@ -75,13 +76,13 @@ namespace uv {
             UVCXX_PROXY(uv_udp_connect(*this, addr));
         }
 
-        int getpeername(struct sockaddr *name, int *namelen) const {
+        int getpeername(sockaddr *name, int *namelen) const {
             UVCXX_PROXY(uv_udp_getpeername(*this, name, namelen));
         }
 
 #endif
 
-        int getsockname(struct sockaddr *name, int *namelen) const {
+        int getsockname(sockaddr *name, int *namelen) const {
             UVCXX_PROXY(uv_udp_getsockname(*this, name, namelen));
         }
 
@@ -136,6 +137,7 @@ namespace uv {
         UVCXX_NODISCARD
         uvcxx::promise<> send(const udp_send_t &req, std::initializer_list<uvcxx::buffer> bufs, const sockaddr *addr) {
             std::vector<uv_buf_t> buffers;
+            buffers.reserve(bufs.size());
             for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
             return send(req, buffers.data(), (unsigned int) buffers.size(), addr);
         }
@@ -153,6 +155,7 @@ namespace uv {
         UVCXX_NODISCARD
         uvcxx::promise<> send(std::initializer_list<uvcxx::buffer> bufs, const sockaddr *addr) {
             std::vector<uv_buf_t> buffers;
+            buffers.reserve(bufs.size());
             for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
             return send(buffers.data(), (unsigned int) buffers.size(), addr);
         }
@@ -167,6 +170,7 @@ namespace uv {
 
         int try_send(std::initializer_list<uvcxx::mutable_buffer> bufs, const sockaddr *addr) {
             std::vector<uv_buf_t> buffers;
+            buffers.reserve(bufs.size());
             for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
             return try_send(buffers.data(), (unsigned int) buffers.size(), addr);
         }
@@ -190,12 +194,12 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
-        uvcxx::callback<ssize_t, const uv_buf_t *, const sockaddr *, unsigned> recv_callback() {
+        uvcxx::callback<ssize_t, const uv_buf_t *, const sockaddr *, uv_udp_flags> recv_callback() {
             return get_data<data_t>()->recv_cb.callback();
         }
 
         UVCXX_NODISCARD
-        uvcxx::callback<ssize_t, const uv_buf_t *, const sockaddr *, unsigned>
+        uvcxx::callback<ssize_t, const uv_buf_t *, const sockaddr *, uv_udp_flags>
         recv_start() {
             UVCXX_APPLY(uv_udp_recv_start(*this, raw_alloc_callback, raw_recv_callback), nullptr);
             _detach_();
@@ -245,12 +249,12 @@ namespace uv {
         static void raw_recv_callback(
                 raw_t *handle, ssize_t nread, const uv_buf_t *buf, const sockaddr *addr, unsigned flags) {
             auto data = (data_t * )(handle->data);
-            data->recv_cb.emit(nread, buf, addr, flags);
+            data->recv_cb.emit(nread, buf, addr, uv_udp_flags(flags));
         }
 
         class data_t : supper::data_t {
         public:
-            uvcxx::callback_emitter<ssize_t, const uv_buf_t *, const sockaddr *, unsigned> recv_cb;
+            uvcxx::callback_emitter<ssize_t, const uv_buf_t *, const sockaddr *, uv_udp_flags> recv_cb;
             uvcxx::callback_emitter<size_t, uv_buf_t *> alloc_cb;
 
             explicit data_t(udp_t &handle)

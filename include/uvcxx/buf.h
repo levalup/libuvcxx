@@ -85,6 +85,15 @@ namespace uv {
         };
     }
 
+    template<class I, typename std::enable_if<std::is_integral<I>::value, int>::type = 0>
+    inline uv_buf_t buf_init(const void *base, I len) {
+        // cover uv_buf_init
+        uv_buf_t buf{};
+        buf.base = (decltype(buf.base)) (base);
+        buf.len = (decltype(buf.len)) (len);
+        return buf;
+    }
+
     /**
      * This type is a reference type, and all copied objects use the same buffer,
      *     which is not thread-safe.
@@ -141,16 +150,9 @@ namespace uv {
         void memset(int v) {
             std::memset(data(), v, size());
         }
-    };
 
-    template<class I, typename std::enable_if<std::is_integral<I>::value, int>::type = 0>
-    inline uv_buf_t buf_init(const void *base, I len) {
-        // cover uv_buf_init
-        uv_buf_t buf{};
-        buf.base = (decltype(buf.base)) (base);
-        buf.len = (decltype(buf.len)) (len);
-        return buf;
-    }
+        operator uv_buf_t() const { return buf_init(data(), size()); }
+    };
 }
 
 namespace uvcxx {

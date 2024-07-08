@@ -82,6 +82,24 @@ namespace uvcxx {
     private:
         int m_errcode = 0;
     };
+
+#define uvcxx_define_errcode(name, code)   \
+    class name : public ::uvcxx::errcode { \
+    public:                                \
+        using self = name;                 \
+        using supper = errcode;            \
+        name() : supper(code) {}         \
+    }
+
+    uvcxx_define_errcode(E_EOF, UV_EOF);
+
+    uvcxx_define_errcode(E_EAGAIN, UV_EAGAIN);
+
+    uvcxx_define_errcode(E_EADDRINUSE, UV_EADDRINUSE);
+
+    uvcxx_define_errcode(E_EBADF, UV_EBADF);
+
+    uvcxx_define_errcode(E_ENOTSOCK, UV_ENOTSOCK);
 }
 
 #if defined(UVCXX_NO_EXCEPTION)

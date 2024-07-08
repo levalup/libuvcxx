@@ -20,20 +20,28 @@ namespace uv {
         }
 
         self &init(const loop_t &loop, int fd) {
+            auto data = get_data<data_t>();
+            if (data->initialized) {
+                UVCXX_THROW_OR_RETURN(UV_EINVAL, nullptr, "duplicated poll_t initialization");
+            }
             // To directly start after init, there is no path to return the error code instead.
             // So an exception is directly thrown. This feature may be modified in the future.
             UVCXX_APPLY_STRICT(uv_poll_init(loop, *this, fd));
             _attach_close_();
-            get_data<data_t>()->initialized = true;
+            data->initialized = true;
             return *this;
         }
 
         self &init_socket(const loop_t &loop, uv_os_sock_t socket) {
+            auto data = get_data<data_t>();
+            if (data->initialized) {
+                UVCXX_THROW_OR_RETURN(UV_EINVAL, nullptr, "duplicated poll_t initialization");
+            }
             // To directly start after init, there is no path to return the error code instead.
             // So an exception is directly thrown. This feature may be modified in the future.
             UVCXX_APPLY_STRICT(uv_poll_init_socket(loop, *this, socket));
             _attach_close_();
-            get_data<data_t>()->initialized = true;
+            data->initialized = true;
             return *this;
         }
 
@@ -65,17 +73,30 @@ namespace uv {
         }
 
         void stop() {
+            auto data = get_data<data_t>();
+
+            if (!data->initialized) {
+                UVCXX_THROW_OR_RETURN(UV_EINVAL, nullptr, "should call `init` or `init_socket` first");
+            }
+
             (void) uv_poll_stop(*this);
             _attach_close_();
         }
 
     private:
         static void raw_callback(raw_t *handle, int status, int events) {
-            auto data = (data_t *) (handle->data);
-            if (status < 0) {
-                (void) data->start_cb.raise<uvcxx::errcode>(status);
-            } else {
+            auto data = (data_t * )(handle->data);
+            if (status >= 0) {
                 data->start_cb.emit(events);
+                return;
+            }
+            switch (status) {
+                case UV_EAGAIN:
+                    data->start_cb.raise<uvcxx::E_EAGAIN>();
+                    break;
+                default:
+                    data->start_cb.raise<uvcxx::errcode>(status);
+                    break;
             }
         }
 

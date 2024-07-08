@@ -115,12 +115,12 @@ namespace uvcxx {
             if (m_on_watch) {
 #if UVCXX_STD_INIT_CAPTURES
                 m_on_watch = [f = std::move(f), pre = std::move(m_on_watch)](const std::exception_ptr &p) {
-                    return pre(p) ? true : f(p);
+                    return pre(p) || f(p);
                 };
 #else
                 auto pre = std::move(m_on_watch);
                 m_on_watch = [f, pre](const std::exception_ptr &p) {
-                    return pre(p) ? true : f(p);
+                    return pre(p) || f(p);
                 };
 #endif
             } else {
@@ -139,12 +139,12 @@ namespace uvcxx {
             if (m_on_except) {
 #if UVCXX_STD_INIT_CAPTURES
                 m_on_except = [f = std::move(f), pre = std::move(m_on_except)](const std::exception_ptr &p) {
-                    return pre(p) ? true : f(p);
+                    return pre(p) || f(p);
                 };
 #else
                 auto pre = std::move(m_on_except);
                 m_on_except = [f, pre](const std::exception_ptr &p) {
-                    return pre(p) ? true : f(p);
+                    return pre(p) || f(p);
                 };
 #endif
             } else {
@@ -235,7 +235,7 @@ namespace uvcxx {
         }
 
         self &then(std::function<void(T...)> f) {
-            m_core->then([UVCXX_CAPTURE_MOVE(f)](void *p) {
+            m_core->then([UVCXX_CAPTURE_MOVE(f)](void *p) mutable {
                 auto &pack = *(type *) (p);
                 proxy_apply(f, std::move(pack));
             });
@@ -266,7 +266,7 @@ namespace uvcxx {
                 std::is_base_of<std::exception, E>::value,
                 int>::type = 0>
         self &except(std::function<void(const E &)> f) {
-            return this->except(on_except_t([UVCXX_CAPTURE_MOVE(f)](const std::exception_ptr &p) -> bool {
+            return this->except(on_except_t([UVCXX_CAPTURE_MOVE(f)](const std::exception_ptr &p) mutable -> bool {
                 try {
                     std::rethrow_exception(p);
                 } catch (const E &e) {
@@ -282,7 +282,7 @@ namespace uvcxx {
                 std::is_base_of<std::exception, E>::value,
                 int>::type = 0>
         self &except(std::function<void()> f) {
-            return this->except<E>([UVCXX_CAPTURE_MOVE(f)](const E &) -> void { f(); });
+            return this->except<E>([UVCXX_CAPTURE_MOVE(f)](const E &) mutable -> void { f(); });
         }
 
         self &except(std::function<void(const std::exception &)> f) {
@@ -290,7 +290,7 @@ namespace uvcxx {
         }
 
         self &except(std::function<bool()> f) {
-            return this->except(on_except_t([UVCXX_CAPTURE_MOVE(f)](const std::exception_ptr &) -> bool {
+            return this->except(on_except_t([UVCXX_CAPTURE_MOVE(f)](const std::exception_ptr &) mutable -> bool {
                 return f();
             }));
         }
@@ -316,7 +316,7 @@ namespace uvcxx {
                         decltype(std::declval<FUNC>()(std::declval<T>()...)),
                         void>::value, int>::type = 0>
         self &then(FUNC f) {
-            return this->then(on_then_t([UVCXX_CAPTURE_MOVE(f)](T ...args) {
+            return this->then(on_then_t([UVCXX_CAPTURE_MOVE(f)](T ...args) mutable {
                 f(std::forward<T>(args)...);
             }));
         }
@@ -326,7 +326,7 @@ namespace uvcxx {
                         decltype(std::declval<FUNC>()()),
                         void>::value, int>::type = 0>
         self &then(FUNC f) {
-            return this->then(on_then_t([UVCXX_CAPTURE_MOVE(f)](T...) {
+            return this->then(on_then_t([UVCXX_CAPTURE_MOVE(f)](T...) mutable {
                 f();
             }));
         }
@@ -336,7 +336,7 @@ namespace uvcxx {
                 std::declval<FUNC>()(std::declval<const std::exception_ptr &>()))>::value,
                 int>::type = 0>
         self &except(FUNC f) {
-            return this->except(on_except_t([UVCXX_CAPTURE_MOVE(f)](const std::exception_ptr &p) -> bool {
+            return this->except(on_except_t([UVCXX_CAPTURE_MOVE(f)](const std::exception_ptr &p) mutable -> bool {
                 f(p);
                 return false;
             }));
@@ -346,7 +346,7 @@ namespace uvcxx {
                 std::is_same<void, decltype(std::declval<FUNC>()())>::value,
                 int>::type = 0>
         self &except(FUNC f) {
-            return this->except(on_except_t([UVCXX_CAPTURE_MOVE(f)](const std::exception_ptr &) -> bool {
+            return this->except(on_except_t([UVCXX_CAPTURE_MOVE(f)](const std::exception_ptr &) mutable -> bool {
                 f();
                 return false;
             }));
@@ -359,7 +359,7 @@ namespace uvcxx {
                 int>::type = 0>
         UVCXX_DEPRECATED("specific exception handling functions should return void")
         self &except(FUNC f) {
-            return this->except<E>([UVCXX_CAPTURE_MOVE(f)](const E &e) -> void { (void) f(e); });
+            return this->except<E>([UVCXX_CAPTURE_MOVE(f)](const E &e) mutable -> void { (void) f(e); });
         }
 
         template<typename E, typename FUNC, typename std::enable_if<
@@ -368,7 +368,7 @@ namespace uvcxx {
                 int>::type = 0>
         UVCXX_DEPRECATED("specific exception handling functions should return void")
         self &except(FUNC f) {
-            return this->except<E>([UVCXX_CAPTURE_MOVE(f)](const E &) -> void { (void) f(); });
+            return this->except<E>([UVCXX_CAPTURE_MOVE(f)](const E &) mutable -> void { (void) f(); });
         }
 
         template<typename FUNC, typename std::enable_if<
@@ -378,7 +378,7 @@ namespace uvcxx {
         UVCXX_DEPRECATED("specific exception handling functions should return void")
         self &except(FUNC f) {
             using E = std::exception;
-            return this->except<E>([UVCXX_CAPTURE_MOVE(f)](const E &e) -> void { (void) f(e); });
+            return this->except<E>([UVCXX_CAPTURE_MOVE(f)](const E &e) mutable -> void { (void) f(e); });
         }
 
         template<typename FUNC, typename std::enable_if<std::is_same<

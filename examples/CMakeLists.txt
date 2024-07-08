@@ -71,6 +71,12 @@ if (WALL)
     endif ()
 endif ()
 
+if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+    foreach (target ${TARGETS})
+        set_target_properties(${target} PROPERTIES OUTPUT_NAME "debug-${target}")
+    endforeach ()
+endif ()
+
 if (WERROR)
     if (CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         foreach (target ${TARGETS})

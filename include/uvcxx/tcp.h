@@ -10,10 +10,10 @@
 #include "stream.h"
 
 namespace uv {
-    class tcp_t : public inherit_handle_t<uv_tcp_t, acceptable_stream_t> {
+    class tcp_t : public inherit_handle_t<uv_tcp_t, stream_t> {
     public:
         using self = tcp_t;
-        using supper = inherit_handle_t<uv_tcp_t, acceptable_stream_t>;
+        using supper = inherit_handle_t<uv_tcp_t, stream_t>;
 
         tcp_t() : self(default_loop()) {}
 
@@ -47,13 +47,25 @@ namespace uv {
             UVCXX_PROXY(uv_fileno(*this, fd));
         }
 
-        stream_t accept() override {
+        self accept() {
             self client(this->loop());
 
             UVCXX_APPLY(uv_accept(*this, client), nullptr);
 
             return client;
         }
+
+#if UVCXX_SATISFY_VERSION(1, 7, 0)
+
+        self accept(int flags) {
+            self client(this->loop(), flags);
+
+            UVCXX_APPLY(uv_accept(*this, client), nullptr);
+
+            return client;
+        }
+
+#endif
 
         int open(uv_os_sock_t sock) {
             UVCXX_PROXY(uv_tcp_open(*this, sock));
@@ -71,26 +83,28 @@ namespace uv {
             UVCXX_PROXY(uv_tcp_simultaneous_accepts(*this, int(enable)));
         }
 
-        int bind(const struct sockaddr *addr, unsigned int flags) {
+        int bind(const sockaddr *addr, unsigned int flags) {
             UVCXX_PROXY(uv_tcp_bind(*this, addr, flags));
         }
 
-        int getsockname(struct sockaddr *name, int *namelen) const {
+        int getsockname(sockaddr *name, int *namelen) const {
             UVCXX_PROXY(uv_tcp_getsockname(*this, name, namelen));
         }
 
-        int getpeername(struct sockaddr *name, int *namelen) const {
+        int getpeername(sockaddr *name, int *namelen) const {
             UVCXX_PROXY(uv_tcp_getpeername(*this, name, namelen));
         }
 
         UVCXX_NODISCARD
         uvcxx::promise<> connect(const connect_t &req, const sockaddr *addr) {
-            return tcp_connect(req, *this, addr);
+            auto p = tcp_connect(req, *this, addr);
+            return p ? (_detach_(), p) : nullptr;
         }
 
         UVCXX_NODISCARD
         uvcxx::promise<> connect(const sockaddr *addr) {
-            return tcp_connect(*this, addr);
+            auto p = tcp_connect(*this, addr);
+            return p ? (_detach_(), p) : nullptr;
         }
 
 #if UVCXX_SATISFY_VERSION(1, 32, 0)

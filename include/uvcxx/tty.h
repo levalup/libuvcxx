@@ -14,24 +14,30 @@ namespace uv {
         using self = tty_t;
         using supper = inherit_handle_t<uv_tty_t, stream_t>;
 
-        tty_t(uv_file fd, int unused) : self(default_loop(), fd, unused) {}
+#if UVCXX_SATISFY_VERSION(1, 23, 1)
 
-        explicit tty_t(const loop_t &loop, uv_file fd, int unused) {
+        explicit tty_t(uv_file fd, int unused = 0) : self(default_loop(), fd, unused) {}
+
+        explicit tty_t(const loop_t &loop, uv_file fd, int unused = 0) {
             set_data(new data_t(*this));    //< data will be deleted in close action
             (void) uv_tty_init(loop, *this, fd, unused);
             _attach_close_();
         }
 
-        int fileno(uv_os_fd_t *fd) const {
-            UVCXX_PROXY(uv_fileno(*this, fd));
+#else
+
+        explicit tty_t(uv_file fd, int readable) : self(default_loop(), fd, readable) {}
+
+        explicit tty_t(const loop_t &loop, uv_file fd, int readable) {
+            set_data(new data_t(*this));    //< data will be deleted in close action
+            (void) uv_tty_init(loop, *this, fd, readable);
+            _attach_close_();
         }
 
-        stream_t accept(uv_file fd, int unused) {
-            self client(this->loop(), fd, unused);
+#endif
 
-            UVCXX_APPLY(uv_accept(*this, client), nullptr);
-
-            return client;
+        int fileno(uv_os_fd_t *fd) const {
+            UVCXX_PROXY(uv_fileno(*this, fd));
         }
 
 #if !UVCXX_SATISFY_VERSION(1, 2, 0)
