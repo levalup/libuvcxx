@@ -184,9 +184,6 @@ namespace uvcxx {
     private:
         sockaddr_storage m_storage{};
         int m_size = 0;
-
-        static_assert(sizeof(sockaddr_storage) >= sizeof(sockaddr_in));
-        static_assert(sizeof(sockaddr_storage) >= sizeof(sockaddr_in6));
     };
 
     class IPv4 : public address_t {

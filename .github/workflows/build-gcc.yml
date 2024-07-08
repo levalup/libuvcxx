@@ -36,6 +36,9 @@ jobs:
           submodules: recursive
 
       - uses: friendlyanon/fetch-core-count@v1
+        if: >-
+          matrix.gcc_version != '6' &&
+          matrix.gcc_version != '5'
         id: cores
 
       - name: Set output

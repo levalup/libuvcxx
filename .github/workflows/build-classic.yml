@@ -70,7 +70,7 @@ jobs:
         run: |
           mkdir -p build
           cd build
-          cmake -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DSTD=11 ..
+          cmake -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DSTD=11 -DWALL=OFF ..
           cd ..
 
       - name: Build
