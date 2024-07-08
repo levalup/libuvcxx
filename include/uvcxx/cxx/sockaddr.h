@@ -106,8 +106,14 @@ namespace uvcxx {
         }
 
         explicit any_address_t(const sockaddr *addr) {
-            std::memcpy(&m_storage, addr, addr->sa_len);
-            m_size = addr->sa_len;
+            if (!addr) return;
+            if (addr->sa_family == AF_INET) {   // ipv4
+                m_size = sizeof(sockaddr_in);
+                std::memcpy(&m_storage, addr, m_size);
+            } else if (addr->sa_family == AF_INET6) { // ipv6
+                m_size = sizeof(sockaddr_in6);
+                std::memcpy(&m_storage, addr, m_size);
+            }
         }
 
         UVCXX_NODISCARD

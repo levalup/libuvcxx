@@ -57,9 +57,9 @@ int main() {
         });
         server.recv_start().call(
                 [=](ssize_t nread, const uv_buf_t *buf, const sockaddr *addr, uv_udp_flags flags) mutable {
-                    // std::cout << "[INFO] received [" << server_sock << " <- " << uvcxx::any_address_t(addr) << "]" << std::endl;
                     std::cout << "server read: " << std::string(buf->base, nread) << " with "
-                              << uvcxx::to_string(uv_udp_flags(flags)) << std::endl;
+                              << uvcxx::to_string(uv_udp_flags(flags)) << " from " << uvcxx::any_address_t(addr)
+                              << std::endl;
                 }).except([=](const std::exception &e) {
             std::cout << "[ERROR] recv " << addr << " failed. " << e.what() << std::endl;
             throw uvcxx::close_handle();
