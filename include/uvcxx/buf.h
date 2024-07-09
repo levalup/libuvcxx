@@ -50,7 +50,7 @@ namespace uv {
                 std::free(this->base);
             }
 
-            explicit operator bool() const { return this->base; }
+            explicit operator bool() const { return bool(this->base); }
 
             void free() {
                 if (this->base) std::free(this->base);

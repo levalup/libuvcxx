@@ -1,4 +1,4 @@
-set(PREFIX example)
+set(PREFIX lib)
 
 file(GLOB FILES ${CMAKE_CURRENT_SOURCE_DIR}/*)
 
@@ -34,8 +34,9 @@ foreach (path ${FILES})
             continue()
         endif ()
 
-        # add executable
-        add_executable(${PREFIX}-${dir} ${DIR_SRC} ${HEADERS})
+        # add library
+        add_library(${PREFIX}-${dir} SHARED ${DIR_SRC} ${HEADERS})
+        set_target_properties(${PREFIX}-${dir} PROPERTIES OUTPUT_NAME "${dir}")
         list(APPEND TARGETS "${PREFIX}-${dir}")
         message(STATUS "==[ Add ${PREFIX}: ${dir}")
     else ()
@@ -52,18 +53,18 @@ foreach (path ${FILES})
             continue()
         endif ()
 
-        # add executable
-        add_executable(${PREFIX}-${file} "${path}" ${HEADERS})
+        # add library
+        add_library(${PREFIX}-${file} SHARED ${path} ${HEADERS})
+        set_target_properties(${PREFIX}-${file} PROPERTIES OUTPUT_NAME "${file}")
         list(APPEND TARGETS "${PREFIX}-${file}")
         message(STATUS "==[ Add ${PREFIX}: ${file}")
     endif ()
 endforeach ()
 
-if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-    foreach (target ${TARGETS})
-        set_target_properties(${target} PROPERTIES OUTPUT_NAME "debug-${target}")
-    endforeach ()
-endif ()
+foreach (target ${TARGETS})
+    target_compile_definitions(${target} PRIVATE -DSHARED_UVCXX)
+    set_target_properties(${target} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/bin")
+endforeach ()
 
 if (WALL)
     if (CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")

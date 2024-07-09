@@ -54,13 +54,13 @@ namespace uv {
         UVCXX_NODISCARD
         uvcxx::callback<> listen(int backlog) {
             auto data = get_data<data_t>();
-            if (data->work_mode == WorkMode::Read) {
-                UVCXX_THROW_OR_RETURN(UV_EPERM, nullptr, "can not listen reading stream");
+            if (data->work_mode != WorkMode::Notset && data->work_mode != WorkMode::Server) {
+                UVCXX_THROW_OR_RETURN(UV_EPERM, nullptr, "can not listen ", work_mode_string()," stream");
             }
-            data->work_mode = WorkMode::Listen;
 
             UVCXX_APPLY(uv_listen(*this, backlog, raw_listen_callback), nullptr);
 
+            data->work_mode = WorkMode::Server;
             _detach_();
             return data->listen_cb.callback();
         }
@@ -100,13 +100,11 @@ namespace uv {
         UVCXX_NODISCARD
         uvcxx::callback<ssize_t, const uv_buf_t *> read_start() {
             auto data = get_data<data_t>();
-            if (data->work_mode == WorkMode::Listen) {
-                UVCXX_THROW_OR_RETURN(UV_EPERM, nullptr, "can not read listening stream");
+            if (data->work_mode == WorkMode::Server) {
+                UVCXX_THROW_OR_RETURN(UV_EPERM, nullptr, "can not read ", work_mode_string()," stream");
             }
-            data->work_mode = WorkMode::Read;
 
-            auto err = uv_read_start(*this, raw_alloc_callback, raw_read_callback);
-            if (err < 0) UVCXX_THROW_OR_RETURN(err, nullptr);
+            UVCXX_APPLY(uv_read_start(*this, raw_alloc_callback, raw_read_callback), nullptr);
 
             _detach_();
             return data->read_cb.callback();
@@ -114,13 +112,11 @@ namespace uv {
 
         int read_stop() {
             auto data = get_data<data_t>();
-            if (data->work_mode == WorkMode::Listen) {
-                UVCXX_THROW_OR_RETURN(UV_EPERM, UV_EPERM, "can not stop listening stream");
+            if (data->work_mode == WorkMode::Server) {
+                UVCXX_THROW_OR_RETURN(UV_EPERM, nullptr, "can not stop ", work_mode_string()," stream");
             }
 
             UVCXX_APPLY(uv_read_stop(*this), status);
-
-            data->work_mode = WorkMode::Notset;
 
             _attach_close_();
             return 0;
@@ -283,7 +279,7 @@ namespace uv {
                 case 0:
                     break;
                 case UV_EAGAIN:
-                    data->read_cb.raise<uvcxx::E_EAGAIN>();
+                    data->read_cb.raise<uvcxx::E_AGAIN>();
                     break;
                 case UV_EOF:
                     data->read_cb.raise<uvcxx::E_EOF>();
@@ -302,13 +298,13 @@ namespace uv {
             }
             switch (status) {
                 case UV_EADDRINUSE:
-                    data->listen_cb.raise<uvcxx::E_EADDRINUSE>();
+                    data->listen_cb.raise<uvcxx::E_ADDRINUSE>();
                     break;
                 case UV_EBADF:
-                    data->listen_cb.raise<uvcxx::E_EBADF>();
+                    data->listen_cb.raise<uvcxx::E_BADF>();
                     break;
                 case UV_ENOTSOCK:
-                    data->listen_cb.raise<uvcxx::E_ENOTSOCK>();
+                    data->listen_cb.raise<uvcxx::E_NOTSOCK>();
                     break;
                 default:
                     data->listen_cb.raise<uvcxx::errcode>(status);
@@ -319,9 +315,25 @@ namespace uv {
     protected:
         enum class WorkMode {
             Notset = 0,
-            Listen = 1,
-            Read = 2,
+            Server = 1,
+            Client = 2,
+            Agent = 3,
         };
+
+        UVCXX_NODISCARD
+        const char *work_mode_string() const {
+            auto data = get_data<data_t>();
+            switch (data->work_mode) {
+                case WorkMode::Notset:
+                    return "notset";
+                case WorkMode::Server:
+                    return "server";
+                case WorkMode::Client:
+                    return "client";
+                case WorkMode::Agent:
+                    return "agent";
+            }
+        }
 
         class data_t : supper::data_t {
         public:

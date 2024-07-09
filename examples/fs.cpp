@@ -53,6 +53,8 @@ int main() {
         uv::fs::rmdir(nullptr, tmp, path, nullptr);
     });
 
+#if UVCXX_SATISFY_VERSION(1, 28, 0)
+
     // readdir
     uv::fs::opendir("tmp").then([](uv_dir_t *dir) {
         uv::fs::readdir(dir, 1024).then([](uv_dirent_t *file, size_t size) {
@@ -63,6 +65,8 @@ int main() {
             (void) uv::fs::closedir(dir);
         });
     });
+
+#endif
 
     // scandir
     uv::fs::scandir("tmp", 0).then([](const uv::fs::scan_next &next) {

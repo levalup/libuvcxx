@@ -125,54 +125,56 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
-        uvcxx::promise<> send(const udp_send_t &req, const uv_buf_t bufs[], unsigned int nbufs, const sockaddr *addr) {
+        uvcxx::promise<> send(
+                const udp_send_t &req, const uv_buf_t bufs[], unsigned int nbufs, const sockaddr *addr = nullptr) {
             return udp_send(req, *this, bufs, nbufs, addr);
         }
 
         UVCXX_NODISCARD
-        uvcxx::promise<> send(const udp_send_t &req, uvcxx::buffer buf, const sockaddr *addr) {
-            return send(req, &buf.buf, 1, addr);
+        uvcxx::promise<> send(const udp_send_t &req, uvcxx::buffer buf, const sockaddr *addr = nullptr) {
+            return this->send(req, &buf.buf, 1, addr);
         }
 
         UVCXX_NODISCARD
-        uvcxx::promise<> send(const udp_send_t &req, std::initializer_list<uvcxx::buffer> bufs, const sockaddr *addr) {
+        uvcxx::promise<> send(
+                const udp_send_t &req, std::initializer_list<uvcxx::buffer> bufs, const sockaddr *addr = nullptr) {
             std::vector<uv_buf_t> buffers;
             buffers.reserve(bufs.size());
             for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
-            return send(req, buffers.data(), (unsigned int) buffers.size(), addr);
+            return this->send(req, buffers.data(), (unsigned int) buffers.size(), addr);
         }
 
         UVCXX_NODISCARD
-        uvcxx::promise<> send(const uv_buf_t bufs[], unsigned int nbufs, const sockaddr *addr) {
-            return udp_send(*this, bufs, nbufs, addr);
+        uvcxx::promise<> send(const uv_buf_t bufs[], unsigned int nbufs, const sockaddr *addr = nullptr) {
+            return this->send({}, bufs, nbufs, addr);
         }
 
         UVCXX_NODISCARD
-        uvcxx::promise<> send(uvcxx::buffer buf, const sockaddr *addr) {
-            return send(&buf.buf, 1, addr);
+        uvcxx::promise<> send(uvcxx::buffer buf, const sockaddr *addr = nullptr) {
+            return this->send(&buf.buf, 1, addr);
         }
 
         UVCXX_NODISCARD
-        uvcxx::promise<> send(std::initializer_list<uvcxx::buffer> bufs, const sockaddr *addr) {
+        uvcxx::promise<> send(std::initializer_list<uvcxx::buffer> bufs, const sockaddr *addr = nullptr) {
             std::vector<uv_buf_t> buffers;
             buffers.reserve(bufs.size());
             for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
-            return send(buffers.data(), (unsigned int) buffers.size(), addr);
+            return this->send(buffers.data(), (unsigned int) buffers.size(), addr);
         }
 
-        int try_send(const uv_buf_t bufs[], unsigned int nbufs, const sockaddr *addr) {
+        int try_send(const uv_buf_t bufs[], unsigned int nbufs, const sockaddr *addr = nullptr) {
             return uv_udp_try_send(*this, bufs, nbufs, addr);
         }
 
-        int try_send(uvcxx::mutable_buffer buf, const sockaddr *addr) {
-            return try_send(&buf.buf, 1, addr);
+        int try_send(uvcxx::buffer buf, const sockaddr *addr = nullptr) {
+            return this->try_send(&buf.buf, 1, addr);
         }
 
-        int try_send(std::initializer_list<uvcxx::mutable_buffer> bufs, const sockaddr *addr) {
+        int try_send(std::initializer_list<uvcxx::buffer> bufs, const sockaddr *addr = nullptr) {
             std::vector<uv_buf_t> buffers;
             buffers.reserve(bufs.size());
             for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
-            return try_send(buffers.data(), (unsigned int) buffers.size(), addr);
+            return this->try_send(buffers.data(), (unsigned int) buffers.size(), addr);
         }
 
         UVCXX_NODISCARD
@@ -247,7 +249,7 @@ namespace uv {
         }
 
         static void raw_recv_callback(
-                raw_t *handle, ssize_t nread, const uv_buf_t *buf, const sockaddr *addr, unsigned flags) {
+                raw_t *handle, ssize_t nread, const uv_buf_t *buf, const sockaddr *addr, unsigned int flags) {
             auto data = (data_t * )(handle->data);
             data->recv_cb.emit(nread, buf, addr, uv_udp_flags(flags));
         }

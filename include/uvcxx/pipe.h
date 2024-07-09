@@ -49,6 +49,7 @@ namespace uv {
 
             UVCXX_APPLY(uv_accept(*this, client), nullptr);
 
+            client.data<data_t>()->work_mode = WorkMode::Agent;
             return client;
         }
 
@@ -57,17 +58,23 @@ namespace uv {
         }
 
         int bind(uvcxx::string name) {
-            UVCXX_PROXY(uv_pipe_bind(*this, name));
+            UVCXX_APPLY(uv_pipe_bind(*this, name), status);
+
+            data<data_t>()->work_mode = WorkMode::Server;
+            return 0;
         }
 
 #if UVCXX_SATISFY_VERSION(1, 46, 0)
 
         int bind2(const char *name, size_t namelen, unsigned int flags) {
-            UVCXX_PROXY(uv_pipe_bind2(*this, name, namelen, flags));
+            UVCXX_APPLY(uv_pipe_bind2(*this, name, namelen, flags), status);
+
+            data<data_t>()->work_mode = WorkMode::Server;
+            return 0;
         }
 
         int bind2(uvcxx::string_view name, unsigned int flags) {
-            return bind2(name.data, name.size, flags);
+            return this->bind2(name.data, name.size, flags);
         }
 
 #endif
@@ -75,13 +82,16 @@ namespace uv {
         UVCXX_NODISCARD
         uvcxx::promise<> connect(const connect_t &req, uvcxx::string name) {
             auto p = pipe_connect(req, *this, name);
-            return p ? (_detach_(), p) : nullptr;
+            if (p) {
+                data<data_t>()->work_mode = WorkMode::Client;
+                _detach_();
+            }
+            return p;
         }
 
         UVCXX_NODISCARD
         uvcxx::promise<> connect(uvcxx::string name) {
-            auto p = pipe_connect(*this, name);
-            return p ? (_detach_(), p) : nullptr;
+            return this->connect({}, name);
         }
 
 #if UVCXX_SATISFY_VERSION(1, 46, 0)
@@ -89,25 +99,26 @@ namespace uv {
         UVCXX_NODISCARD
         uvcxx::promise<> connect2(const connect_t &req, const char *name, size_t namelen, unsigned int flags) {
             auto p = pipe_connect2(req, *this, name, namelen, flags);
-            return p ? (_detach_(), p) : nullptr;
+            if (p) {
+                data<data_t>()->work_mode = WorkMode::Client;
+                _detach_();
+            }
+            return p;
         }
 
         UVCXX_NODISCARD
         uvcxx::promise<> connect2(const char *name, size_t namelen, unsigned int flags) {
-            auto p = pipe_connect2(*this, name, namelen, flags);
-            return p ? (_detach_(), p) : nullptr;
+            return this->connect2({}, name, namelen, flags);
         }
 
         UVCXX_NODISCARD
         uvcxx::promise<> connect2(const connect_t &req, uvcxx::string_view name, unsigned int flags) {
-            auto p = pipe_connect2(req, *this, name.data, name.size, flags);
-            return p ? (_detach_(), p) : nullptr;
+            return this->connect2(req, name.data, name.size, flags);
         }
 
         UVCXX_NODISCARD
         uvcxx::promise<> connect2(uvcxx::string_view name, unsigned int flags) {
-            auto p = pipe_connect2(*this, name.data, name.size, flags);
-            return p ? (_detach_(), p) : nullptr;
+            return this->connect2({}, name.data, name.size, flags);
         }
 
 #endif

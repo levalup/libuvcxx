@@ -35,7 +35,7 @@ namespace uvcxx {
 
         shared_raw_base_t(std::nullptr_t) {}
 
-        operator bool() const { return m_raw; }
+        operator bool() const { return bool(m_raw); }
 
         operator raw_t *() { return m_raw.get(); }
 
@@ -109,7 +109,7 @@ namespace uvcxx {
             delete m_raw;
         }
 
-        operator bool() const { return m_raw; }
+        operator bool() const { return bool(m_raw); }
 
         operator raw_t *() { return m_raw; }
 

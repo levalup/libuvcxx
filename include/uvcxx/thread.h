@@ -168,7 +168,7 @@ namespace uv {
         }
 
     public:
-        explicit operator bool() const { return m_thread; }
+        explicit operator bool() const { return bool(m_thread); }
 
         operator raw_t *() { return &m_thread->tid; }
 

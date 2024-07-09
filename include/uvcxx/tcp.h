@@ -52,6 +52,7 @@ namespace uv {
 
             UVCXX_APPLY(uv_accept(*this, client), nullptr);
 
+            client.data<data_t>()->work_mode = WorkMode::Agent;
             return client;
         }
 
@@ -62,6 +63,7 @@ namespace uv {
 
             UVCXX_APPLY(uv_accept(*this, client), nullptr);
 
+            client.data<data_t>()->work_mode = WorkMode::Agent;
             return client;
         }
 
@@ -84,7 +86,10 @@ namespace uv {
         }
 
         int bind(const sockaddr *addr, unsigned int flags) {
-            UVCXX_PROXY(uv_tcp_bind(*this, addr, flags));
+            UVCXX_APPLY(uv_tcp_bind(*this, addr, flags), status);
+
+            data<data_t>()->work_mode = WorkMode::Server;
+            return 0;
         }
 
         int getsockname(sockaddr *name, int *namelen) const {
@@ -98,13 +103,16 @@ namespace uv {
         UVCXX_NODISCARD
         uvcxx::promise<> connect(const connect_t &req, const sockaddr *addr) {
             auto p = tcp_connect(req, *this, addr);
-            return p ? (_detach_(), p) : nullptr;
+            if (p) {
+                data<data_t>()->work_mode = WorkMode::Client;
+                _detach_();
+            }
+            return p;
         }
 
         UVCXX_NODISCARD
         uvcxx::promise<> connect(const sockaddr *addr) {
-            auto p = tcp_connect(*this, addr);
-            return p ? (_detach_(), p) : nullptr;
+            return this->connect({}, addr);
         }
 
 #if UVCXX_SATISFY_VERSION(1, 32, 0)

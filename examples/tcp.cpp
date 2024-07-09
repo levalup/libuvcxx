@@ -61,7 +61,7 @@ int main() {
             });
             conn.read_start().call([=](ssize_t nread, const uv_buf_t *buf) mutable {
                 std::cout << "server read: " << std::string(buf->base, nread) << std::endl;
-            }).except<uvcxx::E_EAGAIN>([]() {
+            }).except<uvcxx::E_AGAIN>([]() {
             }).except<uvcxx::E_EOF>([=]() mutable {
                 conn.close(nullptr);
             }).except([=]() mutable {
@@ -89,7 +89,9 @@ int main() {
         client.connect(addr).then([=]() mutable {
             client.write(msg).then([=]() {
                 std::cout << "client write: " << msg << std::endl;
-            }).finally([=]() mutable {
+            });
+            // wait write finish then shutdown
+            client.shutdown().finally([=]() mutable {
                 client.close(nullptr);
             });
         }).except([=]() mutable {

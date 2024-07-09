@@ -91,15 +91,17 @@ namespace uvcxx {
         name() : supper(code) {}         \
     }
 
+    uvcxx_define_errcode(E_CANCELED, UV_ECANCELED);
+
     uvcxx_define_errcode(E_EOF, UV_EOF);
 
-    uvcxx_define_errcode(E_EAGAIN, UV_EAGAIN);
+    uvcxx_define_errcode(E_AGAIN, UV_EAGAIN);
 
-    uvcxx_define_errcode(E_EADDRINUSE, UV_EADDRINUSE);
+    uvcxx_define_errcode(E_ADDRINUSE, UV_EADDRINUSE);
 
-    uvcxx_define_errcode(E_EBADF, UV_EBADF);
+    uvcxx_define_errcode(E_BADF, UV_EBADF);
 
-    uvcxx_define_errcode(E_ENOTSOCK, UV_ENOTSOCK);
+    uvcxx_define_errcode(E_NOTSOCK, UV_ENOTSOCK);
 }
 
 #if defined(UVCXX_NO_EXCEPTION)

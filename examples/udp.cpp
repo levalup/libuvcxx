@@ -19,13 +19,6 @@ uvcxx::any_address_t getsockname(const uv::udp_t &tcp) {
     return name;
 }
 
-uvcxx::any_address_t getpeername(const uv::udp_t &tcp) {
-    uvcxx::any_address_t name;
-    auto len = name.len();
-    (void) tcp.getpeername(name, &len);
-    return name;
-}
-
 int main() {
     // setting
     std::string localhost = "127.0.0.1";
@@ -80,8 +73,7 @@ int main() {
         auto msg = uvcxx::catstr("hello~", i);
 
         uv::udp_t client(client_loop, false);
-        client.connect(addr);
-        client.send(msg, nullptr).then([=]() {
+        client.send(msg, addr).then([=]() {
             std::cout << "client write: " << msg << std::endl;
         }).finally([=]() mutable {
             client.close(nullptr);

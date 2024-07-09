@@ -95,9 +95,7 @@ namespace uv {
                 if (*this) uv_os_free_passwd(*this);
             }
 
-            explicit operator bool() const {
-                return raw()->username;
-            }
+            explicit operator bool() const { return bool(raw()->username); }
         };
 
         inline passwd_t get_passwd() {
@@ -159,9 +157,7 @@ namespace uv {
                 if (*this) uv_os_free_group(*this);
             }
 
-            explicit operator bool() const {
-                return raw()->members;
-            }
+            explicit operator bool() const { return bool(raw()->members); }
         };
 
         inline group_t get_group(uv_uid_t gid) {

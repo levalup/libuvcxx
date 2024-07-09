@@ -21,6 +21,7 @@ namespace uv {
         explicit tty_t(const loop_t &loop, uv_file fd, int unused = 0) {
             set_data(new data_t(*this));    //< data will be deleted in close action
             (void) uv_tty_init(loop, *this, fd, unused);
+            data<data_t>()->work_mode = WorkMode::Agent;
             _attach_close_();
         }
 
@@ -31,6 +32,7 @@ namespace uv {
         explicit tty_t(const loop_t &loop, uv_file fd, int readable) {
             set_data(new data_t(*this));    //< data will be deleted in close action
             (void) uv_tty_init(loop, *this, fd, readable);
+            data<data_t>()->work_mode = WorkMode::Agent;
             _attach_close_();
         }
 

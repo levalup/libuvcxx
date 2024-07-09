@@ -61,7 +61,7 @@ namespace uvcxx {
             m_handle.reset();
         }
 
-        explicit operator bool() const { return m_handle; }
+        explicit operator bool() const { return bool(m_handle); }
 
         Handle &operator*() { return *m_handle; }
 
@@ -114,7 +114,7 @@ namespace uvcxx {
             m_handle.reset();
         }
 
-        explicit operator bool() const { return m_handle; }
+        explicit operator bool() const { return bool(m_handle); }
 
         Handle &operator*() { return **m_handle; }
 

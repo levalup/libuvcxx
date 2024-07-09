@@ -21,7 +21,7 @@ namespace uv {
     /**
      * This class is not thread-safe.
      */
-    class lib_t : uvcxx::pointer_raw_base_t<uv_lib_t> {
+    class lib_t : public uvcxx::pointer_raw_base_t<uv_lib_t> {
     public:
         using self = lib_t;
         using supper = uvcxx::pointer_raw_base_t<uv_lib_t>;
@@ -82,7 +82,7 @@ namespace uv {
         UVCXX_NODISCARD
         FUNC *sym(uvcxx::string name) const {
             FUNC *func;
-            auto err = sym(name, &func);
+            auto err = sym(name, (void **)&func);
             if (err < 0) return nullptr;
             return func;
         }

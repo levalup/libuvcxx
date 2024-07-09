@@ -2,6 +2,24 @@
 
 --------------------------------
 
+## v0.1.4
+
+> Since: 2024-07-09
+
+### New features
+
+## Bug fix
+
+## Break changes
+
+- Change error exception name.
+  - `E_EAGAIN` -> `E_AGAIN`
+  - `E_EADDRINUSE` -> `E_ADDRINUSE`
+  - `E_EBADF` -> `E_BADF`
+  - `E_ENOTSOCK` -> `E_NOTSOCK`
+
+--------------------------------
+
 ## v0.1.3
 
 > Date: 2024-07-02

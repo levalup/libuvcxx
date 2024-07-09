@@ -92,7 +92,7 @@ namespace uv {
             }
             switch (status) {
                 case UV_EAGAIN:
-                    data->start_cb.raise<uvcxx::E_EAGAIN>();
+                    data->start_cb.raise<uvcxx::E_AGAIN>();
                     break;
                 default:
                     data->start_cb.raise<uvcxx::errcode>(status);

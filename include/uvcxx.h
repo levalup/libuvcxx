@@ -21,6 +21,7 @@
 #include "uvcxx/cxx/buffer.h"
 #include "uvcxx/cxx/except.h"
 #include "uvcxx/cxx/ref.h"
+#include "uvcxx/cxx/sockaddr.h"
 #include "uvcxx/cxx/string.h"
 #include "uvcxx/cxx/to_string.h"
 #include "uvcxx/cxx/version.h"

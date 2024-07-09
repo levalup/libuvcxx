@@ -188,8 +188,9 @@ namespace uv {
             try {
                 auto status = data->check(req, args...);
                 // cancel request will not do anything
-                if (status == UV_ECANCELED) return;
-                if (status < 0) {
+                if (status == UV_ECANCELED) {
+                    (void) proxy.template reject<uvcxx::E_CANCELED>();
+                } else if (status < 0) {
                     (void) proxy.template reject<uvcxx::errcode>(status);
                 } else {
                     proxy.resolve(req, args...);
