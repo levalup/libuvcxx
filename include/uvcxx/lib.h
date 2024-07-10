@@ -82,7 +82,7 @@ namespace uv {
         UVCXX_NODISCARD
         FUNC *sym(uvcxx::string name) const {
             FUNC *func;
-            auto err = sym(name, (void **)&func);
+            auto err = sym(name, (void **) &func);
             if (err < 0) return nullptr;
             return func;
         }

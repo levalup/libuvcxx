@@ -19,7 +19,7 @@ namespace uvcxx {
     class close_handle : public std::exception {
     public:
         UVCXX_NODISCARD
-        const char *what() const UVCXX_NOEXCEPT override  {
+        const char *what() const UVCXX_NOEXCEPT override {
             return "uvcxx::close_handle";
         }
     };

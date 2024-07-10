@@ -40,9 +40,9 @@ namespace uvcxx {
 
         template<typename... Args>
         static inline std::string Message(const char *cond,
-                                   const std::string &file,
-                                   int line,
-                                   const Args &...args) {
+                                          const std::string &file,
+                                          int line,
+                                          const Args &...args) {
             std::string filename;
             {
                 auto sep = file.rfind('/');

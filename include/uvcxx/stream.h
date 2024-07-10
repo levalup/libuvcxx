@@ -38,7 +38,7 @@ namespace uv {
 
         /**
          * @return uvcxx::callback<>
-         * @throws E_EADDRINUSE, E_EBADF, E_ENOTSOCK
+         * @throws E_ADDRINUSE, E_BADF, E_NOTSOCK
          */
         UVCXX_NODISCARD
         uvcxx::callback<> listen_callback() {
@@ -49,13 +49,13 @@ namespace uv {
          * Start listening for incoming connections. backlog indicates the number of connections the kernel might queue, same as listen(2).
          * @param backlog the number of connections the kernel might queue
          * @return uvcxx::callback<>
-         * @throws E_EADDRINUSE, E_EBADF, E_ENOTSOCK
+         * @throws E_ADDRINUSE, E_BADF, E_NOTSOCK
          */
         UVCXX_NODISCARD
         uvcxx::callback<> listen(int backlog) {
             auto data = get_data<data_t>();
             if (data->work_mode != WorkMode::Notset && data->work_mode != WorkMode::Server) {
-                UVCXX_THROW_OR_RETURN(UV_EPERM, nullptr, "can not listen ", work_mode_string()," stream");
+                UVCXX_THROW_OR_RETURN(UV_EPERM, nullptr, "can not listen ", work_mode_string(), " stream");
             }
 
             UVCXX_APPLY(uv_listen(*this, backlog, raw_listen_callback), nullptr);
@@ -85,7 +85,7 @@ namespace uv {
 
         /**
          * @return uvcxx::callback<ssize_t, const uv_buf_t *>
-         * @throws E_EOF, E_EAGAIN
+         * @throws E_EOF, E_AGAIN
          */
         UVCXX_NODISCARD
         uvcxx::callback<ssize_t, const uv_buf_t *> read_callback() {
@@ -95,13 +95,13 @@ namespace uv {
         /**
          * Read data from an incoming stream.
          * @return uvcxx::callback<ssize_t, const uv_buf_t *>
-         * @throws E_EOF, E_EAGAIN
+         * @throws E_EOF, E_AGAIN
          */
         UVCXX_NODISCARD
         uvcxx::callback<ssize_t, const uv_buf_t *> read_start() {
             auto data = get_data<data_t>();
             if (data->work_mode == WorkMode::Server) {
-                UVCXX_THROW_OR_RETURN(UV_EPERM, nullptr, "can not read ", work_mode_string()," stream");
+                UVCXX_THROW_OR_RETURN(UV_EPERM, nullptr, "can not read ", work_mode_string(), " stream");
             }
 
             UVCXX_APPLY(uv_read_start(*this, raw_alloc_callback, raw_read_callback), nullptr);
@@ -113,7 +113,7 @@ namespace uv {
         int read_stop() {
             auto data = get_data<data_t>();
             if (data->work_mode == WorkMode::Server) {
-                UVCXX_THROW_OR_RETURN(UV_EPERM, nullptr, "can not stop ", work_mode_string()," stream");
+                UVCXX_THROW_OR_RETURN(UV_EPERM, nullptr, "can not stop ", work_mode_string(), " stream");
             }
 
             UVCXX_APPLY(uv_read_stop(*this), status);

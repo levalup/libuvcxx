@@ -86,6 +86,7 @@ namespace uv {
             auto data = (data_t *) (handle->data);
             data->start_cb.emit(signum);
         }
+
         static void raw_oneshot_callback(raw_t *handle, int signum) {
             auto data = (data_t *) (handle->data);
             data->start_oneshot_cb.resolve(signum);

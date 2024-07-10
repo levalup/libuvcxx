@@ -72,10 +72,10 @@ namespace uvcxx {
             uint16_t b = 0x1234;
         } test;
         if (test.a[0] == 0x12) {
-            return p;
+            return uint16_t(p);
         } else {
-            return (uint16_t)((((uint16_t)(p) & 0xff00U) >> 8) |
-                              (((uint16_t)(p) & 0x00ffU) << 8));
+            return uint16_t((((uint16_t) (p) & 0xff00U) >> 8) |
+                            (((uint16_t) (p) & 0x00ffU) << 8));
         }
     }
 
