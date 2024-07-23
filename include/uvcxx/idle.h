@@ -19,7 +19,12 @@ namespace uv {
         explicit idle_t(const loop_t &loop) {
             set_data(new data_t(*this));    //< data will be deleted in close action
             (void) uv_idle_init(loop, *this);
-            _attach_close_();
+            _initialized_();
+        }
+
+        self &detach() {
+            _detach_();
+            return *this;
         }
 
         UVCXX_NODISCARD
@@ -28,15 +33,13 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
-        uvcxx::callback<> start() {
+        uvcxx::attached_callback<> start() {
             UVCXX_APPLY(uv_idle_start(*this, raw_callback), nullptr);
-            _detach_();
-            return callback();
+            return {*this, callback()};
         }
 
         void stop() {
             (void) uv_idle_stop(*this);
-            _attach_close_();
         }
 
     private:

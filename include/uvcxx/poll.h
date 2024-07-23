@@ -16,32 +16,34 @@ namespace uv {
 
         poll_t() {
             set_data(new data_t(*this));    //< data will be deleted in close action
-            _attach_data_();
+        }
+
+        self &detach() {
+            _detach_();
+            return *this;
         }
 
         self &init(const loop_t &loop, int fd) {
             auto data = get_data<data_t>();
-            if (data->initialized) {
+            if (data->is_initialized()) {
                 UVCXX_THROW_OR_RETURN(UV_EINVAL, nullptr, "duplicated poll_t initialization");
             }
             // To directly start after init, there is no path to return the error code instead.
             // So an exception is directly thrown. This feature may be modified in the future.
             UVCXX_APPLY_STRICT(uv_poll_init(loop, *this, fd));
-            _attach_close_();
-            data->initialized = true;
+            _initialized_();
             return *this;
         }
 
         self &init_socket(const loop_t &loop, uv_os_sock_t socket) {
             auto data = get_data<data_t>();
-            if (data->initialized) {
+            if (data->is_initialized()) {
                 UVCXX_THROW_OR_RETURN(UV_EINVAL, nullptr, "duplicated poll_t initialization");
             }
             // To directly start after init, there is no path to return the error code instead.
             // So an exception is directly thrown. This feature may be modified in the future.
             UVCXX_APPLY_STRICT(uv_poll_init_socket(loop, *this, socket));
-            _attach_close_();
-            data->initialized = true;
+            _initialized_();
             return *this;
         }
 
@@ -59,28 +61,27 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
-        uvcxx::callback<int> start(int events) {
+        uvcxx::attached_callback<int> start(int events) {
             auto data = get_data<data_t>();
 
-            if (!data->initialized) {
+            if (!data->is_initialized()) {
                 UVCXX_THROW_OR_RETURN(UV_EINVAL, nullptr, "should call `init` or `init_socket` first");
             }
 
             UVCXX_APPLY(uv_poll_start(*this, events, raw_callback), nullptr);
 
             _detach_();
-            return data->start_cb.callback();
+            return {*this, data->start_cb.callback()};
         }
 
         void stop() {
             auto data = get_data<data_t>();
 
-            if (!data->initialized) {
+            if (!data->is_initialized()) {
                 UVCXX_THROW_OR_RETURN(UV_EINVAL, nullptr, "should call `init` or `init_socket` first");
             }
 
             (void) uv_poll_stop(*this);
-            _attach_close_();
         }
 
     private:
@@ -100,9 +101,8 @@ namespace uv {
             }
         }
 
-        class data_t : supper::data_t {
+        class data_t : public supper::data_t {
         public:
-            bool initialized{false};
             uvcxx::callback_emitter<int> start_cb;
 
             explicit data_t(poll_t &handle)

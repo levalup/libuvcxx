@@ -8,7 +8,7 @@
 int main() {
     uv::loop_t loop;
     int64_t counter = 0;
-    uv::idle_t(loop).start().call([&]() {
+    uv::idle_t(loop).start().detach().call([&]() {
         counter++;
         if (counter >= 1000) {
             throw uvcxx::close_handle();

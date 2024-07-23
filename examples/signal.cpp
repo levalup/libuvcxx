@@ -51,7 +51,7 @@ int main(int argc, const char *argv[]) {
     {
         // start backend
         uv::signal_t signal(loop);
-        signal.start(sig).call([key, &count](int) mutable {
+        signal.start(sig).detach().call([key, &count](int) mutable {
             ++count;
             std::cout << "Received " << key << " " << count << std::endl;
             throw uvcxx::close_handle();
@@ -61,9 +61,12 @@ int main(int argc, const char *argv[]) {
     uvcxx_assert(loop_handle_count(loop) == 0, "count = ", loop_handle_count(loop));
     // start oneshot
     {
-        uv::signal_t(loop).start_oneshot(sig).then([key, &count](int) mutable {
+        uv::signal_t signal(loop);
+        signal.start_oneshot(sig).detach().then([key, &count](int) mutable {
             ++count;
             std::cout << "Received " << key << " " << count << std::endl;
+        }).finally([signal]() mutable {
+            signal.close(nullptr);
         });
     }
     loop.run();

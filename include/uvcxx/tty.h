@@ -22,7 +22,7 @@ namespace uv {
             set_data(new data_t(*this));    //< data will be deleted in close action
             (void) uv_tty_init(loop, *this, fd, unused);
             data<data_t>()->work_mode = WorkMode::Agent;
-            _attach_close_();
+            _initialized_();
         }
 
 #else
@@ -33,10 +33,15 @@ namespace uv {
             set_data(new data_t(*this));    //< data will be deleted in close action
             (void) uv_tty_init(loop, *this, fd, readable);
             data<data_t>()->work_mode = WorkMode::Agent;
-            _attach_close_();
+            _initialized_();
         }
 
 #endif
+
+        self &detach() {
+            _detach_();
+            return *this;
+        }
 
         int fileno(uv_os_fd_t *fd) const {
             UVCXX_PROXY(uv_fileno(*this, fd));

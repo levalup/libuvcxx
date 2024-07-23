@@ -8,6 +8,7 @@
 
 #include "cxx/buffer.h"
 #include "cxx/string.h"
+#include "utils/attached_promise.h"
 
 #include "handle.h"
 #include "udp_send.h"
@@ -25,7 +26,7 @@ namespace uv {
         explicit udp_t(const loop_t &loop) {
             set_data(new data_t(*this));    //< data will be deleted in close action
             (void) uv_udp_init(loop, *this);
-            _attach_close_();
+            _initialized_();
         }
 
 #if UVCXX_SATISFY_VERSION(1, 7, 0)
@@ -35,10 +36,15 @@ namespace uv {
         explicit udp_t(const loop_t &loop, int flags) {
             set_data(new data_t(*this));    //< data will be deleted in close action
             (void) uv_udp_init_ex(loop, *this, flags);
-            _attach_close_();
+            _initialized_();
         }
 
 #endif
+
+        self &detach() {
+            _detach_();
+            return *this;
+        }
 
         UVCXX_NODISCARD
         size_t send_queue_size() const {
@@ -125,18 +131,18 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
-        uvcxx::promise<> send(
+        uvcxx::attached_promise<> send(
                 const udp_send_t &req, const uv_buf_t bufs[], unsigned int nbufs, const sockaddr *addr = nullptr) {
-            return udp_send(req, *this, bufs, nbufs, addr);
+            return {*this, udp_send(req, *this, bufs, nbufs, addr)};
         }
 
         UVCXX_NODISCARD
-        uvcxx::promise<> send(const udp_send_t &req, uvcxx::buffer buf, const sockaddr *addr = nullptr) {
+        uvcxx::attached_promise<> send(const udp_send_t &req, uvcxx::buffer buf, const sockaddr *addr = nullptr) {
             return this->send(req, &buf.buf, 1, addr);
         }
 
         UVCXX_NODISCARD
-        uvcxx::promise<> send(
+        uvcxx::attached_promise<> send(
                 const udp_send_t &req, std::initializer_list<uvcxx::buffer> bufs, const sockaddr *addr = nullptr) {
             std::vector<uv_buf_t> buffers;
             buffers.reserve(bufs.size());
@@ -145,17 +151,17 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
-        uvcxx::promise<> send(const uv_buf_t bufs[], unsigned int nbufs, const sockaddr *addr = nullptr) {
+        uvcxx::attached_promise<> send(const uv_buf_t bufs[], unsigned int nbufs, const sockaddr *addr = nullptr) {
             return this->send({}, bufs, nbufs, addr);
         }
 
         UVCXX_NODISCARD
-        uvcxx::promise<> send(uvcxx::buffer buf, const sockaddr *addr = nullptr) {
+        uvcxx::attached_promise<> send(uvcxx::buffer buf, const sockaddr *addr = nullptr) {
             return this->send(&buf.buf, 1, addr);
         }
 
         UVCXX_NODISCARD
-        uvcxx::promise<> send(std::initializer_list<uvcxx::buffer> bufs, const sockaddr *addr = nullptr) {
+        uvcxx::attached_promise<> send(std::initializer_list<uvcxx::buffer> bufs, const sockaddr *addr = nullptr) {
             std::vector<uv_buf_t> buffers;
             buffers.reserve(bufs.size());
             for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
@@ -201,11 +207,11 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
-        uvcxx::callback<ssize_t, const uv_buf_t *, const sockaddr *, uv_udp_flags>
+        uvcxx::attached_callback<ssize_t, const uv_buf_t *, const sockaddr *, uv_udp_flags>
         recv_start() {
             UVCXX_APPLY(uv_udp_recv_start(*this, raw_alloc_callback, raw_recv_callback), nullptr);
             _detach_();
-            return recv_callback();
+            return {*this, recv_callback()};
         }
 
 #if UVCXX_SATISFY_VERSION(1, 39, 0)
@@ -218,9 +224,7 @@ namespace uv {
 #endif
 
         int recv_stop() {
-            UVCXX_APPLY(uv_udp_recv_stop(*this), status);
-            _attach_close_();
-            return 0;
+            UVCXX_PROXY(uv_udp_recv_stop(*this));
         }
 
 #if UVCXX_SATISFY_VERSION(1, 19, 0)

@@ -19,7 +19,12 @@ namespace uv {
         explicit timer_t(const loop_t &loop) {
             set_data(new data_t(*this));    //< data will be deleted in close action
             (void) uv_timer_init(loop, *this);
-            _attach_close_();
+            _initialized_();
+        }
+
+        self &detach() {
+            _detach_();
+            return *this;
         }
 
         UVCXX_NODISCARD
@@ -28,15 +33,14 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
-        uvcxx::callback<> start(uint64_t timeout, uint64_t repeat) {
+        uvcxx::attached_callback<> start(uint64_t timeout, uint64_t repeat) {
             UVCXX_APPLY(uv_timer_start(*this, raw_callback, timeout, repeat), nullptr);
             _detach_();
-            return callback();
+            return {*this, callback()};
         }
 
         int stop() {
             UVCXX_APPLY(uv_timer_stop(*this), status);
-            _attach_close_();
             return 0;
         }
 

@@ -16,7 +16,11 @@ namespace uv {
 
         async_t() {
             set_data(new data_t(*this));    //< data will be deleted in close action
-            _attach_data_();
+        }
+
+        self &detach() {
+            _detach_();
+            return *this;
         }
 
         UVCXX_NODISCARD
@@ -25,14 +29,14 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
-        uvcxx::callback<> init(const loop_t &loop) {
+        uvcxx::attached_callback<> init(const loop_t &loop) {
             UVCXX_APPLY(uv_async_init(loop, *this, raw_callback), nullptr);
-            _detach_();
-            return callback();
+            _initialized_();
+            return {*this, callback()};
         }
 
         UVCXX_NODISCARD
-        uvcxx::callback<> init() {
+        uvcxx::attached_callback<> init() {
             return init(default_loop());
         }
 

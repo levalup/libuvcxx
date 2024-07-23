@@ -15,10 +15,10 @@ stateDiagram-v2
     direction LR
 
     [*] --> Suspend
-    Suspend --> Running : run
-    Suspend --> [*] : close
+    Suspend --> Running: run
+    Suspend --> [*]: close
     Running --> Suspend
-    Running --> [*] : close
+    Running --> [*]: close
 
     classDef attached color:#67C23A;
     classDef detached stroke:red,color:#F56C6C;
@@ -47,9 +47,9 @@ stateDiagram-v2
     direction LR
 
     [*] --> Hanging
-    Hanging --> Waiting : request
-    Waiting --> Dealing : response
-    Dealing --> Waiting : request
+    Hanging --> Waiting: request
+    Waiting --> Dealing: response
+    Dealing --> Waiting: request
     Dealing --> Hanging
 
     classDef attached color:#67C23A;
@@ -73,18 +73,21 @@ However, it should be noted that `request` operations can only be performed in t
 
 ## Handle
 
+> In the new version, the strategy for the lifecycle has been modified, and it no longer automatically "detaches".
+> An explicit "detach" interface is provided, allowing the status to be explicitly adjusted to "detach" when needed.
+
 Following is the life states of `handle`.
 
 ```mermaid
 stateDiagram-v2
     direction LR
 
-    [*] --> Allocated : set_data
-    Allocated --> Suspend : init
-    Suspend --> Running : start
-    Suspend --> [*] : close
+    [*] --> Allocated: set_data
+    Allocated --> Suspend: init
+    Suspend --> Running: start
+    Suspend --> [*]: close
     Running --> Suspend: stop
-    Running --> [*] : close
+    Running --> [*]: close
 
     classDef attached color:#67C23A;
     classDef detached stroke:red,color:#F56C6C;

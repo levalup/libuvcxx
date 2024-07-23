@@ -6,6 +6,8 @@
 #ifndef LIBUVCXX_TCP_H
 #define LIBUVCXX_TCP_H
 
+#include "utils/attached_promise.h"
+
 #include "connect.h"
 #include "stream.h"
 
@@ -20,7 +22,7 @@ namespace uv {
         explicit tcp_t(const loop_t &loop) {
             set_data(new data_t(*this));    //< data will be deleted in close action
             (void) uv_tcp_init(loop, *this);
-            _attach_close_();
+            _initialized_();
         }
 
 #if UVCXX_SATISFY_VERSION(1, 7, 0)
@@ -30,10 +32,15 @@ namespace uv {
         explicit tcp_t(const loop_t &loop, int flags) {
             set_data(new data_t(*this));    //< data will be deleted in close action
             (void) uv_tcp_init_ex(loop, *this, flags);
-            _attach_close_();
+            _initialized_();
         }
 
 #endif
+
+        self &detach() {
+            _detach_();
+            return *this;
+        }
 
         int send_buffer_size(int *value) {
             UVCXX_PROXY(uv_send_buffer_size(*this, value));
@@ -101,17 +108,14 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
-        uvcxx::promise<> connect(const connect_t &req, const sockaddr *addr) {
+        uvcxx::attached_promise<> connect(const connect_t &req, const sockaddr *addr) {
             auto p = tcp_connect(req, *this, addr);
-            if (p) {
-                data<data_t>()->work_mode = WorkMode::Client;
-                _detach_();
-            }
-            return p;
+            if (p) data<data_t>()->work_mode = WorkMode::Client;
+            return {*this, p};
         }
 
         UVCXX_NODISCARD
-        uvcxx::promise<> connect(const sockaddr *addr) {
+        uvcxx::attached_promise<> connect(const sockaddr *addr) {
             return this->connect({}, addr);
         }
 

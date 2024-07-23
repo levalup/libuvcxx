@@ -8,6 +8,8 @@
 
 #include "uvcxx/utils/apply.h"
 #include "uvcxx/utils/assert.h"
+#include "uvcxx/utils/attached_callback.h"
+#include "uvcxx/utils/attached_promise.h"
 #include "uvcxx/utils/callback.h"
 #include "uvcxx/utils/defer.h"
 #include "uvcxx/utils/detach.h"

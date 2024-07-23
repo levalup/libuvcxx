@@ -25,7 +25,12 @@ namespace uv {
 #endif
             set_data(new data_t(*this));    //< data will be deleted in close action
             (void) uv_fs_event_init(loop, *this);
-            _attach_close_();
+            _initialized_();
+        }
+
+        self &detach() {
+            _detach_();
+            return *this;
         }
 
         UVCXX_NODISCARD
@@ -34,15 +39,13 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
-        uvcxx::callback<const char *, uv_fs_event> start(uvcxx::string path, int flags) {
+        uvcxx::attached_callback<const char *, uv_fs_event> start(uvcxx::string path, int flags) {
             UVCXX_APPLY(uv_fs_event_start(*this, raw_callback, path, flags), nullptr);
-            _detach_();
-            return callback();
+            return {*this, callback()};
         }
 
         void stop() {
             (void) uv_fs_event_stop(*this);
-            _attach_close_();
         }
 
         int getpath(char *buffer, size_t *size) {

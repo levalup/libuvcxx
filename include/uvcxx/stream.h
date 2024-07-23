@@ -52,7 +52,7 @@ namespace uv {
          * @throws E_ADDRINUSE, E_BADF, E_NOTSOCK
          */
         UVCXX_NODISCARD
-        uvcxx::callback<> listen(int backlog) {
+        uvcxx::attached_callback<> listen(int backlog) {
             auto data = get_data<data_t>();
             if (data->work_mode != WorkMode::Notset && data->work_mode != WorkMode::Server) {
                 UVCXX_THROW_OR_RETURN(UV_EPERM, nullptr, "can not listen ", work_mode_string(), " stream");
@@ -61,8 +61,7 @@ namespace uv {
             UVCXX_APPLY(uv_listen(*this, backlog, raw_listen_callback), nullptr);
 
             data->work_mode = WorkMode::Server;
-            _detach_();
-            return data->listen_cb.callback();
+            return {*this, data->listen_cb.callback()};
         }
 
         UVCXX_NODISCARD
@@ -77,7 +76,6 @@ namespace uv {
          */
         UVCXX_NODISCARD
         uvcxx::callback<size_t, uv_buf_t *> alloc() {
-            // this alloc is not under Running state, so no `_detach_` applied.
             // memory alloc can not register multi-times callback
             // use call(nullptr) to avoid call alloc multi times.
             return get_data<data_t>()->alloc_cb.callback().call(nullptr);
@@ -98,7 +96,7 @@ namespace uv {
          * @throws E_EOF, E_AGAIN
          */
         UVCXX_NODISCARD
-        uvcxx::callback<ssize_t, const uv_buf_t *> read_start() {
+        uvcxx::attached_callback<ssize_t, const uv_buf_t *> read_start() {
             auto data = get_data<data_t>();
             if (data->work_mode == WorkMode::Server) {
                 UVCXX_THROW_OR_RETURN(UV_EPERM, nullptr, "can not read ", work_mode_string(), " stream");
@@ -106,8 +104,7 @@ namespace uv {
 
             UVCXX_APPLY(uv_read_start(*this, raw_alloc_callback, raw_read_callback), nullptr);
 
-            _detach_();
-            return data->read_cb.callback();
+            return {*this, data->read_cb.callback()};
         }
 
         int read_stop() {
@@ -116,10 +113,7 @@ namespace uv {
                 UVCXX_THROW_OR_RETURN(UV_EPERM, nullptr, "can not stop ", work_mode_string(), " stream");
             }
 
-            UVCXX_APPLY(uv_read_stop(*this), status);
-
-            _attach_close_();
-            return 0;
+            UVCXX_PROXY(uv_read_stop(*this));
         }
 
         UVCXX_NODISCARD

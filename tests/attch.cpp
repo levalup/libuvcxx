@@ -28,7 +28,7 @@ int main() {
     int idle_times = 0;
     {
         uv::idle_t idle(loop);
-        (void) idle.start().call([&]() mutable {
+        (void) idle.start().detach().call([&]() mutable {
             ++idle_times;
             if (idle_times > 1) throw uvcxx::close_handle();
         });
@@ -62,12 +62,12 @@ int main() {
     {
         // close it in any time after not use it
         uv::idle_t idle(loop);
-        (void) idle.start().call([&, idle]() mutable {
+        (void) idle.start().detach().call([&, idle]() mutable {
             ++idle_times;
             if (idle_times > 3) idle.close(nullptr);
         });
         // especially using temporary objects
-        (void) uv::idle_t(loop).start().call([&]() mutable {
+        (void) uv::idle_t(loop).start().detach().call([&]() mutable {
             ++idle_times;
             if (idle_times > 3) throw uvcxx::close_handle();
         });

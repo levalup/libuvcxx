@@ -9,7 +9,7 @@
 #include <cassert>
 
 #include "inner/base.h"
-#include "utils/callback.h"
+#include "utils/attached_callback.h"
 #include "utils/promise.h"
 #include "utils/detach.h"
 
@@ -165,6 +165,10 @@ namespace uv {
                 return data && ((data_t *) data)->magic == MAGIC;
             }
 
+            bool is_closed() { return m_closed.load(); }
+
+            bool is_initialized() { return m_initialized.load(); }
+
         public:
             explicit data_t(const handle_t &handle)
                     : m_handle(handle.shared_raw()) {
@@ -192,19 +196,28 @@ namespace uv {
              * @param close close cb, could be `uv_close` or `uv_tcp_close_reset`.
              * @return
              */
-            bool close_for(const std::function<void(void (*)(raw_t *))> &close) {
+            bool close_for(raw_t *raw, const std::function<void(void (*)(raw_t *))> &close) {
                 bool closed = false;
                 if (!m_closed.compare_exchange_strong(closed, true)) return false;
 
-                close(raw_close_callback);
+                if (m_initialized) {
+                    close(raw_close_callback);
+                    return true;
+                } else {
+                    raw_non_initialized_close(raw);
+                    return false;
+                }
+            }
 
-                return true;
+            void open() {
+                m_initialized = true;
             }
 
         private:
             // store the instance of `handle` to avoid resource release caused by no external reference
             std::shared_ptr<raw_t> m_handle;
 
+            std::atomic<bool> m_initialized{false};
             std::atomic<bool> m_closed{false};
         };
 
@@ -217,6 +230,17 @@ namespace uv {
             uvcxx::defer reset_data([&]() { raw->data = nullptr; });
 
             data->close_cb.resolve();
+            data->close_cb.finalize();
+        }
+
+        static void raw_non_initialized_close(raw_t *raw) {
+            auto data = (data_t *) raw->data;
+            if (!data) return;
+
+            uvcxx::defer delete_data(std::default_delete<data_t>(), data);
+            uvcxx::defer reset_data([&]() { raw->data = nullptr; });
+
+            data->close_cb.finalize();
         }
 
     protected:
@@ -226,7 +250,7 @@ namespace uv {
                 throw uvcxx::errcode(UV_EPERM, "close invalid libuvcxx handle");
             }
 
-            (void) data->close_for(close);
+            (void) data->close_for(*this, close);
             _detach_();
 
             return data->close_cb.promise();
@@ -241,7 +265,7 @@ namespace uv {
                     std::rethrow_exception(p);
                 } catch (const uvcxx::close_handle &) {
                     auto data = (data_t *) handle->data;
-                    data->close_for([handle](void (*cb)(raw_t *)) {
+                    data->close_for(handle, [handle](void (*cb)(raw_t *)) {
                         uv_close(handle, cb);
                     });
                     return true;
@@ -265,46 +289,28 @@ namespace uv {
         uvcxx::attach_t m_attach;
 
     protected:
-        void _attach_data_() {
-            m_attach.attach(this->attach_data());
+        void _attach_() {
+            m_attach.attach(this->attach_finalize());
         }
 
-        void _attach_close_() {
-            m_attach.attach(this->attach_close());
+        void _initialized_() {
+            get_data<data_t>()->open();
         }
 
         void _detach_() {
             m_attach.detach();
         }
 
-        uvcxx::attach_t::count_t _attach_count_() {
-            return m_attach.attach_count();
-        }
-
-        void _unref_attach_() {
-            m_attach.unref_attach();
-        }
+        operator uvcxx::attach_t() { return m_attach; }
 
     private:
-        std::function<void(void)> attach_data() {
-            auto handle = raw();
-            return [handle]() {
-                auto data = (data_t *) handle->data;
-                if (!data_t::is_it(data)) return;
-                data->close_for([&](void (*cb)(raw_t *)) {
-                    // directly delete data and emit close promise
-                    cb(handle);
-                });
-            };
-        }
-
-        std::function<void(void)> attach_close() {
+        std::function<void(void)> attach_finalize() {
             auto handle = raw();
             return [handle]() {
                 auto data = (data_t *) handle->data;
                 if (!data_t::is_it(data)) return;
 
-                data->close_for([&](void (*cb)(raw_t *)) {
+                data->close_for(handle, [&](void (*cb)(raw_t *)) {
                     uv_close(handle, cb);
                 });
             };
@@ -323,6 +329,7 @@ namespace uv {
         inherit_handle_t()
                 : supper(make_shared()) {
             this->set_data(nullptr);
+            this->_attach_();   // Default attached status
         }
 
         operator T *() { return this->template raw<T>(); }

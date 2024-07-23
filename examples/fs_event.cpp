@@ -28,7 +28,7 @@ int main() {
     });
 
     // close fs_event
-    uv::timer_t().start(2 * 1000, 1).call([&]() {
+    uv::timer_t().start(2 * 1000, 1).detach().call([&]() {
         fs_event.close(nullptr);
         throw uvcxx::close_handle();
     });

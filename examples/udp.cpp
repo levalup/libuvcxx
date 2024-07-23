@@ -48,7 +48,7 @@ int main() {
             server_buf.resize(size);
             *buf = server_buf;
         });
-        server.recv_start().call(
+        server.recv_start().detach().call(
                 [=](ssize_t nread, const uv_buf_t *buf, const sockaddr *addr, uv_udp_flags flags) mutable {
                     std::cout << "server read: " << std::string(buf->base, nread) << " with "
                               << uvcxx::to_string(uv_udp_flags(flags)) << " from " << uvcxx::any_address_t(addr)
@@ -60,7 +60,7 @@ int main() {
         });
 
         std::cout << "[INFO] stop server after " << server_time_ms << "ms" << std::endl;
-        uv::timer_t(server_loop).start(server_time_ms, 1).call([=]() mutable {
+        uv::timer_t(server_loop).start(server_time_ms, 1).detach().call([=]() mutable {
             server.close(nullptr);
             throw uvcxx::close_handle();    // close timer
         });
@@ -73,7 +73,7 @@ int main() {
         auto msg = uvcxx::catstr("hello~", i);
 
         uv::udp_t client(client_loop, false);
-        client.send(msg, addr).then([=]() {
+        client.send(msg, addr).detach().then([=]() {
             std::cout << "client write: " << msg << std::endl;
         }).finally([=]() mutable {
             client.close(nullptr);

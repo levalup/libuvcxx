@@ -49,7 +49,7 @@ int main() {
 
         std::cout << "[INFO] server start listen: " << server_sock << std::endl;
 
-        server.listen(128).call([=]() mutable {
+        server.listen(128).detach().call([=]() mutable {
             auto conn = server.accept(false);
 
             std::cout << "[INFO] received [" << getsockname(conn) << " <- " << getpeername(conn) << "]" << std::endl;
@@ -59,7 +59,7 @@ int main() {
                 server_buf.resize(size);
                 *buf = server_buf;
             });
-            conn.read_start().call([=](ssize_t nread, const uv_buf_t *buf) mutable {
+            conn.read_start().detach().call([=](ssize_t nread, const uv_buf_t *buf) mutable {
                 std::cout << "server read: " << std::string(buf->base, nread) << std::endl;
             }).except<uvcxx::E_AGAIN>([]() {
             }).except<uvcxx::E_EOF>([=]() mutable {
@@ -73,7 +73,7 @@ int main() {
         });
 
         std::cout << "[INFO] stop server after " << server_time_ms << "ms" << std::endl;
-        uv::timer_t(server_loop).start(server_time_ms, 1).call([=]() mutable {
+        uv::timer_t(server_loop).start(server_time_ms, 1).detach().call([=]() mutable {
             server.close(nullptr);
             throw uvcxx::close_handle();    // close timer
         });
@@ -86,7 +86,7 @@ int main() {
         auto msg = uvcxx::catstr("hello~", i);
 
         uv::tcp_t client(client_loop, false);
-        client.connect(addr).then([=]() mutable {
+        client.connect(addr).detach().then([=]() mutable {
             client.write(msg).then([=]() {
                 std::cout << "client write: " << msg << std::endl;
             });

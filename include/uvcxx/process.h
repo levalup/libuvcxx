@@ -235,7 +235,6 @@ namespace uv {
 
         process_t() {
             set_data(new data_t(*this));
-            _attach_data_();
         }
 
         UVCXX_NODISCARD
@@ -276,7 +275,7 @@ namespace uv {
 
             data->exit_cb.resolve(exit_status, term_signal);
 
-            data->close_for([&](void (*cb)(uv_handle_t *)) {
+            data->close_for((uv_handle_t *) handle, [&](void (*cb)(uv_handle_t *)) {
                 uv_close((uv_handle_t *) handle, cb);
             });
         }
