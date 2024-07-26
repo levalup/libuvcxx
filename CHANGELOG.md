@@ -4,9 +4,12 @@
 
 ## v0.1.4
 
-> Since: 2024-07-09
+> Date: 2024-07-26
 
 ### New features
+
+- Using the new lifecycle management method, it is now necessary to explicitly call detach to switch lifecycles.
+  - This avoids the additional mental overhead caused by implicit lifecycle transitions.
 
 ## Bug fix
 
