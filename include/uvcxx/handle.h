@@ -9,9 +9,9 @@
 #include <cassert>
 
 #include "inner/base.h"
-#include "utils/attached_callback.h"
+#include "utils/callback2.h"
 #include "utils/promise.h"
-#include "utils/detach.h"
+#include "utils/clip.h"
 
 #include "loop.h"
 
@@ -30,10 +30,8 @@ namespace uv {
      * The data field of uv_handle_t will be retained and used by the UVCXX.
      * Please do not modify data.
      * The data' resources will be freed after close. So remember to `close` handle.
-     * In most of case, only the handles in `Running` state need to be `close` manually.
+     * In most of case, only the handles in `Detached` state need to be `close` manually.
      * See [lifecycle.md](https://github.com/levalup/libuvcxx/blob/master/docs/lifecycle.md) for more details.
-     * Q: Why not `close` in destructor?
-     * A: Because the destructor only be called after it is closed.
      */
     class handle_t : public uvcxx::shared_raw_base_t<uv_handle_t> {
     public:
@@ -41,6 +39,8 @@ namespace uv {
         using supper = uvcxx::shared_raw_base_t<uv_handle_t>;
 
         using supper::supper;
+
+        handle_t(std::nullptr_t) : supper(nullptr), m_clip(nullptr) {}
 
         UVCXX_NODISCARD
         loop_t loop() const {
@@ -116,7 +116,6 @@ namespace uv {
             });
         }
 
-        UVCXX_NODISCARD
         uvcxx::promise<> close() {
             return close_for([&](void (*cb)(raw_t *)) {
                 uv_close(*this, cb);
@@ -209,7 +208,7 @@ namespace uv {
                 }
             }
 
-            void open() {
+            void initialize() {
                 m_initialized = true;
             }
 
@@ -286,22 +285,22 @@ namespace uv {
         }
 
     private:
-        uvcxx::attach_t m_attach;
+        uvcxx::clip_t m_clip;
 
     protected:
         void _attach_() {
-            m_attach.attach(this->attach_finalize());
+            m_clip.attach(this->attach_finalize());
         }
 
         void _initialized_() {
-            get_data<data_t>()->open();
+            get_data<data_t>()->initialize();
         }
 
         void _detach_() {
-            m_attach.detach();
+            m_clip.detach();
         }
 
-        operator uvcxx::attach_t() { return m_attach; }
+        operator uvcxx::clip_t() const { return m_clip; }
 
     private:
         std::function<void(void)> attach_finalize() {
@@ -329,7 +328,7 @@ namespace uv {
         inherit_handle_t()
                 : supper(make_shared()) {
             this->set_data(nullptr);
-            this->_attach_();   // Default attached status
+            this->_attach_();   // make default status to attached
         }
 
         operator T *() { return this->template raw<T>(); }

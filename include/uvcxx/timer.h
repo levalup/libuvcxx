@@ -33,7 +33,7 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
-        uvcxx::attached_callback<> start(uint64_t timeout, uint64_t repeat) {
+        uvcxx::callback2<> start(uint64_t timeout, uint64_t repeat) {
             UVCXX_APPLY(uv_timer_start(*this, raw_callback, timeout, repeat), nullptr);
             _detach_();
             return {*this, callback()};

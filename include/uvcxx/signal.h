@@ -6,7 +6,7 @@
 #ifndef LIBUVCXX_SIGNAL_H
 #define LIBUVCXX_SIGNAL_H
 
-#include "utils/attached_promise.h"
+#include "utils/promise2.h"
 
 #include "handle.h"
 
@@ -40,7 +40,7 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
-        uvcxx::attached_callback<int> start(int signum) {
+        uvcxx::callback2<int> start(int signum) {
             UVCXX_APPLY(uv_signal_start(*this, raw_callback, signum), nullptr);
             return {*this, callback()};
         }
@@ -48,7 +48,7 @@ namespace uv {
 #if UVCXX_SATISFY_VERSION(1, 12, 0)
 
         UVCXX_NODISCARD
-        uvcxx::attached_promise<int> start_oneshot(int signum) {
+        uvcxx::promise2<int> start_oneshot(int signum) {
             UVCXX_APPLY(uv_signal_start_oneshot(*this, raw_oneshot_callback, signum), nullptr);
             return {*this, get_data<data_t>()->start_oneshot_cb.promise()};
         }

@@ -73,9 +73,6 @@ However, it should be noted that `request` operations can only be performed in t
 
 ## Handle
 
-> In the new version, the strategy for the lifecycle has been modified, and it no longer automatically "detaches".
-> An explicit "detach" interface is provided, allowing the status to be explicitly adjusted to "detach" when needed.
-
 Following is the life states of `handle`.
 
 ```mermaid
@@ -88,18 +85,22 @@ stateDiagram-v2
     Suspend --> [*]: close
     Running --> Suspend: stop
     Running --> [*]: close
+    Running --> Detached: detach
+    Detached --> [*]: close
 
     classDef attached color:#67C23A;
     classDef detached stroke:red,color:#F56C6C;
 
     class Allocated attached
     class Suspend attached
-    class Running detached
+    class Running attached
+    class Detached detached
 ```
 
 - **Allocated[*attached*]**: Context data allocated but libuv's `handle` no initialized yet.
 - **Suspend[*attached*]**: Handle initialized but not running.
-- **Running[*detached*]**: Handle is running.
+- **Running[*attached*]**: Handle is running.
+- **Detached[*detached*]**: Handle detached. It must be explicitly closed manually.
 
 
 - **set_data**: New context data and set `handle->data`.
@@ -107,6 +108,7 @@ stateDiagram-v2
 - **start**: Start callback operations, such as `start` for `timer`, `listen` for `tcp`, and `read_start` for `stream`.
 - **stop**: Stop callback operations, but not close handle. such as `stop` for `timer`.
 - **close**: Close `handle`. Release context data and reset `handle->data`.
+- **detach**: Detach `handle`. It must be explicitly closed manually.
 
 If the `handle` is in the `attached` state, resources will be automatically recycled when the `handle` is no longer
 referenced.

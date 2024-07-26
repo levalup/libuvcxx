@@ -6,7 +6,7 @@
 #ifndef LIBUVCXX_TCP_H
 #define LIBUVCXX_TCP_H
 
-#include "utils/attached_promise.h"
+#include "utils/promise2.h"
 
 #include "connect.h"
 #include "stream.h"
@@ -108,14 +108,14 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
-        uvcxx::attached_promise<> connect(const connect_t &req, const sockaddr *addr) {
+        uvcxx::promise2<> connect(const connect_t &req, const sockaddr *addr) {
             auto p = tcp_connect(req, *this, addr);
             if (p) data<data_t>()->work_mode = WorkMode::Client;
             return {*this, p};
         }
 
         UVCXX_NODISCARD
-        uvcxx::attached_promise<> connect(const sockaddr *addr) {
+        uvcxx::promise2<> connect(const sockaddr *addr) {
             return this->connect({}, addr);
         }
 
@@ -127,7 +127,6 @@ namespace uv {
             });
         }
 
-        UVCXX_NODISCARD
         uvcxx::promise<> close_reset() {
             return close_for([&](void (*cb)(uv_handle_t *)) {
                 (void) uv_tcp_close_reset(*this, cb);

@@ -61,7 +61,7 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
-        uvcxx::attached_callback<int> start(int events) {
+        uvcxx::callback2<int> start(int events) {
             auto data = get_data<data_t>();
 
             if (!data->is_initialized()) {

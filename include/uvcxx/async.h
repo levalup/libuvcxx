@@ -29,14 +29,14 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
-        uvcxx::attached_callback<> init(const loop_t &loop) {
+        uvcxx::callback2<> init(const loop_t &loop) {
             UVCXX_APPLY(uv_async_init(loop, *this, raw_callback), nullptr);
             _initialized_();
             return {*this, callback()};
         }
 
         UVCXX_NODISCARD
-        uvcxx::attached_callback<> init() {
+        uvcxx::callback2<> init() {
             return init(default_loop());
         }
 

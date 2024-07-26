@@ -36,7 +36,7 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
-        uvcxx::attached_callback<const uv_stat_t *, const uv_stat_t *> start(uvcxx::string path, unsigned int interval) {
+        uvcxx::callback2<const uv_stat_t *, const uv_stat_t *> start(uvcxx::string path, unsigned int interval) {
             UVCXX_APPLY(uv_fs_poll_start(*this, raw_callback, path, interval), nullptr);
             return {*this, callback()};
         }

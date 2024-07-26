@@ -33,7 +33,7 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
-        uvcxx::attached_callback<> start() {
+        uvcxx::callback2<> start() {
             UVCXX_APPLY(uv_prepare_start(*this, raw_callback), nullptr);
             return {*this, callback()};
         }

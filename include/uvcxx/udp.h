@@ -8,7 +8,7 @@
 
 #include "cxx/buffer.h"
 #include "cxx/string.h"
-#include "utils/attached_promise.h"
+#include "utils/promise2.h"
 
 #include "handle.h"
 #include "udp_send.h"
@@ -131,18 +131,18 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
-        uvcxx::attached_promise<> send(
+        uvcxx::promise2<> send(
                 const udp_send_t &req, const uv_buf_t bufs[], unsigned int nbufs, const sockaddr *addr = nullptr) {
             return {*this, udp_send(req, *this, bufs, nbufs, addr)};
         }
 
         UVCXX_NODISCARD
-        uvcxx::attached_promise<> send(const udp_send_t &req, uvcxx::buffer buf, const sockaddr *addr = nullptr) {
+        uvcxx::promise2<> send(const udp_send_t &req, uvcxx::buffer buf, const sockaddr *addr = nullptr) {
             return this->send(req, &buf.buf, 1, addr);
         }
 
         UVCXX_NODISCARD
-        uvcxx::attached_promise<> send(
+        uvcxx::promise2<> send(
                 const udp_send_t &req, std::initializer_list<uvcxx::buffer> bufs, const sockaddr *addr = nullptr) {
             std::vector<uv_buf_t> buffers;
             buffers.reserve(bufs.size());
@@ -151,17 +151,17 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
-        uvcxx::attached_promise<> send(const uv_buf_t bufs[], unsigned int nbufs, const sockaddr *addr = nullptr) {
+        uvcxx::promise2<> send(const uv_buf_t bufs[], unsigned int nbufs, const sockaddr *addr = nullptr) {
             return this->send({}, bufs, nbufs, addr);
         }
 
         UVCXX_NODISCARD
-        uvcxx::attached_promise<> send(uvcxx::buffer buf, const sockaddr *addr = nullptr) {
+        uvcxx::promise2<> send(uvcxx::buffer buf, const sockaddr *addr = nullptr) {
             return this->send(&buf.buf, 1, addr);
         }
 
         UVCXX_NODISCARD
-        uvcxx::attached_promise<> send(std::initializer_list<uvcxx::buffer> bufs, const sockaddr *addr = nullptr) {
+        uvcxx::promise2<> send(std::initializer_list<uvcxx::buffer> bufs, const sockaddr *addr = nullptr) {
             std::vector<uv_buf_t> buffers;
             buffers.reserve(bufs.size());
             for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
@@ -207,7 +207,7 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
-        uvcxx::attached_callback<ssize_t, const uv_buf_t *, const sockaddr *, uv_udp_flags>
+        uvcxx::callback2<ssize_t, const uv_buf_t *, const sockaddr *, uv_udp_flags>
         recv_start() {
             UVCXX_APPLY(uv_udp_recv_start(*this, raw_alloc_callback, raw_recv_callback), nullptr);
             _detach_();

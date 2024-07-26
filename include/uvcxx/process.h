@@ -242,6 +242,12 @@ namespace uv {
             return raw<raw_t>()->pid;
         }
 
+        /**
+         * This handle will be detached after spawn succeed.
+         * @param loop
+         * @param options
+         * @return
+         */
         UVCXX_NODISCARD
         uvcxx::promise<int64_t, int> spawn(const loop_t &loop, const uv_process_options_t *options) {
             auto fix_options = *options;

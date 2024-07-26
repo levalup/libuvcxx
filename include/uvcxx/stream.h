@@ -7,6 +7,9 @@
 #define LIBUVCXX_STREAM_H
 
 #include "cxx/buffer.h"
+#include "utils/callback2.h"
+#include "utils/promise2.h"
+
 #include "connect.h"
 #include "handle.h"
 #include "shutdown.h"
@@ -52,7 +55,7 @@ namespace uv {
          * @throws E_ADDRINUSE, E_BADF, E_NOTSOCK
          */
         UVCXX_NODISCARD
-        uvcxx::attached_callback<> listen(int backlog) {
+        uvcxx::callback2<> listen(int backlog) {
             auto data = get_data<data_t>();
             if (data->work_mode != WorkMode::Notset && data->work_mode != WorkMode::Server) {
                 UVCXX_THROW_OR_RETURN(UV_EPERM, nullptr, "can not listen ", work_mode_string(), " stream");
@@ -96,7 +99,7 @@ namespace uv {
          * @throws E_EOF, E_AGAIN
          */
         UVCXX_NODISCARD
-        uvcxx::attached_callback<ssize_t, const uv_buf_t *> read_start() {
+        uvcxx::callback2<ssize_t, const uv_buf_t *> read_start() {
             auto data = get_data<data_t>();
             if (data->work_mode == WorkMode::Server) {
                 UVCXX_THROW_OR_RETURN(UV_EPERM, nullptr, "can not read ", work_mode_string(), " stream");
@@ -117,17 +120,17 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
-        uvcxx::promise<> write(const write_t &req, const uv_buf_t bufs[], unsigned int nbufs) {
-            return ::uv::write(req, *this, bufs, nbufs);
+        uvcxx::promise2<> write(const write_t &req, const uv_buf_t bufs[], unsigned int nbufs) {
+            return {*this, ::uv::write(req, *this, bufs, nbufs)};
         }
 
         UVCXX_NODISCARD
-        uvcxx::promise<> write(const write_t &req, uvcxx::buffer buf) {
+        uvcxx::promise2<> write(const write_t &req, uvcxx::buffer buf) {
             return this->write(req, &buf.buf, 1);
         }
 
         UVCXX_NODISCARD
-        uvcxx::promise<> write(const write_t &req, std::initializer_list<uvcxx::buffer> bufs) {
+        uvcxx::promise2<> write(const write_t &req, std::initializer_list<uvcxx::buffer> bufs) {
             std::vector<uv_buf_t> buffers;
             buffers.reserve(bufs.size());
             for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
@@ -135,17 +138,17 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
-        uvcxx::promise<> write(const uv_buf_t bufs[], unsigned int nbufs) {
-            return ::uv::write(*this, bufs, nbufs);
+        uvcxx::promise2<> write(const uv_buf_t bufs[], unsigned int nbufs) {
+            return this->write({}, bufs, nbufs);
         }
 
         UVCXX_NODISCARD
-        uvcxx::promise<> write(uvcxx::buffer buf) {
+        uvcxx::promise2<> write(uvcxx::buffer buf) {
             return this->write(&buf.buf, 1);
         }
 
         UVCXX_NODISCARD
-        uvcxx::promise<> write(std::initializer_list<uvcxx::buffer> bufs) {
+        uvcxx::promise2<> write(std::initializer_list<uvcxx::buffer> bufs) {
             std::vector<uv_buf_t> buffers;
             buffers.reserve(bufs.size());
             for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
@@ -153,19 +156,19 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
-        uvcxx::promise<> write2(
+        uvcxx::promise2<> write2(
                 const write_t &req, const uv_buf_t bufs[], unsigned int nbufs, const stream_t &send_handle) {
-            return ::uv::write2(req, *this, bufs, nbufs, send_handle);
+            return {*this, ::uv::write2(req, *this, bufs, nbufs, send_handle)};
         }
 
         UVCXX_NODISCARD
-        uvcxx::promise<> write2(const write_t &req,
+        uvcxx::promise2<> write2(const write_t &req,
                                 uvcxx::mutable_buffer buf, const stream_t &send_handle) {
             return this->write2(req, &buf.buf, 1, send_handle);
         }
 
         UVCXX_NODISCARD
-        uvcxx::promise<> write2(const write_t &req,
+        uvcxx::promise2<> write2(const write_t &req,
                                 std::initializer_list<uvcxx::mutable_buffer> bufs, const stream_t &send_handle) {
             std::vector<uv_buf_t> buffers;
             buffers.reserve(bufs.size());
@@ -174,17 +177,17 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
-        uvcxx::promise<> write2(const uv_buf_t bufs[], unsigned int nbufs, const stream_t &send_handle) {
-            return ::uv::write2(*this, bufs, nbufs, send_handle);
+        uvcxx::promise2<> write2(const uv_buf_t bufs[], unsigned int nbufs, const stream_t &send_handle) {
+            return this->write2({}, bufs, nbufs, send_handle);
         }
 
         UVCXX_NODISCARD
-        uvcxx::promise<> write2(uvcxx::mutable_buffer buf, const stream_t &send_handle) {
+        uvcxx::promise2<> write2(uvcxx::mutable_buffer buf, const stream_t &send_handle) {
             return this->write2(&buf.buf, 1, send_handle);
         }
 
         UVCXX_NODISCARD
-        uvcxx::promise<> write2(std::initializer_list<uvcxx::mutable_buffer> bufs, const stream_t &send_handle) {
+        uvcxx::promise2<> write2(std::initializer_list<uvcxx::mutable_buffer> bufs, const stream_t &send_handle) {
             std::vector<uv_buf_t> buffers;
             buffers.reserve(bufs.size());
             for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
@@ -318,6 +321,8 @@ namespace uv {
         const char *work_mode_string() const {
             auto data = get_data<data_t>();
             switch (data->work_mode) {
+                default:
+                    return "unknown";
                 case WorkMode::Notset:
                     return "notset";
                 case WorkMode::Server:

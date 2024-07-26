@@ -39,7 +39,7 @@ namespace uv {
         }
 
         UVCXX_NODISCARD
-        uvcxx::attached_callback<const char *, uv_fs_event> start(uvcxx::string path, int flags) {
+        uvcxx::callback2<const char *, uv_fs_event> start(uvcxx::string path, int flags) {
             UVCXX_APPLY(uv_fs_event_start(*this, raw_callback, path, flags), nullptr);
             return {*this, callback()};
         }

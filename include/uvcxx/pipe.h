@@ -7,7 +7,7 @@
 #define LIBUVCXX_PIPE_H
 
 #include "cxx/string.h"
-#include "utils/attached_promise.h"
+#include "utils/promise2.h"
 
 #include "connect.h"
 #include "stream.h"
@@ -86,38 +86,38 @@ namespace uv {
 #endif
 
         UVCXX_NODISCARD
-        uvcxx::attached_promise<> connect(const connect_t &req, uvcxx::string name) {
+        uvcxx::promise2<> connect(const connect_t &req, uvcxx::string name) {
             auto p = pipe_connect(req, *this, name);
             if (p) data<data_t>()->work_mode = WorkMode::Client;
             return {*this, p};
         }
 
         UVCXX_NODISCARD
-        uvcxx::attached_promise<> connect(uvcxx::string name) {
+        uvcxx::promise2<> connect(uvcxx::string name) {
             return this->connect({}, name);
         }
 
 #if UVCXX_SATISFY_VERSION(1, 46, 0)
 
         UVCXX_NODISCARD
-        uvcxx::attached_promise<> connect2(const connect_t &req, const char *name, size_t namelen, unsigned int flags) {
+        uvcxx::promise2<> connect2(const connect_t &req, const char *name, size_t namelen, unsigned int flags) {
             auto p = pipe_connect2(req, *this, name, namelen, flags);
             if (p) data<data_t>()->work_mode = WorkMode::Client;
             return {*this, p};
         }
 
         UVCXX_NODISCARD
-        uvcxx::attached_promise<> connect2(const char *name, size_t namelen, unsigned int flags) {
+        uvcxx::promise2<> connect2(const char *name, size_t namelen, unsigned int flags) {
             return this->connect2({}, name, namelen, flags);
         }
 
         UVCXX_NODISCARD
-        uvcxx::attached_promise<> connect2(const connect_t &req, uvcxx::string_view name, unsigned int flags) {
+        uvcxx::promise2<> connect2(const connect_t &req, uvcxx::string_view name, unsigned int flags) {
             return this->connect2(req, name.data, name.size, flags);
         }
 
         UVCXX_NODISCARD
-        uvcxx::attached_promise<> connect2(uvcxx::string_view name, unsigned int flags) {
+        uvcxx::promise2<> connect2(uvcxx::string_view name, unsigned int flags) {
             return this->connect2({}, name.data, name.size, flags);
         }
 
