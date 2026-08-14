@@ -12,10 +12,10 @@
 #include <sstream>
 #include <utility>
 
-#include "apply.h"
-#include "queue.h"
-#include "standard.h"
-#include "tuple.h"
+#include "./apply.h"
+#include "./queue.h"
+#include "./standard.h"
+#include "./tuple.h"
 
 namespace uvcxx {
     class callback_core {

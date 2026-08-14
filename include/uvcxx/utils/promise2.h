@@ -6,8 +6,8 @@
 #ifndef LIBUVCXX_PROMISE2_H
 #define LIBUVCXX_PROMISE2_H
 
-#include "promise.h"
-#include "clip.h"
+#include "./promise.h"
+#include "./clip.h"
 
 namespace uvcxx {
     template <typename... Args>

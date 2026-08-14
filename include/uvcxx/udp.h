@@ -6,12 +6,12 @@
 #ifndef LIBUVCXX_UDP_H
 #define LIBUVCXX_UDP_H
 
-#include "cxx/buffer.h"
-#include "cxx/string.h"
-#include "utils/promise2.h"
+#include "./cxx/buffer.h"
+#include "./cxx/string.h"
+#include "./utils/promise2.h"
 
-#include "handle.h"
-#include "udp_send.h"
+#include "./handle.h"
+#include "./udp_send.h"
 
 namespace uv {
     class udp_t : public inherit_handle_t<uv_udp_t, handle_t> {
@@ -71,6 +71,14 @@ namespace uv {
         int open(uv_os_sock_t sock) {
             UVCXX_PROXY(uv_udp_open(*this, sock));
         }
+
+#if UVCXX_SATISFY_VERSION(1, 52, 0)
+
+        int open(uv_os_sock_t sock, unsigned int flags) {
+            UVCXX_PROXY(uv_udp_open_ex(*this, sock, flags));
+        }
+
+#endif
 
         int bind(const struct sockaddr *addr, unsigned int flags) {
             UVCXX_PROXY(uv_udp_bind(*this, addr, flags));
@@ -182,6 +190,53 @@ namespace uv {
             for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
             return this->try_send(buffers.data(), (unsigned int) buffers.size(), addr);
         }
+
+#if UVCXX_SATISFY_VERSION(1, 50, 0)
+
+        int try_send2(
+                unsigned int count,
+                uv_buf_t *bufs[/*count*/], unsigned int nbufs[/*count*/], sockaddr *addrs[/*count*/],
+                unsigned int flags) {
+            return uv_udp_try_send2(*this, count, bufs, nbufs, addrs, flags);
+        }
+
+        int try_send2(
+                std::initializer_list<std::initializer_list<uvcxx::buffer>> bufs,
+                std::initializer_list<uvcxx::any_address_t> addrs, unsigned int flags) {
+            // TODO: Find a proper error code
+            if (bufs.size() != addrs.size()) return -1;
+
+            std::vector<std::vector<uv_buf_t>> buffers;
+            buffers.reserve(bufs.size());
+            for (auto &buf: bufs) {
+                std::vector<uv_buf_t> tmp;
+                tmp.reserve(buf.size());
+                for (auto &b: buf) { tmp.emplace_back(b.buf); }
+                buffers.emplace_back(std::move(tmp));
+            }
+
+            std::vector<uv_buf_t*> args1;
+            std::vector<unsigned int> args2;
+            std::vector<sockaddr *> args3;
+            args1.reserve(buffers.size());
+            args2.reserve(buffers.size());
+            args3.reserve(addrs.size());
+
+            for (auto &buf: buffers) {
+                args1.emplace_back(buf.data());
+                args2.emplace_back(static_cast<unsigned int>(buf.size()));
+            }
+
+            for (auto &addr: addrs) {
+                args3.emplace_back(addr);
+            }
+
+            auto count = static_cast<unsigned int>(buffers.size());
+
+            return this->try_send2(count, args1.data(), args2.data(), args3.data(), flags);
+        }
+
+#endif
 
         UVCXX_NODISCARD
         uvcxx::callback<size_t, uv_buf_t *> alloc_callback() {

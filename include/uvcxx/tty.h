@@ -6,7 +6,7 @@
 #ifndef LIBUVCXX_TTY_H
 #define LIBUVCXX_TTY_H
 
-#include "stream.h"
+#include "./stream.h"
 
 namespace uv {
     class tty_t : public inherit_handle_t<uv_tty_t, stream_t> {

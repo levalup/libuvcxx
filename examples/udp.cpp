@@ -72,7 +72,7 @@ int main() {
 
         auto msg = uvcxx::catstr("hello~", i);
 
-        uv::udp_t client(client_loop, false);
+        uv::udp_t client(client_loop);
         client.send(msg, addr).detach().then([=]() {
             std::cout << "client write: " << msg << std::endl;
         }).finally([=]() mutable {

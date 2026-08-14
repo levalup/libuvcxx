@@ -2,6 +2,28 @@
 
 --------------------------------
 
+## v0.1.5
+
+> Date: 2026-08-14
+
+### Updates
+
+- Update `libuv` to `v1.52.1`.
+  - Add wrapper for `uv_write_nwritten`.
+  - Add wrapper for `uv_tcp_keepalive_ex`.
+  - Add wrapper for `uv_thread_detach`.
+  - Add wrapper for `uv_thread_getname`.
+  - Add wrapper for `uv_thread_setname`.
+  - Add wrapper for `uv_udp_open_ex`.
+  - Add wrapper for `uv_udp_try_send2`.
+  - Add wrapper for `uv_getrusage_thread`.
+
+### Bug fix
+
+- Fixed multiple API compatibility check issues for versions below 1.21.
+
+--------------------------------
+
 ## v0.1.4
 
 > Date: 2024-07-26

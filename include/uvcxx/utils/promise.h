@@ -13,9 +13,9 @@
 #include <sstream>
 #include <utility>
 
-#include "apply.h"
-#include "standard.h"
-#include "tuple.h"
+#include "./apply.h"
+#include "./standard.h"
+#include "./tuple.h"
 
 namespace uvcxx {
     class promise_core {

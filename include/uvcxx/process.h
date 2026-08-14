@@ -9,8 +9,8 @@
 #include <cstring>
 #include <sstream>
 
-#include "cxx/string.h"
-#include "handle.h"
+#include "./cxx/string.h"
+#include "./handle.h"
 
 namespace uv {
     class process_option_t : public uvcxx::extend_raw_base_t<uv_process_options_t> {
@@ -268,11 +268,15 @@ namespace uv {
             UVCXX_PROXY(uv_process_kill(*this, signum));
         }
 
+#if UVCXX_SATISFY_VERSION(1, 16, 0)
+
         UVCXX_NODISCARD
         uv_pid_t get_pid() const {
             // cover uv_process_get_pid
             return (uv_pid_t) raw<raw_t>()->pid;
         }
+
+#endif
 
     private:
         static void raw_exit_callback(uv_process_t *handle, int64_t exit_status, int term_signal) {

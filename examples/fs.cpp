@@ -5,7 +5,9 @@
 
 #include "uvcxx/fs.h"
 #include "uvcxx/buf.h"
+#include "uvcxx/cxx/version.h"
 #include "uvcxx/cxx/to_string.h"
+
 
 int main() {
     std::string content = "!!!!404!!!!";

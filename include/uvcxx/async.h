@@ -6,7 +6,7 @@
 #ifndef LIBUVCXX_ASYNC_H
 #define LIBUVCXX_ASYNC_H
 
-#include "handle.h"
+#include "./handle.h"
 
 namespace uv {
     class async_t : public inherit_handle_t<uv_async_t, handle_t> {

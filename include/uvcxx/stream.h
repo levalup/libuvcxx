@@ -6,14 +6,14 @@
 #ifndef LIBUVCXX_STREAM_H
 #define LIBUVCXX_STREAM_H
 
-#include "cxx/buffer.h"
-#include "utils/callback2.h"
-#include "utils/promise2.h"
+#include "./cxx/buffer.h"
+#include "./utils/callback2.h"
+#include "./utils/promise2.h"
 
-#include "connect.h"
-#include "handle.h"
-#include "shutdown.h"
-#include "write.h"
+#include "./connect.h"
+#include "./handle.h"
+#include "./shutdown.h"
+#include "./write.h"
 
 namespace uv {
     class stream_t : public handle_t {
@@ -163,13 +163,13 @@ namespace uv {
 
         UVCXX_NODISCARD
         uvcxx::promise2<> write2(const write_t &req,
-                                uvcxx::mutable_buffer buf, const stream_t &send_handle) {
+                                 uvcxx::mutable_buffer buf, const stream_t &send_handle) {
             return this->write2(req, &buf.buf, 1, send_handle);
         }
 
         UVCXX_NODISCARD
         uvcxx::promise2<> write2(const write_t &req,
-                                std::initializer_list<uvcxx::mutable_buffer> bufs, const stream_t &send_handle) {
+                                 std::initializer_list<uvcxx::mutable_buffer> bufs, const stream_t &send_handle) {
             std::vector<uv_buf_t> buffers;
             buffers.reserve(bufs.size());
             for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
@@ -224,6 +224,14 @@ namespace uv {
             buffers.reserve(bufs.size());
             for (auto &buf: bufs) { buffers.emplace_back(buf.buf); }
             return try_write2(buffers.data(), (unsigned int) buffers.size(), send_handle);
+        }
+
+#endif
+
+#if UVCXX_SATISFY_VERSION(1, 53, 0)
+
+        size_t nwritten() const {
+            return uv_write_nwritten(*this);
         }
 
 #endif

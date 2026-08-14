@@ -11,8 +11,8 @@
 
 #include <uv.h>
 
-#include "cxx/buffer.h"
-#include "inner/base.h"
+#include "./cxx/buffer.h"
+#include "./inner/base.h"
 
 namespace uv {
     namespace inner {

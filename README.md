@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](
     LICENSE)
-[![libuv](https://img.shields.io/badge/libuv-v1.48.0-green?logo=libuv&logoColor=green)](
+[![libuv](https://img.shields.io/badge/libuv-v1.52.1-green?logo=libuv&logoColor=green)](
     https://github.com/libuv/libuv)
 [![CMake](https://img.shields.io/badge/CMake-v3.9-%23064F8C?logo=cmake&logoColor=%23064F8C)](
     https://cmake.org)
@@ -91,12 +91,12 @@ unless you are very clear about the lifecycle of the handle.
 
 > Tested and passed in gcc `4.8.5` with `libuv` `v1.44.2` on `CentOS7`.
 
-`libuvcxx` can be compatible with libuv: `>= 1.0.0, <= 1.48.0`.
+`libuvcxx` can be compatible with libuv: `>= 1.0.0, <= 1.52.1`.
 Provided by [test_libuv.sh](scripts/test_libuv.sh).
 
 > Notice: As the development proceeds, compatibility may change with new features.
 
-`libuvcxx` covers `[100%]` all `306` APIs described in the [libuv doc](https://docs.libuv.org/en/v1.x/).
+`libuvcxx` covers `[100%]` all `317` APIs described in the [libuv doc](https://docs.libuv.org/en/v1.x/).
 Provided by [libuv_api_coverage.py](scripts/libuv_api_coverage.py).
 
 See [coverage.md](docs/coverage.md) for more details.

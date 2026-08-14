@@ -6,10 +6,10 @@
 #ifndef LIBUVCXX_GETADDRINFO_H
 #define LIBUVCXX_GETADDRINFO_H
 
-#include "cxx/string.h"
+#include "./cxx/string.h"
 
-#include "loop.h"
-#include "req.h"
+#include "./loop.h"
+#include "./req.h"
 
 namespace uv {
     class getaddrinfo_t : public inherit_req_t<uv_getaddrinfo_t, req_t> {
@@ -22,10 +22,14 @@ namespace uv {
             return loop_t::borrow(raw<raw_t>()->loop);
         }
 
+#if UVCXX_SATISFY_VERSION(1, 3, 0)
+
         UVCXX_NODISCARD
         struct addrinfo *addrinfo() const {
             return raw<raw_t>()->addrinfo;
         }
+        
+#endif
 
     public:
         class callback_t : public req_callback_t<raw_t, int, ::addrinfo *> {

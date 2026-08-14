@@ -8,7 +8,7 @@
 
 #include <uv.h>
 
-#include "cxx/version.h"
+#include "./cxx/version.h"
 
 #if !UVCXX_SATISFY_VERSION(1, 7, 0) && !defined(UV_VERSION_HEX)
 #define UV_VERSION_HEX ((UV_VERSION_MAJOR << 16) | \

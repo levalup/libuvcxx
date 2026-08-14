@@ -13,7 +13,7 @@
 
 #include <uv.h>
 
-#include "version.h"
+#include "./version.h"
 
 namespace uvcxx {
     template<typename T, typename std::enable_if<
@@ -104,14 +104,22 @@ namespace uvcxx {
         switch (t) {
             UVCXX_CASE(UV_READABLE, "readable");
             UVCXX_CASE(UV_WRITABLE, "writable");
+#if UVCXX_SATISFY_VERSION(1, 9, 0)
             UVCXX_CASE(UV_DISCONNECT, "disconnect");
+#endif
+#if UVCXX_SATISFY_VERSION(1, 14, 0)
             UVCXX_CASE(UV_PRIORITIZED, "prioritized");
+#endif
         }
         return mask_string(t, "notset", {
                 {UV_READABLE,    "readable"},
                 {UV_WRITABLE,    "writable"},
+#if UVCXX_SATISFY_VERSION(1, 9, 0)
                 {UV_DISCONNECT,  "disconnect"},
+#endif
+#if UVCXX_SATISFY_VERSION(1, 14, 0)
                 {UV_PRIORITIZED, "prioritized"},
+#endif
         });
     }
 
@@ -125,6 +133,9 @@ namespace uvcxx {
 #if UVCXX_SATISFY_VERSION(1, 24, 0)
                 {UV_PROCESS_WINDOWS_HIDE_CONSOLE, "hide-console"},
                 {UV_PROCESS_WINDOWS_HIDE_GUI, "hide-gui"},
+#endif
+#if UVCXX_SATISFY_VERSION(1, 48, 0)
+                {UV_PROCESS_WINDOWS_FILE_PATH_EXACT_NAME, "file-path-exact-name"},
 #endif
         });
     }
@@ -150,6 +161,9 @@ namespace uvcxx {
             UVCXX_CASE(UV_TTY_MODE_NORMAL, "normal");
             UVCXX_CASE(UV_TTY_MODE_RAW, "raw");
             UVCXX_CASE(UV_TTY_MODE_IO, "io");
+#if UVCXX_SATISFY_VERSION(1, 51, 0)
+            UVCXX_CASE(UV_TTY_MODE_RAW_VT, "raw-vt");
+#endif
         }
     }
 
@@ -181,6 +195,9 @@ namespace uvcxx {
 #if UVCXX_SATISFY_VERSION(1, 45, 0)
                 {UV_UDP_MMSG_FREE, "mmsg-free"},
                 {UV_UDP_LINUX_RECVERR, "linux-recverr"},
+#endif
+#if UVCXX_SATISFY_VERSION(1, 49, 0)
+                {UV_UDP_REUSEPORT , "reuseport"},
 #endif
         });
     }
@@ -240,9 +257,15 @@ namespace uvcxx {
             UVCXX_CASE(UV_FS_READLINK, "readlink");
             UVCXX_CASE(UV_FS_CHOWN, "chown");
             UVCXX_CASE(UV_FS_FCHOWN, "fchown");
+#if UVCXX_SATISFY_VERSION(1, 8, 0)
             UVCXX_CASE(UV_FS_REALPATH, "realpath");
+#endif
+#if UVCXX_SATISFY_VERSION(1, 14, 0)
             UVCXX_CASE(UV_FS_COPYFILE, "copyfile");
+#endif
+#if UVCXX_SATISFY_VERSION(1, 21, 0)
             UVCXX_CASE(UV_FS_LCHOWN, "lchown");
+#endif
 #if UVCXX_SATISFY_VERSION(1, 28, 0)
             UVCXX_CASE(UV_FS_OPENDIR, "opendir");
             UVCXX_CASE(UV_FS_READDIR, "readdir");

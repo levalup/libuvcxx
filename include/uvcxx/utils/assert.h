@@ -12,8 +12,8 @@
 #include <stdexcept>
 #include <string>
 
-#include "pencil_box.h"
-#include "standard.h"
+#include "./pencil_box.h"
+#include "./standard.h"
 
 namespace uvcxx {
     class assert_failed : public std::logic_error {

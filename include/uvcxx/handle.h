@@ -8,12 +8,12 @@
 
 #include <cassert>
 
-#include "inner/base.h"
-#include "utils/callback2.h"
-#include "utils/promise.h"
-#include "utils/clip.h"
+#include "./inner/base.h"
+#include "./utils/callback2.h"
+#include "./utils/promise.h"
+#include "./utils/clip.h"
 
-#include "loop.h"
+#include "./loop.h"
 
 namespace uvcxx {
     class close_handle : public std::exception {

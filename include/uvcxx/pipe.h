@@ -6,11 +6,11 @@
 #ifndef LIBUVCXX_PIPE_H
 #define LIBUVCXX_PIPE_H
 
-#include "cxx/string.h"
-#include "utils/promise2.h"
+#include "./cxx/string.h"
+#include "./utils/promise2.h"
 
-#include "connect.h"
-#include "stream.h"
+#include "./connect.h"
+#include "./stream.h"
 
 namespace uv {
     class pipe_t : public inherit_handle_t<uv_pipe_t, stream_t> {

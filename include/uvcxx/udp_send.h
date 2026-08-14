@@ -6,7 +6,7 @@
 #ifndef LIBUVCXX_UDP_SEND_H
 #define LIBUVCXX_UDP_SEND_H
 
-#include "req.h"
+#include "./req.h"
 
 namespace uv {
     class udp_t;

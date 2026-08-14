@@ -8,9 +8,9 @@
 
 #include <uv.h>
 
-#include "cxx/except.h"
-#include "cxx/wrapper.h"
-#include "inner/base.h"
+#include "./cxx/except.h"
+#include "./cxx/wrapper.h"
+#include "./inner/base.h"
 
 namespace uv {
     class key_t : public uvcxx::pointer_raw_base_t<uv_key_t> {

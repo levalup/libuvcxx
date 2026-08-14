@@ -6,10 +6,10 @@
 #ifndef LIBUVCXX_FS_EVENT_H
 #define LIBUVCXX_FS_EVENT_H
 
-#include "cxx/string.h"
-#include "utils/platform.h"
+#include "./cxx/string.h"
+#include "./utils/platform.h"
 
-#include "handle.h"
+#include "./handle.h"
 
 namespace uv {
     class fs_event_t : public inherit_handle_t<uv_fs_event_t, handle_t> {

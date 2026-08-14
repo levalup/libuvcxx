@@ -6,7 +6,7 @@
 #ifndef LIBUVCXX_PREPARE_H
 #define LIBUVCXX_PREPARE_H
 
-#include "handle.h"
+#include "./handle.h"
 
 namespace uv {
     class prepare_t : public inherit_handle_t<uv_prepare_t, handle_t> {

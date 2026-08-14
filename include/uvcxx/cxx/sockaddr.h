@@ -13,6 +13,7 @@
 #include <uv.h>
 
 #include "./string.h"
+#include "./version.h"
 #include "./wrapper.h"
 #include "../utils/pencil_box.h"
 #include "../utils/standard.h"
@@ -125,6 +126,10 @@ namespace uvcxx {
         int len() const final {
             return m_size;
         }
+        
+#if !UVCXX_SATISFY_VERSION(1, 16, 0) && !defined(UV_IF_NAMESIZE)
+#define UV_IF_NAMESIZE (16 + 1)
+#endif
 
         UVCXX_NODISCARD
         std::string ip() const final {

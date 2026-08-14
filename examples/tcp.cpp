@@ -50,7 +50,7 @@ int main() {
         std::cout << "[INFO] server start listen: " << server_sock << std::endl;
 
         server.listen(128).detach().call([=]() mutable {
-            auto conn = server.accept(false);
+            auto conn = server.accept();
 
             std::cout << "[INFO] received [" << getsockname(conn) << " <- " << getpeername(conn) << "]" << std::endl;
 
@@ -85,7 +85,7 @@ int main() {
 
         auto msg = uvcxx::catstr("hello~", i);
 
-        uv::tcp_t client(client_loop, false);
+        uv::tcp_t client(client_loop);
         client.connect(addr).detach().then([=]() mutable {
             client.write(msg).then([=]() {
                 std::cout << "client write: " << msg << std::endl;

@@ -10,11 +10,11 @@
 
 #include <uv.h>
 
-#include "cxx/except.h"
-#include "cxx/string.h"
-#include "cxx/version.h"
-#include "cxx/wrapper.h"
-#include "inner/base.h"
+#include "./cxx/except.h"
+#include "./cxx/string.h"
+#include "./cxx/version.h"
+#include "./cxx/wrapper.h"
+#include "./inner/base.h"
 
 namespace uv {
     namespace os {

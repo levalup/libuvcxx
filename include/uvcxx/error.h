@@ -8,7 +8,7 @@
 
 #include <uv.h>
 
-#include "uvcxx/cxx/version.h"
+#include "./cxx/version.h"
 
 namespace uv {
     inline const char *strerror(int err) { return uv_strerror(err); }

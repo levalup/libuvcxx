@@ -6,7 +6,7 @@
 #ifndef LIBUVCXX_IDLE_H
 #define LIBUVCXX_IDLE_H
 
-#include "handle.h"
+#include "./handle.h"
 
 namespace uv {
     class idle_t : public inherit_handle_t<uv_idle_t, handle_t> {

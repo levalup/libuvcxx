@@ -8,12 +8,12 @@
 
 #include <uv.h>
 
-#include "cxx/except.h"
-#include "cxx/version.h"
-#include "cxx/wrapper.h"
-#include "inner/base.h"
-#include "utils/defer.h"
-#include "utils/promise.h"
+#include "./cxx/except.h"
+#include "./cxx/version.h"
+#include "./cxx/wrapper.h"
+#include "./inner/base.h"
+#include "./utils/defer.h"
+#include "./utils/promise.h"
 
 namespace uv {
     /**

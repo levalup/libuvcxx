@@ -6,11 +6,11 @@
 #ifndef LIBUVCXX_UTILITIES_H
 #define LIBUVCXX_UTILITIES_H
 
-#include "cxx/except.h"
-#include "cxx/string.h"
-#include "cxx/version.h"
-#include "cxx/wrapper.h"
-#include "inner/base.h"
+#include "./cxx/except.h"
+#include "./cxx/string.h"
+#include "./cxx/version.h"
+#include "./cxx/wrapper.h"
+#include "./inner/base.h"
 
 #if !UVCXX_SATISFY_VERSION(1, 34, 0)
 
@@ -70,6 +70,14 @@ namespace uv {
     inline int getrusage(uv_rusage_t *rusage) {
         UVCXX_PROXY(uv_getrusage(rusage));
     }
+
+#if UVCXX_SATISFY_VERSION(1, 50, 0)
+
+    inline int getrusage_thread(uv_rusage_t *rusage) {
+        UVCXX_PROXY(uv_getrusage_thread(rusage));
+    }
+
+#endif
 
 #if UVCXX_SATISFY_VERSION(1, 44, 0)
 
@@ -221,6 +229,10 @@ namespace uv {
         UVCXX_PROXY(uv_ip4_name(src, dst, size));
     }
 
+#if !UVCXX_SATISFY_VERSION(1, 16, 0) && !defined(UV_IF_NAMESIZE)
+#define UV_IF_NAMESIZE (16 + 1)
+#endif
+
     inline std::string ip4_name(const sockaddr_in *src) {
         char dst[UV_IF_NAMESIZE] = {0};
         (void) ip4_name(src, dst, sizeof(dst));
@@ -258,10 +270,6 @@ namespace uv {
     inline int inet_pton(int af, uvcxx::string src, char *dst) {
         UVCXX_PROXY(uv_inet_pton(af, src, dst));
     }
-
-#if !UVCXX_SATISFY_VERSION(1, 16, 0) && !defined(UV_IF_NAMESIZE)
-#define UV_IF_NAMESIZE (16 + 1)
-#endif
 
 #if UVCXX_SATISFY_VERSION(1, 16, 0)
 

@@ -6,10 +6,10 @@
 #ifndef LIBUVCXX_TCP_H
 #define LIBUVCXX_TCP_H
 
-#include "utils/promise2.h"
+#include "./utils/promise2.h"
 
-#include "connect.h"
-#include "stream.h"
+#include "./connect.h"
+#include "./stream.h"
 
 namespace uv {
     class tcp_t : public inherit_handle_t<uv_tcp_t, stream_t> {
@@ -87,6 +87,14 @@ namespace uv {
         int keepalive(bool enable, unsigned int delay) {
             UVCXX_PROXY(uv_tcp_keepalive(*this, int(enable), delay));
         }
+
+#if UVCXX_SATISFY_VERSION(1, 52, 0)
+
+        int keepalive_ex(bool on, unsigned int idle, unsigned int intvl, unsigned int cnt) {
+            UVCXX_PROXY(uv_tcp_keepalive_ex(*this, int(on), idle, intvl, cnt));
+        }
+
+#endif
 
         int simultaneous_accepts(bool enable) {
             UVCXX_PROXY(uv_tcp_simultaneous_accepts(*this, int(enable)));

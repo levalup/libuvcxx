@@ -6,7 +6,7 @@
 #ifndef LIBUVCXX_POLL_H
 #define LIBUVCXX_POLL_H
 
-#include "handle.h"
+#include "./handle.h"
 
 namespace uv {
     class poll_t : public inherit_handle_t<uv_poll_t, handle_t> {

@@ -6,8 +6,8 @@
 #ifndef LIBUVCXX_WORK_H
 #define LIBUVCXX_WORK_H
 
-#include "loop.h"
-#include "req.h"
+#include "./loop.h"
+#include "./req.h"
 
 namespace uv {
     class work_t : public inherit_req_t<uv_work_t, req_t> {

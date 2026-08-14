@@ -10,7 +10,7 @@
 
 #include <uv.h>
 
-#include "uvcxx/inner/base.h"
+#include "./inner/base.h"
 
 namespace uv {
     class rwlock_t : public uvcxx::pointer_raw_base_t<uv_rwlock_t> {

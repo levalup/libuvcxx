@@ -10,7 +10,8 @@
 
 #include <uv.h>
 
-#include "uvcxx/inner/base.h"
+#include "./cxx/version.h"
+#include "./inner/base.h"
 
 namespace uv {
     class mutex_t : public uvcxx::pointer_raw_base_t<uv_mutex_t> {
@@ -28,6 +29,8 @@ namespace uv {
             (void) uv_mutex_init(*this);
         }
 
+#if UVCXX_SATISFY_VERSION(1, 15, 0)
+
         explicit mutex_t(bool recursive) {
             if (recursive) {
                 (void) uv_mutex_init_recursive(*this);
@@ -35,6 +38,8 @@ namespace uv {
                 (void) uv_mutex_init(*this);
             }
         }
+
+#endif
 
         ~mutex_t() override {
             if (*this) uv_mutex_destroy(*this);

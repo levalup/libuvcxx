@@ -6,8 +6,8 @@
 #ifndef LIBUVCXX_RANDOM_H
 #define LIBUVCXX_RANDOM_H
 
-#include "loop.h"
-#include "req.h"
+#include "./loop.h"
+#include "./req.h"
 
 #if !UVCXX_SATISFY_VERSION(1, 33, 0)
 

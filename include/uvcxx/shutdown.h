@@ -6,7 +6,7 @@
 #ifndef LIBUVCXX_SHUTDOWN_H
 #define LIBUVCXX_SHUTDOWN_H
 
-#include "req.h"
+#include "./req.h"
 
 namespace uv {
     class stream_t;

@@ -6,7 +6,7 @@
 #ifndef LIBUVCXX_TIMER_H
 #define LIBUVCXX_TIMER_H
 
-#include "handle.h"
+#include "./handle.h"
 
 namespace uv {
     class timer_t : public inherit_handle_t<uv_timer_t, handle_t> {

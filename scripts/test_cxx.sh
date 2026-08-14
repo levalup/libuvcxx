@@ -8,7 +8,7 @@ start_time=$(date +%s)
 # working path
 HOME=$(cd "$(dirname "$0")" || exit; pwd)
 
-stds=(11 14 17)
+stds=(17 14 11)
 
 echo "[INFO] Test start."
 

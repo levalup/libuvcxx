@@ -32,7 +32,7 @@ Following is the output of [libuv_api_coverage.py](../scripts/libuv_api_coverage
 [INFO] Section "Threading and synchronization utilities" ... [OK]
 [INFO] Section "Miscellaneous utilities" ... [OK]
 [INFO] Section "Metrics operations" ... [OK]
-[INFO] Total API coverage [100%] - [306/306]
+[INFO] Total API coverage [100%] - [317/317]
 ```
 
 ## API version limit

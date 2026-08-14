@@ -10,8 +10,8 @@
 
 #include <uv.h>
 
-#include "uvcxx/cxx/except.h"
-#include "uvcxx/inner/base.h"
+#include "./cxx/except.h"
+#include "./inner/base.h"
 
 namespace uv {
     class cond_t : public uvcxx::pointer_raw_base_t<uv_cond_t> {

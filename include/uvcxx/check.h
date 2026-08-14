@@ -6,7 +6,7 @@
 #ifndef LIBUVCXX_CHECK_H
 #define LIBUVCXX_CHECK_H
 
-#include "handle.h"
+#include "./handle.h"
 
 namespace uv {
     class check_t : public inherit_handle_t<uv_check_t, handle_t> {

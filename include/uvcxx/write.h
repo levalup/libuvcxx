@@ -6,7 +6,7 @@
 #ifndef LIBUVCXX_WRITE_H
 #define LIBUVCXX_WRITE_H
 
-#include "req.h"
+#include "./req.h"
 
 namespace uv {
     class stream_t;

@@ -8,12 +8,12 @@
 
 #include <vector>
 
-#include "cxx/buffer.h"
-#include "cxx/string.h"
+#include "./cxx/buffer.h"
+#include "./cxx/string.h"
 
-#include "buf.h"
-#include "loop.h"
-#include "req.h"
+#include "./buf.h"
+#include "./loop.h"
+#include "./req.h"
 
 namespace uv {
     class fs_t : public inherit_req_t<uv_fs_t, req_t> {
@@ -1402,6 +1402,8 @@ namespace uv {
             return fchown(default_loop(), req, file, uid, gid);
         }
 
+#if UVCXX_SATISFY_VERSION(1, 21, 0)
+
         inline int lchown(std::nullptr_t, fs_t &req,
                           uvcxx::string path, uv_uid_t uid, uv_gid_t gid,
                           std::nullptr_t) {
@@ -1430,6 +1432,8 @@ namespace uv {
         inline uvcxx::promise<int> lchown(const fs_t &req, uvcxx::string path, uv_uid_t uid, uv_gid_t gid) {
             return lchown(default_loop(), req, path, uid, gid);
         }
+
+#endif
     }
 
 #if UVCXX_SATISFY_VERSION(1, 12, 0)
@@ -1443,5 +1447,74 @@ namespace uv {
 
 #endif
 }
+
+#if !UVCXX_SATISFY_VERSION(1, 16, 0)
+#if !defined(UV_FS_O_APPEND) && defined(O_APPEND)
+#define UV_FS_O_APPEND O_APPEND
+#endif
+#if !defined(UV_FS_O_CREAT) && defined(O_CREAT)
+#define UV_FS_O_CREAT O_CREAT
+#endif
+#if !defined(UV_FS_O_DIRECT) && defined(O_DIRECT)
+#define UV_FS_O_DIRECT O_DIRECT
+#endif
+#if !defined(UV_FS_O_DIRECTORY) && defined(O_DIRECTORY)
+#define UV_FS_O_DIRECTORY O_DIRECTORY
+#endif
+#if !defined(UV_FS_O_DSYNC) && defined(O_DSYNC)
+#define UV_FS_O_DSYNC O_DSYNC
+#endif
+#if !defined(UV_FS_O_EXCL) && defined(O_EXCL)
+#define UV_FS_O_EXCL O_EXCL
+#endif
+#if !defined(UV_FS_O_EXLOCK) && defined(O_EXLOCK)
+#define UV_FS_O_EXLOCK O_EXLOCK
+#endif
+#if !defined(UV_FS_O_FILEMAP) && defined(O_FILEMAP)
+#define UV_FS_O_FILEMAP O_FILEMAP
+#endif
+#if !defined(UV_FS_O_NOATIME) && defined(O_NOATIME)
+#define UV_FS_O_NOATIME O_NOATIME
+#endif
+#if !defined(UV_FS_O_NOCTTY) && defined(O_NOCTTY)
+#define UV_FS_O_NOCTTY O_NOCTTY
+#endif
+#if !defined(UV_FS_O_NOFOLLOW) && defined(O_NOFOLLOW)
+#define UV_FS_O_NOFOLLOW O_NOFOLLOW
+#endif
+#if !defined(UV_FS_O_NONBLOCK) && defined(O_NONBLOCK)
+#define UV_FS_O_NONBLOCK O_NONBLOCK
+#endif
+#if !defined(UV_FS_O_RANDOM) && defined(O_RANDOM)
+#define UV_FS_O_RANDOM O_RANDOM
+#endif
+#if !defined(UV_FS_O_RDONLY) && defined(O_RDONLY)
+#define UV_FS_O_RDONLY O_RDONLY
+#endif
+#if !defined(UV_FS_O_RDWR) && defined(O_RDWR)
+#define UV_FS_O_RDWR O_RDWR
+#endif
+#if !defined(UV_FS_O_SEQUENTIAL) && defined(O_SEQUENTIAL)
+#define UV_FS_O_SEQUENTIAL O_SEQUENTIAL
+#endif
+#if !defined(UV_FS_O_SHORT_LIVED) && defined(O_SHORT_LIVED)
+#define UV_FS_O_SHORT_LIVED O_SHORT_LIVED
+#endif
+#if !defined(UV_FS_O_SYMLINK) && defined(O_SYMLINK)
+#define UV_FS_O_SYMLINK O_SYMLINK
+#endif
+#if !defined(UV_FS_O_SYNC) && defined(O_SYNC)
+#define UV_FS_O_SYNC O_SYNC
+#endif
+#if !defined(UV_FS_O_TEMPORARY) && defined(O_TEMPORARY)
+#define UV_FS_O_TEMPORARY O_TEMPORARY
+#endif
+#if !defined(UV_FS_O_TRUNC) && defined(O_TRUNC)
+#define UV_FS_O_TRUNC O_TRUNC
+#endif
+#if !defined(UV_FS_O_WRONLY) && defined(O_WRONLY)
+#define UV_FS_O_WRONLY O_WRONLY
+#endif
+#endif
 
 #endif //LIBUVCXX_FS_H

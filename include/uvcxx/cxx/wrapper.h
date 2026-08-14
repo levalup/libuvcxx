@@ -11,7 +11,7 @@
 
 #include <uv.h>
 
-#include "except.h"
+#include "./except.h"
 
 #define UVCXX_APPLY(call, ret, ...) \
     do {                            \

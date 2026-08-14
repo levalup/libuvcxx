@@ -6,8 +6,8 @@
 #ifndef LIBUVCXX_CALLBACK2_H
 #define LIBUVCXX_CALLBACK2_H
 
-#include "callback.h"
-#include "clip.h"
+#include "./callback.h"
+#include "./clip.h"
 
 namespace uvcxx {
     template <typename... Args>

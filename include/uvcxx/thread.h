@@ -8,13 +8,15 @@
 
 #include <atomic>
 #include <functional>
+#include <memory>
 
 #include <uv.h>
 
-#include "cxx/except.h"
-#include "cxx/version.h"
-#include "cxx/wrapper.h"
-#include "inner/base.h"
+#include "./cxx/except.h"
+#include "./cxx/string.h"
+#include "./cxx/version.h"
+#include "./cxx/wrapper.h"
+#include "./inner/base.h"
 
 namespace uv {
     namespace inner {
@@ -123,6 +125,15 @@ namespace uv {
             return 0;
         }
 
+#if UVCXX_SATISFY_VERSION(1, 50, 0)
+
+        int detach() {
+            // TODO: Mark m_thread->m_detached
+            UVCXX_PROXY(uv_thread_detach(*this));
+        }
+
+#endif
+
 #if UVCXX_SATISFY_VERSION(1, 45, 0)
 
         int setaffinity(char *cpumask, char *oldmask, size_t mask_size) {
@@ -139,6 +150,18 @@ namespace uv {
         bool equal(const self &other) const {
             return uv_thread_equal(*this, other);
         }
+
+#if UVCXX_SATISFY_VERSION(1, 50, 0)
+
+        UVCXX_NODISCARD
+        std::string getname() {
+            size_t size = 2048;
+            std::shared_ptr<char> name(new char[size], std::default_delete<char[]>());
+            UVCXX_APPLY(uv_thread_getname(*this, name.get(), size), "");
+            return name.get();
+        }
+
+#endif
 
 #if UVCXX_SATISFY_VERSION(1, 48, 0)
 
@@ -189,6 +212,14 @@ namespace uv {
 #if UVCXX_SATISFY_VERSION(1, 45, 0)
 
         inline int getcpu() { return uv_thread_getcpu(); }
+
+#endif
+
+#if UVCXX_SATISFY_VERSION(1, 50, 0)
+
+        inline int setname(uvcxx::string name) {
+            UVCXX_PROXY(uv_thread_setname(name));
+        }
 
 #endif
 

@@ -10,7 +10,7 @@
 
 #include <uv.h>
 
-#include "uvcxx/inner/base.h"
+#include "./inner/base.h"
 
 namespace uv {
     class once_t : public uvcxx::extend_raw_base_t<uv_once_t> {

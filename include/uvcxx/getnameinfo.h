@@ -6,8 +6,8 @@
 #ifndef LIBUVCXX_GETNAMEINFO_H
 #define LIBUVCXX_GETNAMEINFO_H
 
-#include "loop.h"
-#include "req.h"
+#include "./loop.h"
+#include "./req.h"
 
 namespace uv {
     class getnameinfo_t : public inherit_req_t<uv_getnameinfo_t, req_t> {

@@ -6,9 +6,9 @@
 #ifndef LIBUVCXX_SIGNAL_H
 #define LIBUVCXX_SIGNAL_H
 
-#include "utils/promise2.h"
+#include "./utils/promise2.h"
 
-#include "handle.h"
+#include "./handle.h"
 
 namespace uv {
     class signal_t : public inherit_handle_t<uv_signal_t, handle_t> {
