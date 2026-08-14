@@ -153,12 +153,15 @@ namespace uv {
 
 #if UVCXX_SATISFY_VERSION(1, 50, 0)
 
+        int getname(char *name, size_t size) const {
+            return uv_thread_getname(*this, name, size);
+        }
+
         UVCXX_NODISCARD
         std::string getname() {
-            size_t size = 2048;
-            std::shared_ptr<char> name(new char[size], std::default_delete<char[]>());
-            UVCXX_APPLY(uv_thread_getname(*this, name.get(), size), "");
-            return name.get();
+            return uvcxx::get_string<2048>([this](char *name, size_t size) {
+                return uv_thread_getname(*this, name, size);
+            });
         }
 
 #endif
